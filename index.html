@@ -1,0 +1,1702 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mis Apuntes</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
+  <meta name="theme-color" content="#F2F2F7">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Mis Apuntes">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', '"SF Pro Display"', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    @keyframes slideRight {
+      from { transform: translateX(-100%); }
+      to { transform: translateX(0); }
+    }
+    .animate-fade-in { animation: fadeIn 0.25s ease-out; }
+    .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .animate-slide-right { animation: slideRight 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    
+    [contenteditable][data-placeholder]:empty:before {
+      content: attr(data-placeholder);
+      color: #8E8E93;
+      pointer-events: none;
+      display: block;
+    }
+    .dark [contenteditable][data-placeholder]:empty:before {
+      color: #636366;
+    }
+  </style>
+
+  <script crossorigin="anonymous" src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin="anonymous" src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
+</head>
+<body class="bg-[#F2F2F7] dark:bg-[#000000] text-black dark:text-white antialiased selection:bg-[#007AFF]/30">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const ChevronLeft = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m15 18-6-6 6-6"/></svg>
+    );
+    const ChevronDown = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m6 9 6 6 6-6"/></svg>
+    );
+    const ChevronUp = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m18 15-6-6-6 6"/></svg>
+    );
+    const Menu = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+    );
+    const MoreVertical = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+    );
+    const Plus = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+    );
+    const Cloud = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+    );
+    const CloudLightning = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973"/><path d="m13 12-3 5h4l-3 5"/></svg>
+    );
+    const User = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    );
+    const Loader2 = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+    );
+    const Download = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+    );
+    const Upload = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+    );
+
+    // Iconografía estilo SF Symbols de Apple (Bote de basura y Caja de Archivo)
+    const AppleTrashIcon = ({ size = 22, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M3 6h18" />
+        <path d="M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6" />
+        <path d="M19 6l-.8 13.2a2 2 0 0 1-2 1.8H7.8a2 2 0 0 1-2-1.8L5 6" />
+        <line x1="10" y1="11" x2="10" y2="16.5" />
+        <line x1="14" y1="11" x2="14" y2="16.5" />
+      </svg>
+    );
+
+    const AppleArchiveIcon = ({ size = 22, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <rect x="2.5" y="4" width="19" height="4.5" rx="1.2" />
+        <path d="M4.5 8.5v9.8a2.2 2.2 0 0 0 2.2 2.2h10.6a2.2 2.2 0 0 0 2.2-2.2V8.5" />
+        <path d="M9.5 13h5" />
+      </svg>
+    );
+
+    const NOTE_COLORS = [
+      '#007AFF',
+      '#FF9500',
+      '#34C759',
+      '#AF52DE',
+      '#FF2D55',
+      '#5856D6',
+      '#00C7BE',
+      '#FFCC00'
+    ];
+
+    const formatNoteDate = (timestamp) => {
+      if (!timestamp) return '';
+      try {
+        const d = new Date(timestamp);
+        return d.toLocaleDateString('es-ES', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric'
+        });
+      } catch (e) {
+        return '';
+      }
+    };
+
+    // --- COMPONENTE DE DESLIZAMIENTO HACIA LA DERECHA ESTILO iOS ---
+    const SwipeableItem = ({ itemId, openSwipeId, setOpenSwipeId, onArchive, onDelete, isArchived, onClick, children }) => {
+      const ACTION_WIDTH = 148;
+      const [offsetX, setOffsetX] = useState(0);
+      const [isDragging, setIsDragging] = useState(false);
+      const startXRef = useRef(0);
+      const startYRef = useRef(0);
+      const currentBaseRef = useRef(0);
+      const swipedRef = useRef(false);
+      const directionLockedRef = useRef(null);
+
+      useEffect(() => {
+        if (openSwipeId !== itemId && offsetX !== 0) {
+          setOffsetX(0);
+          currentBaseRef.current = 0;
+        }
+      }, [openSwipeId, itemId]);
+
+      const beginDrag = (clientX, clientY) => {
+        startXRef.current = clientX;
+        startYRef.current = clientY;
+        currentBaseRef.current = openSwipeId === itemId ? ACTION_WIDTH : 0;
+        swipedRef.current = false;
+        directionLockedRef.current = null;
+        setIsDragging(true);
+      };
+
+      const moveDrag = (clientX, clientY) => {
+        if (!isDragging) return;
+        const dx = clientX - startXRef.current;
+        const dy = clientY - startYRef.current;
+
+        if (!directionLockedRef.current) {
+          if (Math.abs(dx) > 7 || Math.abs(dy) > 7) {
+            directionLockedRef.current = Math.abs(dx) >= Math.abs(dy) ? 'horizontal' : 'vertical';
+          }
+        }
+
+        if (directionLockedRef.current === 'vertical') return;
+
+        if (Math.abs(dx) > 6) {
+          swipedRef.current = true;
+        }
+
+        // Permitir arrastrar hacia la derecha (y cerrar hacia la izquierda si estaba abierto)
+        const nextOffset = Math.max(0, Math.min(ACTION_WIDTH + 24, currentBaseRef.current + dx));
+        setOffsetX(nextOffset);
+      };
+
+      const finishDrag = () => {
+        if (!isDragging) return;
+        setIsDragging(false);
+        if (offsetX > 52) {
+          setOffsetX(ACTION_WIDTH);
+          currentBaseRef.current = ACTION_WIDTH;
+          setOpenSwipeId(itemId);
+        } else {
+          setOffsetX(0);
+          currentBaseRef.current = 0;
+          if (openSwipeId === itemId) setOpenSwipeId(null);
+        }
+      };
+
+      const handleCardClick = () => {
+        if (swipedRef.current) {
+          swipedRef.current = false;
+          return;
+        }
+        if (offsetX > 0) {
+          setOffsetX(0);
+          currentBaseRef.current = 0;
+          setOpenSwipeId(null);
+          return;
+        }
+        if (openSwipeId && openSwipeId !== itemId) {
+          setOpenSwipeId(null);
+        }
+        if (onClick) onClick();
+      };
+
+      return (
+        <div className="relative overflow-hidden rounded-[16px] select-none">
+          {/* Acciones reveladas a la izquierda al arrastrar la tarjeta hacia la derecha */}
+          <div
+            className="absolute inset-y-0 left-0 flex items-stretch overflow-hidden rounded-l-[16px]"
+            style={{
+              width: `${ACTION_WIDTH}px`,
+              opacity: offsetX > 2 ? 1 : 0,
+              pointerEvents: offsetX > 20 ? 'auto' : 'none',
+              transition: isDragging ? 'none' : 'opacity 0.2s ease'
+            }}
+          >
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOffsetX(0);
+                setOpenSwipeId(null);
+                onArchive();
+              }}
+              className="flex-1 bg-[#5856D6] active:bg-[#4745B5] text-white flex flex-col items-center justify-center gap-1 transition-colors"
+            >
+              <AppleArchiveIcon size={21} />
+              <span className="text-[11px] font-semibold tracking-tight">{isArchived ? 'Desarchivar' : 'Archivar'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOffsetX(0);
+                setOpenSwipeId(null);
+                onDelete();
+              }}
+              className="flex-1 bg-[#FF3B30] active:bg-[#D7281E] text-white flex flex-col items-center justify-center gap-1 transition-colors"
+            >
+              <AppleTrashIcon size={21} />
+              <span className="text-[11px] font-semibold tracking-tight">Eliminar</span>
+            </button>
+          </div>
+
+          {/* Tarjeta deslizable */}
+          <div
+            onTouchStart={(e) => beginDrag(e.touches[0].clientX, e.touches[0].clientY)}
+            onTouchMove={(e) => moveDrag(e.touches[0].clientX, e.touches[0].clientY)}
+            onTouchEnd={finishDrag}
+            onMouseDown={(e) => beginDrag(e.clientX, e.clientY)}
+            onMouseMove={(e) => moveDrag(e.clientX, e.clientY)}
+            onMouseUp={finishDrag}
+            onMouseLeave={() => { if (isDragging) finishDrag(); }}
+            onClick={handleCardClick}
+            style={{
+              transform: `translateX(${offsetX}px)`,
+              transition: isDragging ? 'none' : 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)'
+            }}
+            className="relative z-10 cursor-pointer"
+          >
+            {children}
+          </div>
+        </div>
+      );
+    };
+
+    const programsDB = [
+      {
+        id: 'regional_2026',
+        title: '"Felices para siempre"',
+        year: '2026',
+        days: 3,
+        viernes: [
+          { id: 'v_att_am', title: 'Asistencia (Mañana)', type: 'attendance', hasStream: true },
+          { id: 'v1', time: '9:20', title: 'Video musical', type: 'music' },
+          { id: 'v2', time: '9:30', title: 'Canción 160 y oración', type: 'song' },
+          { id: 'v3', time: '9:40', title: 'DISCURSO DEL PRESIDENTE: ¿Es realista la idea de ser felices para siempre?', type: 'talk' },
+          { id: 'v4', time: '10:10', title: 'PRODUCCIÓN AUDIOVISUAL: Las buenas noticias según Jesús: Episodio 4 "Para eso he venido"', type: 'talk' },
+          { id: 'v5', time: '11:05', title: 'Canción 17 y anuncios', type: 'song' },
+          { id: 'v6', time: '11:15', title: 'SERIE DE DISCURSOS: ¡Las profecías sobre el Mesías se cumplieron!', type: 'symposium',
+            parts: [
+              { id: 'v6-1', title: '• "Él mismo tomó nuestras enfermedades"' },
+              { id: 'v6-2', title: '• "No discutirá"' },
+              { id: 'v6-3', title: '• "Nunca les hablaba sin utilizar alguna comparación"' }
+            ]
+          },
+          { id: 'v7', time: '12:10', title: 'Canción 14 e intermedio', type: 'song' },
+          { id: 'v_att_pm', title: 'Asistencia (Tarde)', type: 'attendance', hasStream: true },
+          { id: 'v8', time: '1:35', title: 'Video musical', type: 'music' },
+          { id: 'v9', time: '1:45', title: 'Canción 23', type: 'song' },
+          { id: 'v10', time: '1:50', title: '¿Qué enseñó Jesús sobre el sábado?', type: 'talk' },
+          { id: 'v11', time: '2:10', title: 'SERIE DE DISCURSOS: Imitemos a los que sirvieron a Jesús', type: 'symposium',
+            parts: [
+              { id: 'v11-1', title: '• Los apóstoles' },
+              { id: 'v11-2', title: '• Muchas mujeres' }
+            ]
+          },
+          { id: 'v12', time: '2:50', title: 'Canción 76 y anuncios', type: 'song' },
+          { id: 'v13', time: '3:00', title: '"Felices los que lavan sus túnicas largas"', type: 'talk' },
+          { id: 'v14', time: '3:30', title: 'Canción 155 y oración de conclusión', type: 'song' },
+        ],
+        sabado: [
+          { id: 's_att_am', title: 'Asistencia (Mañana)', type: 'attendance', hasStream: true },
+          { id: 's1', time: '9:20', title: 'Video musical', type: 'music' },
+          { id: 's2', time: '9:30', title: 'Canción 111 y oración', type: 'song' },
+          { id: 's3', time: '9:40', title: '"Él tomó la palabra y se puso a enseñarles"', type: 'talk' },
+          { id: 's4', time: '9:50', title: 'PRODUCCIÓN AUDIOVISUAL: Las buenas noticias según Jesús: Episodio 5 "Impactados con su manera de enseñar"', type: 'talk' },
+          { id: 's5', time: '10:25', title: 'Canción 89 y anuncios', type: 'song' },
+          { id: 's6', time: '10:35', title: 'Cuatro enemigos de la felicidad', type: 'talk' },
+          { id: 's7', time: '10:50', title: '¿Puede ver el principio detrás de la ley?', type: 'talk' },
+          { id: 's8', time: '11:15', title: 'SERIE DE DISCURSOS: Lecciones sobre la tierra en la que vivió Jesús', type: 'symposium',
+            parts: [
+              { id: 's8-1', title: '• La sal y la luz' },
+              { id: 's8-2', title: '• Las plantas y los animales' }
+            ]
+          },
+          { id: 's9', time: '11:40', title: 'DISCURSO DE BAUTISMO: "Tu Padre, que mira en secreto, te lo pagará"', type: 'talk' },
+          { id: 's10', time: '12:10', title: 'Canción 51 e intermedio', type: 'song' },
+          { id: 's_att_pm', title: 'Asistencia (Tarde)', type: 'attendance', hasStream: true },
+          { id: 's11', time: '1:35', title: 'Video musical', type: 'music' },
+          { id: 's12', time: '1:45', title: 'Canción 125', type: 'song' },
+          { id: 's13', time: '1:50', title: 'SERIE DE DISCURSOS: Felices...', type: 'symposium',
+            parts: [
+              { id: 's13-1', title: '• los que reconocen sus necesidades espirituales' },
+              { id: 's13-2', title: '• los que se lamentan' },
+              { id: 's13-3', title: '• los que son apacibles' },
+              { id: 's13-4', title: '• los que tienen hambre y sed de justicia' },
+              { id: 's13-5', title: '• los que son misericordiosos' },
+              { id: 's13-6', title: '• los que tienen un corazón puro' },
+              { id: 's13-7', title: '• los que fomentan la paz' },
+              { id: 's13-8', title: '• los que han sido perseguidos por causa de la justicia' },
+              { id: 's13-9', title: '• ustedes cuando la gente los insulte' }
+            ]
+          },
+          { id: 's14', time: '3:20', title: 'Canción 81 y anuncios', type: 'song' },
+          { id: 's15', time: '3:30', title: '¿Por qué se angustian?', type: 'talk' },
+          { id: 's16', time: '3:55', title: '"Entren por la puerta angosta"', type: 'talk' },
+          { id: 's17', time: '4:30', title: 'Canción 21 y oración de conclusión', type: 'song' }
+        ],
+        domingo: [
+          { id: 'd_att_am', title: 'Asistencia (Mañana)', type: 'attendance', hasStream: true },
+          { id: 'd1', time: '9:20', title: 'Video musical', type: 'music' },
+          { id: 'd2', time: '9:30', title: 'Canción 68 y oración', type: 'song' },
+          { id: 'd3', time: '9:40', title: 'SERIE DE DISCURSOS: Lecciones de las comparaciones de Jesús', type: 'symposium',
+            parts: [
+              { id: 'd3-1', title: '• Los cuatro tipos de terreno' },
+              { id: 'd3-2', title: '• El trigo y la mala hierba' },
+              { id: 'd3-3', title: '• El grano de mostaza' },
+              { id: 'd3-4', title: '• La levadura' },
+              { id: 'd3-5', title: '• La red de pesca' }
+            ]
+          },
+          { id: 'd4', time: '11:00', title: 'Canción 64 y anuncios', type: 'song' },
+          { id: 'd5', time: '11:10', title: 'DISCURSO PÚBLICO: ¿Ha encontrado el tesoro?', type: 'talk' },
+          { id: 'd6', time: '11:40', title: 'Resumen de La Atalaya', type: 'talk' },
+          { id: 'd7', time: '12:10', title: 'Canción 140 e intermedio', type: 'song' },
+          { id: 'd_att_pm', title: 'Asistencia (Tarde)', type: 'attendance', hasStream: true },
+          { id: 'd8', time: '1:35', title: 'Video musical', type: 'music' },
+          { id: 'd9', time: '1:45', title: 'Canción 108', type: 'song' },
+          { id: 'd10', time: '1:50', title: 'PRODUCCIÓN AUDIOVISUAL: Las buenas noticias según Jesús: Episodio 6 "¿Eres tú el que tiene que venir?"', type: 'talk' },
+          { id: 'd11', time: '2:35', title: 'Canción 120 y anuncios', type: 'song' },
+          { id: 'd12', time: '2:45', title: '¿Qué hemos aprendido?', type: 'talk' },
+          { id: 'd13', time: '2:55', title: '"Felices los ojos de ustedes, que ven"', type: 'talk' },
+          { id: 'd14', time: '3:45', title: 'Canción 163 y oración de conclusión', type: 'song' }
+        ]
+      },
+      {
+        id: 'circuito_confia_2027',
+        title: '"El que confía en Jehová es feliz"',
+        year: '2026-2027 (Sup. Circuito)',
+        days: 1,
+        programa: [
+          { id: 'cc_att_am', title: 'Asistencia (Mañana)', type: 'attendance', hasStream: true },
+          { id: 'cc1', time: '9:40', title: 'Música', type: 'music' },
+          { id: 'cc2', time: '9:50', title: 'Canción 31 y oración', type: 'song' },
+          { id: 'cc3', time: '10:00', title: '¿Por qué debemos confiar en Jehová con todo el corazón?', type: 'talk' },
+          { id: 'cc4', time: '10:15', title: 'SERIE DE DISCURSOS: Imitemos a los que confiaron en Jehová', type: 'symposium',
+            parts: [
+              { id: 'cc4-1', title: '• Barac' },
+              { id: 'cc4-2', title: '• La mujer sunamita' },
+              { id: 'cc4-3', title: '• Daniel, Hananías, Misael y Azarías' }
+            ]
+          },
+          { id: 'cc5', time: '11:05', title: 'Canción 57 y anuncios', type: 'song' },
+          { id: 'cc6', time: '11:15', title: 'Ayudemos a otros a confiar en el "Dios vivo y verdadero"', type: 'talk' },
+          { id: 'cc7', time: '11:35', title: 'Discurso de bautismo: "Tu Padre, que mira en secreto, te lo pagará"', type: 'talk' },
+          { id: 'cc8', time: '12:05', title: 'Canción 29 e intermedio', type: 'song' },
+          { id: 'cc_att_pm', title: 'Asistencia (Tarde)', type: 'attendance', hasStream: true },
+          { id: 'cc9', time: '1:20', title: 'Música', type: 'music' },
+          { id: 'cc10', time: '1:30', title: 'Canción 8 y oración', type: 'song' },
+          { id: 'cc11', time: '1:35', title: 'Discurso público: ¿En quién sí se puede confiar?', type: 'talk' },
+          { id: 'cc12', time: '2:05', title: 'Resumen de La Atalaya', type: 'talk' },
+          { id: 'cc13', time: '2:35', title: 'Canción 135 y anuncios', type: 'song' },
+          { id: 'cc14', time: '2:45', title: 'SERIE DE DISCURSOS: Confíe en la sabiduría de Jehová...', type: 'symposium',
+            parts: [
+              { id: 'cc14-1', title: '• al educar a sus hijos' },
+              { id: 'cc14-2', title: '• al hacer planes para el futuro' },
+              { id: 'cc14-3', title: '• al enfrentar tentaciones' }
+            ]
+          },
+          { id: 'cc15', time: '3:30', title: '"El que confía en Jehová es feliz"', type: 'talk' },
+          { id: 'cc16', time: '4:00', title: 'Canción 54 y oración', type: 'song' }
+        ],
+        repaso: [
+          { id: 'cc_rep1', title: '1. ¿Cómo demostramos que confiamos en Jehová con todo nuestro corazón? (Prov. 3:5, 6)', type: 'talk' },
+          { id: 'cc_rep2', title: '2. ¿Cómo podemos imitar a Barac, a la mujer sunamita y a Daniel, Hananías, Misael y Azarías? (Luc. 16:10; Sal. 50:15; 119:112)', type: 'talk' },
+          { id: 'cc_rep3', title: '3. ¿Qué nos ayudará a iniciar conversaciones con personas que tienen formas de pensar o antecedentes muy diferentes a los nuestros? (1 Cor. 9:19-23)', type: 'talk' },
+          { id: 'cc_rep4', title: '4. ¿Por qué debemos confiar en la sabiduría de Jehová? (Prov. 3:13, 18; 16:3; 22:6; 1 Cor. 10:13)', type: 'talk' },
+          { id: 'cc_rep5', title: '5. ¿Por qué debemos confiar siempre en Jehová? (Prov. 16:20)', type: 'talk' }
+        ]
+      },
+      {
+        id: 'circuito_alegria_2027',
+        title: '"Haz de Jehová tu mayor alegría"',
+        year: '2026-2027 (Rep. Sucursal)',
+        days: 1,
+        programa: [
+          { id: 'ca_att_am', title: 'Asistencia (Mañana)', type: 'attendance', hasStream: true },
+          { id: 'ca1', time: '9:40', title: 'Música', type: 'music' },
+          { id: 'ca2', time: '9:50', title: 'Canción 7 y oración', type: 'song' },
+          { id: 'ca3', time: '10:00', title: '¿Cómo podemos hacer de Jehová nuestra mayor alegría?', type: 'talk' },
+          { id: 'ca4', time: '10:15', title: '"Feliz aquel [...] al que se le perdona su pecado"', type: 'talk' },
+          { id: 'ca5', time: '10:30', title: '"¡Dichosos los que viven en tu casa!"', type: 'talk' },
+          { id: 'ca6', time: '10:55', title: 'Canción 37 y anuncios', type: 'song' },
+          { id: 'ca7', time: '11:05', title: 'Feliz el que se refugia en Jehová', type: 'talk' },
+          { id: 'ca8', time: '11:35', title: 'Discurso de bautismo: "Tu Padre, que mira en secreto, te lo pagará"', type: 'talk' },
+          { id: 'ca9', time: '12:05', title: 'Canción 38 e intermedio', type: 'song' },
+          { id: 'ca_att_pm', title: 'Asistencia (Tarde)', type: 'attendance', hasStream: true },
+          { id: 'ca10', time: '1:20', title: 'Música', type: 'music' },
+          { id: 'ca11', time: '1:30', title: 'Canción 111', type: 'song' },
+          { id: 'ca12', time: '1:35', title: 'Experiencias', type: 'talk' },
+          { id: 'ca13', time: '1:45', title: 'Resumen de La Atalaya', type: 'talk' },
+          { id: 'ca14', time: '2:15', title: 'SERIE DE DISCURSOS: Tres claves para ser felices de verdad', type: 'symposium',
+            parts: [
+              { id: 'ca14-1', title: '• Una vida sencilla' },
+              { id: 'ca14-2', title: '• Los buenos amigos' },
+              { id: 'ca14-3', title: '• Una familia unida' }
+            ]
+          },
+          { id: 'ca15', time: '3:00', title: 'Canción 88 y anuncios', type: 'song' },
+          { id: 'ca16', time: '3:10', title: '"¡Feliz el pueblo que tiene por Dios a Jehová!"', type: 'talk' },
+          { id: 'ca17', time: '3:55', title: 'Canción 161 y oración', type: 'song' }
+        ],
+        repaso: [
+          { id: 'ca_rep1', title: '1. ¿Cómo podemos hacer de Jehová nuestra mayor alegría? (Sal. 37:4)', type: 'talk' },
+          { id: 'ca_rep2', title: '2. ¿Cómo podemos ser felices a pesar de nuestros errores? (Sal. 32:1, 2)', type: 'talk' },
+          { id: 'ca_rep3', title: '3. ¿Por qué debería ser el servicio a Jehová lo más importante en tu vida? (Sal. 84:4, 10)', type: 'talk' },
+          { id: 'ca_rep4', title: '4. ¿Cómo podemos ser felices a pesar de los problemas? (Sal. 34:8; 18:25)', type: 'talk' },
+          { id: 'ca_rep5', title: '5. ¿Qué podemos hacer para no dejarnos engañar por la felicidad ficticia? (1 Tim. 6:7, 8; Prov. 18:24; Sal. 127:1, 2)', type: 'talk' },
+          { id: 'ca_rep6', title: '6. ¿Cómo les ayuda Jehová a sus siervos a ser felices de verdad? (Miq. 2:12; Sant. 3:17; 1 Ped. 5:8)', type: 'talk' }
+        ]
+      }
+    ];
+
+    const RichNoteEditor = ({ id, value, onChange, placeholder, fontSize, isCustomNote = false }) => {
+      const mountRef = useRef(null);
+      const editorNodeRef = useRef(null);
+      const onChangeRef = useRef(onChange);
+      onChangeRef.current = onChange;
+
+      const [activeFormats, setActiveFormats] = useState({ bold: false, underline: false });
+
+      const checkActiveFormats = () => {
+        if (!editorNodeRef.current) return;
+        try {
+          const isBold = document.queryCommandState('bold');
+          const isUnderline = document.queryCommandState('underline');
+          setActiveFormats(prev => (
+            prev.bold === isBold && prev.underline === isUnderline
+              ? prev
+              : { bold: isBold, underline: isUnderline }
+          ));
+        } catch (e) {}
+      };
+
+      useEffect(() => {
+        const container = mountRef.current;
+        if (!container) return;
+
+        container.innerHTML = '';
+        const div = document.createElement('div');
+        div.contentEditable = 'true';
+        div.setAttribute('data-placeholder', placeholder || '');
+        div.className = 'p-4 min-h-[140px] focus:outline-none text-black dark:text-white bg-white dark:bg-[#1C1C1E] leading-relaxed whitespace-pre-wrap break-words';
+        div.style.fontSize = `${fontSize}px`;
+
+        const defaultContent = (!value && !isCustomNote && !id.includes('rep')) ? '<b>Orador: </b><br><br>' : (value || '');
+        div.innerHTML = value || defaultContent;
+
+        const handleInput = () => {
+          if (onChangeRef.current) {
+            onChangeRef.current(div.innerHTML);
+          }
+          checkActiveFormats();
+        };
+
+        div.addEventListener('input', handleInput);
+        div.addEventListener('keyup', checkActiveFormats);
+        div.addEventListener('mouseup', checkActiveFormats);
+        div.addEventListener('touchend', checkActiveFormats);
+        div.addEventListener('focus', checkActiveFormats);
+
+        container.appendChild(div);
+        editorNodeRef.current = div;
+
+        return () => {
+          div.removeEventListener('input', handleInput);
+          div.removeEventListener('keyup', checkActiveFormats);
+          div.removeEventListener('mouseup', checkActiveFormats);
+          div.removeEventListener('touchend', checkActiveFormats);
+          div.removeEventListener('focus', checkActiveFormats);
+        };
+      }, [id]);
+
+      useEffect(() => {
+        if (editorNodeRef.current) {
+          editorNodeRef.current.style.fontSize = `${fontSize}px`;
+        }
+      }, [fontSize]);
+
+      useEffect(() => {
+        const handleSelectionChange = () => {
+          if (editorNodeRef.current && document.activeElement === editorNodeRef.current) {
+            checkActiveFormats();
+          }
+        };
+        document.addEventListener('selectionchange', handleSelectionChange);
+        return () => document.removeEventListener('selectionchange', handleSelectionChange);
+      }, []);
+
+      const applyFormat = (e, command, arg = null) => {
+        e.preventDefault();
+        const ed = editorNodeRef.current;
+        if (!ed) return;
+        try {
+          ed.focus();
+          document.execCommand(command, false, arg);
+          if (onChangeRef.current) {
+            onChangeRef.current(ed.innerHTML);
+          }
+          checkActiveFormats();
+        } catch (err) {}
+      };
+
+      const insertText = (e, text) => {
+        e.preventDefault();
+        const ed = editorNodeRef.current;
+        if (!ed) return;
+        try {
+          ed.focus();
+          document.execCommand('insertText', false, text);
+          if (onChangeRef.current) {
+            onChangeRef.current(ed.innerHTML);
+          }
+        } catch (err) {}
+      };
+
+      return (
+        <div className="mt-3 rounded-[14px] overflow-hidden border border-[#C6C6C8]/60 dark:border-[#38383A] bg-white dark:bg-[#1C1C1E] shadow-sm transition-colors">
+          <div className="flex items-center gap-1.5 px-3 py-2 bg-[#F2F2F7] dark:bg-[#2C2C2E] border-b border-[#C6C6C8]/50 dark:border-[#38383A] overflow-x-auto">
+            <button
+              type="button"
+              onMouseDown={(e) => applyFormat(e, 'bold')}
+              aria-pressed={activeFormats.bold}
+              className={`w-9 h-8 rounded-[8px] font-bold text-[15px] shadow-sm active:scale-95 transition-all flex items-center justify-center shrink-0 ${
+                activeFormats.bold
+                  ? 'bg-[#007AFF] text-white ring-2 ring-[#007AFF]/30'
+                  : 'bg-white dark:bg-[#3A3A3C] text-black dark:text-white'
+              }`}
+            >
+              B
+            </button>
+            <button
+              type="button"
+              onMouseDown={(e) => applyFormat(e, 'underline')}
+              aria-pressed={activeFormats.underline}
+              className={`w-9 h-8 rounded-[8px] underline font-semibold text-[15px] shadow-sm active:scale-95 transition-all flex items-center justify-center shrink-0 ${
+                activeFormats.underline
+                  ? 'bg-[#007AFF] text-white ring-2 ring-[#007AFF]/30'
+                  : 'bg-white dark:bg-[#3A3A3C] text-black dark:text-white'
+              }`}
+            >
+              U
+            </button>
+            <div className="w-px h-5 bg-[#C6C6C8] dark:bg-[#48484A] mx-1 shrink-0"></div>
+            <button type="button" onMouseDown={(e) => insertText(e, '\n• ')} className="w-9 h-8 rounded-[8px] bg-white dark:bg-[#3A3A3C] text-black dark:text-white font-bold text-[18px] shadow-sm active:scale-95 transition-transform flex items-center justify-center shrink-0">•</button>
+            <div className="w-px h-5 bg-[#C6C6C8] dark:bg-[#48484A] mx-1 shrink-0"></div>
+            <button type="button" onMouseDown={(e) => insertText(e, '💎 ')} className="w-9 h-8 rounded-[8px] bg-white dark:bg-[#3A3A3C] text-[16px] shadow-sm active:scale-95 transition-transform flex items-center justify-center shrink-0">💎</button>
+            <button type="button" onMouseDown={(e) => insertText(e, '❤️ ')} className="w-9 h-8 rounded-[8px] bg-white dark:bg-[#3A3A3C] text-[16px] shadow-sm active:scale-95 transition-transform flex items-center justify-center shrink-0">❤️</button>
+            <button type="button" onMouseDown={(e) => insertText(e, '✅ ')} className="w-9 h-8 rounded-[8px] bg-white dark:bg-[#3A3A3C] text-[16px] shadow-sm active:scale-95 transition-transform flex items-center justify-center shrink-0">✅</button>
+          </div>
+          <div ref={mountRef}></div>
+        </div>
+      );
+    };
+
+    function App() {
+      const rescueAndLoadUserData = (username) => {
+        const cleanU = (username || '').trim().toLowerCase();
+        let mergedNotes = {};
+        let mergedCustomList = [];
+        const seenCustomIds = {};
+
+        try {
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (!key) continue;
+
+            if (key.startsWith('asamblea-notas-')) {
+              try {
+                const parsedN = JSON.parse(localStorage.getItem(key) || '{}');
+                if (parsedN && typeof parsedN === 'object') {
+                  Object.keys(parsedN).forEach(noteKey => {
+                    if (parsedN[noteKey] && (!mergedNotes[noteKey] || String(parsedN[noteKey]).length > String(mergedNotes[noteKey]).length)) {
+                      mergedNotes[noteKey] = parsedN[noteKey];
+                    }
+                  });
+                }
+              } catch (e) {}
+            }
+
+            if (key.startsWith('asamblea-custom-list-')) {
+              try {
+                const parsedL = JSON.parse(localStorage.getItem(key) || '[]');
+                if (Array.isArray(parsedL)) {
+                  parsedL.forEach(item => {
+                    if (item && item.id && !seenCustomIds[item.id]) {
+                      seenCustomIds[item.id] = true;
+                      mergedCustomList.push(item);
+                    }
+                  });
+                }
+              } catch (e) {}
+            }
+          }
+
+          if (cleanU) {
+            const userNotesRaw = localStorage.getItem(`asamblea-notas-${cleanU}`);
+            if (userNotesRaw) {
+              const userNotes = JSON.parse(userNotesRaw);
+              mergedNotes = { ...mergedNotes, ...userNotes };
+            }
+          }
+
+          Object.keys(mergedNotes).forEach(noteId => {
+            if (noteId.startsWith('custom_') && !seenCustomIds[noteId]) {
+              seenCustomIds[noteId] = true;
+              const timestamp = parseInt(noteId.replace('custom_', ''), 10) || Date.now();
+              mergedCustomList.push({
+                id: noteId,
+                title: 'Nota recuperada',
+                createdAt: timestamp
+              });
+            }
+          });
+
+          mergedCustomList.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+          if (cleanU) {
+            localStorage.setItem(`asamblea-notas-${cleanU}`, JSON.stringify(mergedNotes));
+            localStorage.setItem(`asamblea-custom-list-${cleanU}`, JSON.stringify(mergedCustomList));
+          }
+        } catch (e) {}
+
+        return { notes: mergedNotes, customList: mergedCustomList };
+      };
+
+      const [currentUser, setCurrentUser] = useState(() => {
+        try {
+          const savedUser = localStorage.getItem('asamblea-active-user');
+          if (savedUser) return JSON.parse(savedUser);
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith('asamblea-notas-')) {
+              const extractedUser = k.replace('asamblea-notas-', '').trim();
+              if (extractedUser) {
+                const uObj = { username: extractedUser };
+                localStorage.setItem('asamblea-active-user', JSON.stringify(uObj));
+                return uObj;
+              }
+            }
+          }
+          return null;
+        } catch (e) { return null; }
+      });
+
+      const [currentScreen, setCurrentScreen] = useState(() => {
+        try {
+          if (localStorage.getItem('asamblea-active-user')) return 'programs';
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith('asamblea-notas-')) return 'programs';
+          }
+          return 'login';
+        } catch (e) { return 'login'; }
+      });
+
+      const [isDbReady] = useState(true);
+      const [loginForm, setLoginForm] = useState({ username: '' });
+      const [loginError, setLoginError] = useState('');
+      const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+      const initialDataRef = useRef(null);
+      if (!initialDataRef.current) {
+        initialDataRef.current = rescueAndLoadUserData(currentUser?.username || '');
+      }
+
+      const [activeProgram, setActiveProgram] = useState(null);
+      const [activeTab, setActiveTab] = useState('');
+      const [notes, setNotes] = useState(initialDataRef.current.notes);
+      const notesRef = useRef(initialDataRef.current.notes);
+      const [expandedItems, setExpandedItems] = useState({});
+      const [isSaving, setIsSaving] = useState(false);
+
+      const [isDarkMode, setIsDarkMode] = useState(() => {
+        try { return localStorage.getItem('asamblea-dark-mode') === 'true'; } catch (e) { return false; }
+      });
+
+      const [fontSize, setFontSize] = useState(() => {
+        try { return parseInt(localStorage.getItem('asamblea-fontsize') || '16', 10); } catch (e) { return 16; }
+      });
+
+      const [archivedItems, setArchivedItems] = useState(() => {
+        try {
+          const u = currentUser?.username || 'default';
+          const saved = localStorage.getItem(`asamblea-archived-${u}`);
+          return saved ? JSON.parse(saved) : {};
+        } catch (e) { return {}; }
+      });
+
+      const [deletedItems, setDeletedItems] = useState(() => {
+        try {
+          const u = currentUser?.username || 'default';
+          const saved = localStorage.getItem(`asamblea-deleted-${u}`);
+          return saved ? JSON.parse(saved) : {};
+        } catch (e) { return {}; }
+      });
+
+      const [customNotesList, setCustomNotesList] = useState(initialDataRef.current.customList);
+
+      const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+      const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+      const [openSwipeId, setOpenSwipeId] = useState(null);
+      const [deferredPrompt, setDeferredPrompt] = useState(null);
+      const [toastMessage, setToastMessage] = useState('');
+
+      const saveTimeoutRef = useRef(null);
+      const fileInputRef = useRef(null);
+
+      const showToast = (msg) => {
+        setToastMessage(msg);
+        setTimeout(() => {
+          setToastMessage('');
+        }, 2800);
+      };
+
+      const handleExportBackup = () => {
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+        saveNotesNow(notesRef.current);
+
+        const backupPayload = {
+          version: 1,
+          exportedAt: Date.now(),
+          username: currentUser?.username || 'usuario',
+          notes: notesRef.current,
+          customNotesList: customNotesList,
+          archivedPrograms: archivedItems,
+          deletedPrograms: deletedItems
+        };
+
+        try {
+          const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          const dateStr = new Date().toISOString().slice(0, 10);
+          a.href = url;
+          a.download = `Respaldo_Apuntes_${currentUser?.username || 'usuario'}_${dateStr}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          setIsSettingsOpen(false);
+          setIsDrawerOpen(false);
+          showToast('Copia de seguridad descargada');
+        } catch (e) {
+          showToast('Error al exportar copia');
+        }
+      };
+
+      const handleImportBackup = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const data = JSON.parse(event.target.result);
+            if (!data || typeof data !== 'object') {
+              showToast('Archivo de respaldo no válido');
+              return;
+            }
+
+            const u = currentUser?.username || 'default';
+            const mergedNotes = { ...notesRef.current, ...(data.notes || {}) };
+            notesRef.current = mergedNotes;
+            setNotes(mergedNotes);
+            localStorage.setItem(`asamblea-notas-${u}`, JSON.stringify(mergedNotes));
+
+            const existingMap = {};
+            customNotesList.forEach(item => {
+              if (item && item.id) existingMap[item.id] = item;
+            });
+            if (Array.isArray(data.customNotesList)) {
+              data.customNotesList.forEach(item => {
+                if (item && item.id) existingMap[item.id] = item;
+              });
+            }
+
+            const mergedList = Object.values(existingMap).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            setCustomNotesList(mergedList);
+            localStorage.setItem(`asamblea-custom-list-${u}`, JSON.stringify(mergedList));
+
+            if (data.archivedPrograms && typeof data.archivedPrograms === 'object') {
+              const nextArch = { ...archivedItems, ...data.archivedPrograms };
+              setArchivedItems(nextArch);
+              localStorage.setItem(`asamblea-archived-${u}`, JSON.stringify(nextArch));
+            }
+
+            setIsSettingsOpen(false);
+            setIsDrawerOpen(false);
+            showToast('¡Notas restauradas con éxito!');
+          } catch (err) {
+            showToast('No se pudo leer el archivo');
+          }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+      };
+
+      useEffect(() => {
+        const handleBeforeInstallPrompt = (e) => {
+          e.preventDefault();
+          setDeferredPrompt(e);
+        };
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      }, []);
+
+      const handleInstallClick = async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          setDeferredPrompt(null);
+        }
+        setIsSettingsOpen(false);
+        setIsDrawerOpen(false);
+      };
+
+      useEffect(() => {
+        if (isDarkMode) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+        try { localStorage.setItem('asamblea-dark-mode', isDarkMode); } catch (e) {}
+      }, [isDarkMode]);
+
+      useEffect(() => {
+        if (currentUser?.username) {
+          const u = currentUser.username;
+          try {
+            const rescued = rescueAndLoadUserData(u);
+            notesRef.current = rescued.notes;
+            setNotes(rescued.notes);
+            setCustomNotesList(rescued.customList);
+
+            const savedArch = localStorage.getItem(`asamblea-archived-${u}`);
+            setArchivedItems(savedArch ? JSON.parse(savedArch) : {});
+
+            const savedDel = localStorage.getItem(`asamblea-deleted-${u}`);
+            setDeletedItems(savedDel ? JSON.parse(savedDel) : {});
+          } catch (e) {}
+        }
+      }, [currentUser]);
+
+      const handleLogin = () => {
+        const cleanUser = loginForm.username.trim().toLowerCase();
+        if (!cleanUser) {
+          setLoginError('Por favor, ingresa tu nombre de usuario');
+          return;
+        }
+        setIsLoggingIn(true);
+        setTimeout(() => {
+          const userObj = { username: cleanUser };
+          setCurrentUser(userObj);
+          try { localStorage.setItem('asamblea-active-user', JSON.stringify(userObj)); } catch (e) {}
+          setIsLoggingIn(false);
+          setLoginError('');
+          setCurrentScreen('programs');
+        }, 250);
+      };
+
+      const handleLogout = () => {
+        try { localStorage.removeItem('asamblea-active-user'); } catch (e) {}
+        setCurrentUser(null);
+        setIsSettingsOpen(false);
+        setIsDrawerOpen(false);
+        setCurrentScreen('login');
+      };
+
+      const saveNotesNow = (updatedNotes) => {
+        const u = currentUser?.username || 'default';
+        try {
+          localStorage.setItem(`asamblea-notas-${u}`, JSON.stringify(updatedNotes));
+        } catch (e) {}
+      };
+
+      const handleNoteChange = (id, val) => {
+        setIsSaving(true);
+        const next = { ...notesRef.current, [id]: val };
+        notesRef.current = next;
+        saveNotesNow(next);
+
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = setTimeout(() => {
+          setNotes({ ...notesRef.current });
+          setIsSaving(false);
+        }, 500);
+      };
+
+      const handleOpenProgram = (progId) => {
+        const prog = programsDB.find(p => p.id === progId);
+        if (!prog) return;
+        setOpenSwipeId(null);
+        setActiveProgram(progId);
+        setActiveTab(prog.days === 3 ? 'viernes' : 'programa');
+        setCurrentScreen('program_view');
+        window.scrollTo(0, 0);
+      };
+
+      const createNewCustomNote = () => {
+        const u = currentUser?.username || 'default';
+        const now = Date.now();
+        const newId = `custom_${now}`;
+        const nextColor = NOTE_COLORS[customNotesList.length % NOTE_COLORS.length];
+        const newNote = { id: newId, title: 'Nueva nota', createdAt: now, color: nextColor };
+        const updatedList = [newNote, ...customNotesList];
+        setCustomNotesList(updatedList);
+        try {
+          localStorage.setItem(`asamblea-custom-list-${u}`, JSON.stringify(updatedList));
+        } catch (e) {}
+        setOpenSwipeId(null);
+        setActiveProgram(newId);
+        setCurrentScreen('custom_note');
+        window.scrollTo(0, 0);
+      };
+
+      const handleOpenCustomNote = (noteId) => {
+        setOpenSwipeId(null);
+        setActiveProgram(noteId);
+        setCurrentScreen('custom_note');
+        window.scrollTo(0, 0);
+      };
+
+      const handleUpdateCustomNoteTitle = (e) => {
+        const newTitle = e.target.value;
+        const u = currentUser?.username || 'default';
+        const updatedList = customNotesList.map(n => n.id === activeProgram ? { ...n, title: newTitle } : n);
+        setCustomNotesList(updatedList);
+        try {
+          localStorage.setItem(`asamblea-custom-list-${u}`, JSON.stringify(updatedList));
+        } catch (e) {}
+      };
+
+      const toggleItem = (id) => {
+        setExpandedItems(prev => ({ ...prev, [id]: !prev[id] }));
+      };
+
+      const toggleDarkMode = () => setIsDarkMode(prev => !prev);
+      
+      const increaseFontSize = () => {
+        setFontSize(prev => {
+          const next = Math.min(prev + 2, 28);
+          try { localStorage.setItem('asamblea-fontsize', next.toString()); } catch (e) {}
+          return next;
+        });
+      };
+
+      const decreaseFontSize = () => {
+        setFontSize(prev => {
+          const next = Math.max(prev - 2, 12);
+          try { localStorage.setItem('asamblea-fontsize', next.toString()); } catch (e) {}
+          return next;
+        });
+      };
+
+      const toggleArchiveItem = (id) => {
+        const u = currentUser?.username || 'default';
+        setArchivedItems(prev => {
+          const willArchive = !prev[id];
+          const newState = { ...prev, [id]: willArchive };
+          try { localStorage.setItem(`asamblea-archived-${u}`, JSON.stringify(newState)); } catch (e) {}
+          showToast(willArchive ? 'Movido a Archivo' : 'Restaurado de Archivo');
+          return newState;
+        });
+      };
+
+      const deleteItem = (id) => {
+        const u = currentUser?.username || 'default';
+        setDeletedItems(prev => {
+          const newState = { ...prev, [id]: true };
+          try { localStorage.setItem(`asamblea-deleted-${u}`, JSON.stringify(newState)); } catch (e) {}
+          return newState;
+        });
+
+        if (String(id).startsWith('custom_')) {
+          setCustomNotesList(prev => {
+            const nextList = prev.filter(n => n.id !== id);
+            try { localStorage.setItem(`asamblea-custom-list-${u}`, JSON.stringify(nextList)); } catch (e) {}
+            return nextList;
+          });
+        }
+        showToast('Elemento eliminado');
+      };
+
+      const handleBackToPrograms = () => {
+        if (saveTimeoutRef.current) {
+          clearTimeout(saveTimeoutRef.current);
+        }
+        saveNotesNow(notesRef.current);
+        setNotes({ ...notesRef.current });
+        setIsSaving(false);
+        setOpenSwipeId(null);
+        setCurrentScreen('programs');
+        setActiveProgram(null);
+        setActiveTab('');
+      };
+
+      const handleExportPDF = () => {
+        setIsSettingsOpen(false);
+        const currentNotes = notesRef.current;
+        const element = document.createElement('div');
+        element.style.padding = '30px';
+        element.style.fontFamily = '-apple-system, BlinkMacSystemFont, Arial, sans-serif';
+        element.style.color = '#1C1C1E';
+
+        let html = `<h1 style="color: #007AFF; text-align: center; margin-bottom: 5px; font-size: 24px;">Mis Apuntes</h1>`;
+        html += `<p style="text-align: center; color: #8E8E93; margin-top: 0; margin-bottom: 30px; font-size: 14px;">Usuario: ${currentUser?.username || ''}</p>`;
+
+        if (currentScreen === 'custom_note' && activeProgram) {
+          const noteObj = customNotesList.find(n => n.id === activeProgram);
+          html += `<h2 style="color: #000; border-bottom: 2px solid #E5E5EA; padding-bottom: 8px;">${noteObj?.title || 'Nota Libre'}</h2>`;
+          html += `<div style="margin-top: 15px; font-size: 15px; line-height: 1.6;">${currentNotes[activeProgram] || 'Sin contenido.'}</div>`;
+        } else {
+          const targetPrograms = activeProgram ? programsDB.filter(p => p.id === activeProgram) : programsDB;
+          targetPrograms.forEach(prog => {
+            html += `<h2 style="color: #007AFF; margin-top: 25px; border-bottom: 2px solid #E5E5EA; padding-bottom: 6px;">${prog.title} (${prog.year})</h2>`;
+            const sections = prog.days === 3 ? ['viernes', 'sabado', 'domingo'] : ['programa', 'repaso'];
+            sections.forEach(sec => {
+              if (!prog[sec]) return;
+              prog[sec].forEach(item => {
+                if (item.type === 'attendance') {
+                  const gen = currentNotes[item.id + '_general'];
+                  const str = currentNotes[item.id + '_stream'];
+                  if (gen || str) {
+                    html += `<p style="font-size: 13px; color: #636366;"><strong>${item.title}:</strong> General: ${gen || 0} | Stream: ${str || 0}</p>`;
+                  }
+                } else {
+                  if (currentNotes[item.id] && currentNotes[item.id].trim() !== '' && currentNotes[item.id] !== '<b>Orador: </b><br><br>') {
+                    html += `<h3 style="color: #000; margin-top: 16px; margin-bottom: 6px; font-size: 16px;">${item.time ? item.time + ' - ' : ''}${item.title}</h3>`;
+                    html += `<div style="background: #F2F2F7; padding: 12px; border-radius: 8px; font-size: 14px; line-height: 1.5;">${currentNotes[item.id]}</div>`;
+                  }
+                  if (item.type === 'symposium' && item.parts) {
+                    item.parts.forEach(part => {
+                      if (currentNotes[part.id] && currentNotes[part.id].trim() !== '' && currentNotes[part.id] !== '<b>Orador: </b><br><br>') {
+                        html += `<h4 style="color: #3A3A3C; margin-top: 12px; margin-left: 15px; margin-bottom: 4px; font-size: 15px;">${part.title}</h4>`;
+                        html += `<div style="background: #F2F2F7; padding: 12px; border-radius: 8px; margin-left: 15px; font-size: 14px; line-height: 1.5;">${currentNotes[part.id]}</div>`;
+                      }
+                    });
+                  }
+                }
+              });
+            });
+          });
+        }
+
+        element.innerHTML = html;
+        if (window.html2pdf) {
+          window.html2pdf().set({
+            margin: 15,
+            filename: `Apuntes_${currentUser?.username || 'Asamblea'}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          }).from(element).save();
+        }
+      };
+
+      if (currentScreen === 'login') {
+        return (
+          <div className="min-h-screen flex flex-col justify-center px-6 animate-fade-in bg-[#F2F2F7] dark:bg-[#000000]">
+            <div className="max-w-sm w-full mx-auto">
+              <div className="text-center mb-6">
+                <h1 className="text-[34px] font-bold tracking-tight mb-1 text-black dark:text-white">Mis Apuntes</h1>
+                <p className="text-[#8E8E93] text-[17px]">Inicia sesión para continuar</p>
+              </div>
+              
+              {!isDbReady ? (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <Loader2 className="animate-spin text-[#8E8E93] mb-4" size={32} />
+                  <p className="text-[#8E8E93] text-[15px]">Conectando...</p>
+                </div>
+              ) : (
+                <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="space-y-3">
+                  {loginError && (
+                    <div className="bg-[#FF3B30]/10 text-[#FF3B30] p-3 rounded-2xl text-[15px] text-center mb-2">
+                      {loginError}
+                    </div>
+                  )}
+                  
+                  <div className="bg-white dark:bg-[#1C1C1E] rounded-full overflow-hidden border border-[#C6C6C8] dark:border-[#38383A] shadow-sm">
+                    <input 
+                      type="text"
+                      value={loginForm.username}
+                      onChange={(e) => setLoginForm({ username: e.target.value })}
+                      className="w-full px-5 py-3 text-[17px] bg-transparent focus:outline-none text-black dark:text-white placeholder-[#8E8E93]"
+                      placeholder="Tu usuario"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                    />
+                  </div>
+                  
+                  <button
+                    type="submit"
+                    disabled={isLoggingIn}
+                    className="w-full bg-[#007AFF] text-white font-semibold text-[17px] py-3 rounded-full active:bg-[#0062CC] transition-colors flex justify-center items-center shadow-sm"
+                  >
+                    {isLoggingIn ? <Loader2 className="animate-spin" size={20} /> : 'Continuar'}
+                  </button>
+
+                  <p className="text-[13px] text-[#8E8E93] text-center pt-3 px-4">
+                    Tus apuntes se sincronizarán automáticamente en tu dispositivo.
+                  </p>
+                </form>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      const activeProgramsList = programsDB.filter(p => !archivedItems[p.id] && !deletedItems[p.id]);
+      const activeCustomNotes = customNotesList.filter(n => !archivedItems[n.id] && !deletedItems[n.id]);
+      const archivedProgramsList = programsDB.filter(p => archivedItems[p.id] && !deletedItems[p.id]);
+      const archivedCustomNotes = customNotesList.filter(n => archivedItems[n.id] && !deletedItems[n.id]);
+      const totalArchivedCount = archivedProgramsList.length + archivedCustomNotes.length;
+
+      return (
+        <div className="min-h-screen bg-[#F2F2F7] dark:bg-[#000000] text-black dark:text-white font-sans pb-20 selection:bg-[#007AFF]/30">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,application/json"
+            onChange={handleImportBackup}
+            className="hidden"
+          />
+
+          {toastMessage && (
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-black/85 dark:bg-white/90 text-white dark:text-black px-5 py-2.5 rounded-full text-[14px] font-semibold shadow-lg animate-fade-in">
+              {toastMessage}
+            </div>
+          )}
+          
+          <header className="sticky top-0 z-40 bg-[#F2F2F7]/80 dark:bg-[#000000]/80 backdrop-blur-md border-b border-[#C6C6C8]/60 dark:border-[#38383A]">
+            <div className="flex items-center justify-between px-2 h-12 max-w-2xl mx-auto">
+              <div className="w-24 flex items-center justify-start">
+                {(currentScreen === 'program_view' || currentScreen === 'custom_note' || currentScreen === 'archive') ? (
+                  <button onClick={handleBackToPrograms} className="flex items-center text-[#007AFF] font-medium text-[17px] px-2 active:opacity-50">
+                    <ChevronLeft size={24} className="-ml-1" />
+                    <span>Atrás</span>
+                  </button>
+                ) : (
+                  <button onClick={() => setIsDrawerOpen(true)} className="p-2 text-[#007AFF] active:opacity-50" aria-label="Menú">
+                    <Menu size={24} />
+                  </button>
+                )}
+              </div>
+              
+              <div className="flex-1 flex justify-center items-center">
+                {(currentScreen === 'program_view' || currentScreen === 'custom_note') && (
+                  <div className="flex items-center text-[12px] text-[#8E8E93] font-medium gap-1 bg-[#8E8E93]/10 px-2.5 py-1 rounded-full">
+                    {isSaving ? <CloudLightning size={12} className="text-[#007AFF]" /> : <Cloud size={12} />}
+                    <span>{isSaving ? 'Guardando...' : 'Guardado'}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="w-24 flex justify-end">
+                <button onClick={() => setIsSettingsOpen(true)} className="p-2 text-[#007AFF] active:opacity-50" aria-label="Ajustes">
+                  <MoreVertical size={24} />
+                </button>
+              </div>
+            </div>
+          </header>
+
+          <main className="max-w-2xl mx-auto px-4 mt-6">
+            
+            {currentScreen === 'programs' && (
+              <div className="animate-fade-in">
+                <div className="flex justify-between items-center mb-4 px-2">
+                  <h1 className="text-[34px] font-bold tracking-tight">Programas</h1>
+                  <button onClick={createNewCustomNote} className="p-2 bg-[#007AFF]/10 text-[#007AFF] rounded-full active:bg-[#007AFF]/20 transition-colors" aria-label="Nueva nota libre">
+                    <Plus size={24} />
+                  </button>
+                </div>
+                
+                <div className="space-y-3.5">
+                  {activeProgramsList.map(prog => (
+                    <SwipeableItem
+                      key={prog.id}
+                      itemId={prog.id}
+                      openSwipeId={openSwipeId}
+                      setOpenSwipeId={setOpenSwipeId}
+                      isArchived={false}
+                      onArchive={() => toggleArchiveItem(prog.id)}
+                      onDelete={() => deleteItem(prog.id)}
+                      onClick={() => handleOpenProgram(prog.id)}
+                    >
+                      <div className="bg-white dark:bg-[#1C1C1E] rounded-[16px] p-5 shadow-sm">
+                        <h3 className="text-[19px] font-semibold tracking-tight text-black dark:text-white leading-snug mb-1">{prog.title}</h3>
+                        <p className="text-[#8E8E93] text-[15px]">{prog.year} • {prog.days === 1 ? '1 día' : '3 días'}</p>
+                      </div>
+                    </SwipeableItem>
+                  ))}
+                </div>
+
+                {activeCustomNotes.length > 0 && (
+                  <div className="mt-8">
+                    <h2 className="text-[22px] font-bold tracking-tight mb-3.5 px-2 text-black dark:text-white">Mis Notas</h2>
+                    <div className="space-y-3.5">
+                      {activeCustomNotes.map((note, idx) => {
+                        const borderColor = note.color || NOTE_COLORS[idx % NOTE_COLORS.length];
+                        const createdDate = formatNoteDate(note.createdAt || parseInt(String(note.id).replace('custom_', ''), 10));
+                        return (
+                          <SwipeableItem
+                            key={note.id}
+                            itemId={note.id}
+                            openSwipeId={openSwipeId}
+                            setOpenSwipeId={setOpenSwipeId}
+                            isArchived={false}
+                            onArchive={() => toggleArchiveItem(note.id)}
+                            onDelete={() => deleteItem(note.id)}
+                            onClick={() => handleOpenCustomNote(note.id)}
+                          >
+                            <div 
+                              style={{ borderLeftColor: borderColor }}
+                              className="bg-white dark:bg-[#1C1C1E] rounded-[16px] p-5 shadow-sm border-l-[5px]"
+                            >
+                              <div className="flex justify-between items-baseline gap-2 mb-1">
+                                <h3 className="text-[19px] font-semibold tracking-tight text-black dark:text-white leading-snug truncate">{note.title || 'Sin título'}</h3>
+                                {createdDate && (
+                                  <span className="text-[12px] text-[#8E8E93] font-medium shrink-0">{createdDate}</span>
+                                )}
+                              </div>
+                              <p className="text-[#8E8E93] text-[14px]">Nota libre</p>
+                            </div>
+                          </SwipeableItem>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* APARTADO ARCHIVO */}
+            {currentScreen === 'archive' && (
+              <div className="animate-fade-in">
+                <div className="mb-5 px-2">
+                  <h1 className="text-[34px] font-bold tracking-tight">Archivo</h1>
+                  <p className="text-[#8E8E93] text-[15px]">Desliza hacia la derecha para restaurar o eliminar</p>
+                </div>
+
+                {totalArchivedCount === 0 ? (
+                  <div className="bg-white dark:bg-[#1C1C1E] rounded-[16px] p-10 text-center shadow-sm mt-4">
+                    <div className="w-12 h-12 rounded-full bg-[#5856D6]/10 text-[#5856D6] flex items-center justify-center mx-auto mb-3">
+                      <AppleArchiveIcon size={24} />
+                    </div>
+                    <p className="text-black dark:text-white font-semibold text-[17px] mb-1">El archivo está vacío</p>
+                    <p className="text-[#8E8E93] text-[14px]">Arrastra cualquier nota o programa hacia la derecha para archivarlo.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {archivedProgramsList.length > 0 && (
+                      <div>
+                        <h2 className="text-[18px] font-bold tracking-tight mb-3 px-2 text-[#8E8E93] uppercase text-[13px]">Programas Archivados</h2>
+                        <div className="space-y-3.5">
+                          {archivedProgramsList.map(prog => (
+                            <SwipeableItem
+                              key={prog.id}
+                              itemId={prog.id}
+                              openSwipeId={openSwipeId}
+                              setOpenSwipeId={setOpenSwipeId}
+                              isArchived={true}
+                              onArchive={() => toggleArchiveItem(prog.id)}
+                              onDelete={() => deleteItem(prog.id)}
+                              onClick={() => handleOpenProgram(prog.id)}
+                            >
+                              <div className="bg-white dark:bg-[#1C1C1E] rounded-[16px] p-5 shadow-sm">
+                                <h3 className="text-[19px] font-semibold tracking-tight text-black dark:text-white leading-snug mb-1">{prog.title}</h3>
+                                <p className="text-[#8E8E93] text-[15px]">{prog.year} • {prog.days === 1 ? '1 día' : '3 días'}</p>
+                              </div>
+                            </SwipeableItem>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {archivedCustomNotes.length > 0 && (
+                      <div>
+                        <h2 className="text-[13px] font-bold tracking-wider uppercase mb-3 px-2 text-[#8E8E93]">Notas Archivadas</h2>
+                        <div className="space-y-3.5">
+                          {archivedCustomNotes.map((note, idx) => {
+                            const borderColor = note.color || NOTE_COLORS[idx % NOTE_COLORS.length];
+                            const createdDate = formatNoteDate(note.createdAt || parseInt(String(note.id).replace('custom_', ''), 10));
+                            return (
+                              <SwipeableItem
+                                key={note.id}
+                                itemId={note.id}
+                                openSwipeId={openSwipeId}
+                                setOpenSwipeId={setOpenSwipeId}
+                                isArchived={true}
+                                onArchive={() => toggleArchiveItem(note.id)}
+                                onDelete={() => deleteItem(note.id)}
+                                onClick={() => handleOpenCustomNote(note.id)}
+                              >
+                                <div 
+                                  style={{ borderLeftColor: borderColor }}
+                                  className="bg-white dark:bg-[#1C1C1E] rounded-[16px] p-5 shadow-sm border-l-[5px]"
+                                >
+                                  <div className="flex justify-between items-baseline gap-2 mb-1">
+                                    <h3 className="text-[19px] font-semibold tracking-tight text-black dark:text-white leading-snug truncate">{note.title || 'Sin título'}</h3>
+                                    {createdDate && (
+                                      <span className="text-[12px] text-[#8E8E93] font-medium shrink-0">{createdDate}</span>
+                                    )}
+                                  </div>
+                                  <p className="text-[#8E8E93] text-[14px]">Nota libre</p>
+                                </div>
+                              </SwipeableItem>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {currentScreen === 'program_view' && activeProgram && (
+              <div className="animate-fade-in">
+                <h1 className="text-[28px] font-bold tracking-tight mb-1 leading-tight text-black dark:text-white px-2">
+                  {programsDB.find(p => p.id === activeProgram)?.title}
+                </h1>
+                <p className="text-[#8E8E93] text-[14px] px-2 mb-5 uppercase tracking-wider font-semibold">
+                  Asamblea {programsDB.find(p => p.id === activeProgram)?.year}
+                </p>
+
+                {programsDB.find(p => p.id === activeProgram)?.days === 3 ? (
+                  <div className="bg-[#767680]/12 dark:bg-[#767680]/24 p-1 rounded-[10px] flex mb-6 mx-1">
+                    {['viernes', 'sabado', 'domingo'].map(tab => (
+                      <button 
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={`flex-1 py-1.5 text-[14px] font-semibold rounded-[8px] capitalize transition-all ${activeTab === tab ? 'bg-white dark:bg-[#636366] text-black dark:text-white shadow-sm' : 'text-[#8E8E93] dark:text-[#EBEBF5]/60'}`}
+                      >
+                        {tab === 'sabado' ? 'Sábado' : tab}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-[#767680]/12 dark:bg-[#767680]/24 p-1 rounded-[10px] flex mb-6 mx-1">
+                    <button onClick={() => setActiveTab('programa')} className={`flex-1 py-1.5 text-[14px] font-semibold rounded-[8px] transition-all ${activeTab === 'programa' ? 'bg-white dark:bg-[#636366] text-black dark:text-white shadow-sm' : 'text-[#8E8E93] dark:text-[#EBEBF5]/60'}`}>Programa</button>
+                    <button onClick={() => setActiveTab('repaso')} className={`flex-1 py-1.5 text-[14px] font-semibold rounded-[8px] transition-all ${activeTab === 'repaso' ? 'bg-white dark:bg-[#636366] text-black dark:text-white shadow-sm' : 'text-[#8E8E93] dark:text-[#EBEBF5]/60'}`}>Repaso</button>
+                  </div>
+                )}
+
+                <div className="space-y-3.5">
+                  {programsDB.find(p => p.id === activeProgram)?.[activeTab]?.map((item) => (
+                    <div key={item.id} className="bg-white dark:bg-[#1C1C1E] rounded-[16px] p-4 sm:p-5 shadow-sm">
+                      {item.type === 'attendance' ? (
+                        <div>
+                          <h3 className="font-semibold text-black dark:text-white mb-3 text-[16px]">{item.title}</h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div className="flex justify-between items-center bg-[#F2F2F7] dark:bg-[#2C2C2E] px-3.5 py-2.5 rounded-xl">
+                              <span className="text-[#8E8E93] text-[15px] font-medium">Asistencia General</span>
+                              <input
+                                type="number"
+                                defaultValue={notesRef.current[item.id + '_general'] || ''}
+                                onChange={(e) => handleNoteChange(item.id + '_general', e.target.value)}
+                                className="w-20 bg-white dark:bg-[#1C1C1E] text-black dark:text-white text-center py-1 rounded-lg border border-[#C6C6C8] dark:border-[#38383A] focus:outline-none focus:border-[#007AFF] font-semibold text-[16px]"
+                                placeholder="0"
+                              />
+                            </div>
+                            {item.hasStream && (
+                              <div className="flex justify-between items-center bg-[#F2F2F7] dark:bg-[#2C2C2E] px-3.5 py-2.5 rounded-xl">
+                                <span className="text-[#8E8E93] text-[15px] font-medium">Conectados (Stream)</span>
+                                <input
+                                  type="number"
+                                  defaultValue={notesRef.current[item.id + '_stream'] || ''}
+                                  onChange={(e) => handleNoteChange(item.id + '_stream', e.target.value)}
+                                  className="w-20 bg-white dark:bg-[#1C1C1E] text-black dark:text-white text-center py-1 rounded-lg border border-[#C6C6C8] dark:border-[#38383A] focus:outline-none focus:border-[#007AFF] font-semibold text-[16px]"
+                                  placeholder="0"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <div 
+                            className={`flex items-start gap-3 ${(item.type === 'talk' || item.type === 'song') ? 'cursor-pointer select-none' : ''}`}
+                            onClick={() => (item.type === 'talk' || item.type === 'song') && toggleItem(item.id)}
+                          >
+                            {item.time && (
+                              <div className="text-[#007AFF] font-semibold text-[15px] pt-0.5 shrink-0 w-[44px]">
+                                {item.time}
+                              </div>
+                            )}
+                            <div className="flex-1 flex justify-between items-start gap-2">
+                              <h3 className={`font-semibold text-[17px] leading-snug ${item.type === 'music' ? 'text-[#8E8E93]' : 'text-black dark:text-white'}`}>
+                                {item.title}
+                              </h3>
+                              {(item.type === 'talk' || item.type === 'song') && (
+                                expandedItems[item.id] 
+                                  ? <ChevronUp size={20} className="text-[#8E8E93] shrink-0 mt-0.5" /> 
+                                  : <ChevronDown size={20} className="text-[#8E8E93] shrink-0 mt-0.5" />
+                              )}
+                            </div>
+                          </div>
+                          
+                          {(item.type === 'talk' || item.type === 'song') && expandedItems[item.id] && (
+                            <div className="mt-3">
+                              <RichNoteEditor
+                                id={item.id}
+                                value={notesRef.current[item.id] || ''}
+                                onChange={(val) => handleNoteChange(item.id, val)}
+                                placeholder="Escribe tus apuntes aquí..."
+                                fontSize={fontSize}
+                              />
+                            </div>
+                          )}
+                          
+                          {item.type === 'symposium' && (
+                            <div className="mt-3 pt-1 border-t border-[#C6C6C8]/30 dark:border-[#38383A]/60 divide-y divide-[#C6C6C8]/30 dark:divide-[#38383A]/60">
+                              {item.parts.map((part) => (
+                                <div key={part.id} className="py-3 first:pt-2 last:pb-0">
+                                  <div 
+                                    onClick={() => toggleItem(part.id)} 
+                                    className="flex items-start justify-between gap-3 cursor-pointer select-none"
+                                  >
+                                    <div className="flex items-start gap-2.5 flex-1">
+                                      <div className="w-2.5 h-2.5 rounded-full border-2 border-[#007AFF] bg-transparent mt-1.5 shrink-0"></div>
+                                      <h4 className="text-[16px] font-medium text-black dark:text-white leading-snug flex-1">
+                                        {part.title.replace(/^•\s*/, '')}
+                                      </h4>
+                                    </div>
+                                    {expandedItems[part.id] 
+                                      ? <ChevronUp size={18} className="text-[#8E8E93] shrink-0 mt-0.5" /> 
+                                      : <ChevronDown size={18} className="text-[#8E8E93] shrink-0 mt-0.5" />
+                                    }
+                                  </div>
+                                  {expandedItems[part.id] && (
+                                    <div className="mt-2.5">
+                                      <RichNoteEditor
+                                        id={part.id}
+                                        value={notesRef.current[part.id] || ''}
+                                        onChange={(val) => handleNoteChange(part.id, val)}
+                                        placeholder="Escribe tus apuntes aquí..."
+                                        fontSize={fontSize}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {currentScreen === 'custom_note' && activeProgram && (
+              <div className="animate-fade-in">
+                <input 
+                  type="text" 
+                  value={customNotesList.find(n => n.id === activeProgram)?.title || ''}
+                  onChange={handleUpdateCustomNoteTitle}
+                  className="w-full text-[32px] font-bold tracking-tight mb-0.5 px-1 text-black dark:text-white bg-transparent focus:outline-none placeholder-[#8E8E93]"
+                  placeholder="Título de la nota..."
+                />
+                <p className="text-[12px] text-[#8E8E93] px-1.5 mb-2 font-medium">
+                  Creada el {formatNoteDate(customNotesList.find(n => n.id === activeProgram)?.createdAt || parseInt(String(activeProgram).replace('custom_', ''), 10))}
+                </p>
+                <RichNoteEditor 
+                  id={activeProgram} 
+                  value={notesRef.current[activeProgram] || ''} 
+                  onChange={(val) => handleNoteChange(activeProgram, val)} 
+                  placeholder="Empieza a escribir tu nota..." 
+                  fontSize={fontSize}
+                  isCustomNote={true}
+                />
+              </div>
+            )}
+          </main>
+
+          {}
+          {isSettingsOpen && (
+            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={() => setIsSettingsOpen(false)}></div>
+              <div className="bg-[#F2F2F7] dark:bg-[#1C1C1E] w-full max-w-sm rounded-[20px] overflow-hidden z-10 animate-slide-up shadow-2xl">
+                <div className="p-4 border-b border-[#C6C6C8]/50 dark:border-[#38383A]">
+                  <h3 className="text-center font-semibold text-[17px] text-black dark:text-white">Ajustes de Vista</h3>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div className="bg-white dark:bg-[#2C2C2E] rounded-xl overflow-hidden">
+                    <div className="flex justify-between items-center p-4 border-b border-[#C6C6C8]/30 dark:border-[#38383A]">
+                      <span className="text-[17px] text-black dark:text-white">Modo Oscuro</span>
+                      <button onClick={toggleDarkMode} className={`w-12 h-7 rounded-full transition-colors relative ${isDarkMode ? 'bg-[#34C759]' : 'bg-[#E5E5EA] dark:bg-[#3A3A3C]'}`}>
+                        <div className={`w-6 h-6 bg-white rounded-full absolute top-0.5 transition-transform ${isDarkMode ? 'translate-x-5' : 'translate-x-0.5'} shadow-sm`}></div>
+                      </button>
+                    </div>
+                    <div className="flex justify-between items-center p-4">
+                      <span className="text-[17px] text-black dark:text-white">Tamaño de letra</span>
+                      <div className="flex items-center gap-3">
+                        <button onClick={decreaseFontSize} className="w-9 h-8 rounded-lg bg-[#F2F2F7] dark:bg-[#3A3A3C] font-semibold flex items-center justify-center active:opacity-50 text-black dark:text-white">A-</button>
+                        <span className="font-semibold text-[16px] w-7 text-center text-black dark:text-white">{fontSize}</span>
+                        <button onClick={increaseFontSize} className="w-9 h-8 rounded-lg bg-[#F2F2F7] dark:bg-[#3A3A3C] font-semibold flex items-center justify-center active:opacity-50 text-black dark:text-white">A+</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {currentScreen !== 'programs' && (
+                    <button onClick={() => { setIsSettingsOpen(false); handleBackToPrograms(); }} className="w-full bg-white dark:bg-[#2C2C2E] text-[#007AFF] font-semibold text-[17px] p-3.5 rounded-xl active:bg-[#E5E5EA] dark:active:bg-[#3A3A3C] transition-colors text-center">
+                      Volver al menú de Programas
+                    </button>
+                  )}
+
+                  {deferredPrompt && (
+                    <button onClick={handleInstallClick} className="w-full bg-[#007AFF] text-white font-semibold text-[17px] p-3.5 rounded-xl active:bg-[#0062CC] transition-colors text-center shadow-sm">
+                      Instalar Aplicación en el celular
+                    </button>
+                  )}
+
+                  <button onClick={handleExportPDF} className="w-full bg-white dark:bg-[#2C2C2E] text-[#007AFF] font-semibold text-[17px] p-3.5 rounded-xl active:bg-[#E5E5EA] dark:active:bg-[#3A3A3C] transition-colors text-center">
+                    Exportar como PDF
+                  </button>
+
+                  <div className="bg-white dark:bg-[#2C2C2E] rounded-xl overflow-hidden divide-y divide-[#C6C6C8]/30 dark:divide-[#38383A]">
+                    <button onClick={handleExportBackup} className="w-full text-[#007AFF] font-semibold text-[16px] p-3.5 active:bg-[#E5E5EA] dark:active:bg-[#3A3A3C] transition-colors flex items-center justify-center gap-2">
+                      <Download size={18} />
+                      <span>Exportar Notas</span>
+                    </button>
+                    <button onClick={() => fileInputRef.current?.click()} className="w-full text-[#007AFF] font-semibold text-[16px] p-3.5 active:bg-[#E5E5EA] dark:active:bg-[#3A3A3C] transition-colors flex items-center justify-center gap-2">
+                      <Upload size={18} />
+                      <span>Importar notas</span>
+                    </button>
+                  </div>
+
+                  <button onClick={handleLogout} className="w-full bg-white dark:bg-[#2C2C2E] text-[#FF3B30] font-semibold text-[17px] p-3.5 rounded-xl active:bg-[#E5E5EA] dark:active:bg-[#3A3A3C] transition-colors text-center">
+                    Cerrar Sesión
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isDrawerOpen && (
+            <div className="fixed inset-0 z-50 flex items-stretch justify-start">
+              <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={() => setIsDrawerOpen(false)}></div>
+              <div className="bg-[#F2F2F7] dark:bg-[#1C1C1E] w-[82%] max-w-sm shadow-2xl z-10 animate-slide-right flex flex-col">
+                <div className="p-6 pt-10 border-b border-[#C6C6C8]/50 dark:border-[#38383A] bg-white dark:bg-[#2C2C2E]">
+                  <div className="w-14 h-14 bg-[#007AFF]/10 text-[#007AFF] rounded-full flex items-center justify-center mb-3 mx-auto">
+                    <User size={28} />
+                  </div>
+                  <h3 className="text-center font-semibold text-[19px] text-black dark:text-white">{currentUser?.username}</h3>
+                  <p className="text-center text-[13px] text-[#8E8E93]">Sesión activa</p>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                  <div>
+                    <h4 className="text-[#8E8E93] text-[13px] uppercase tracking-wider font-semibold mb-2 px-2">Navegación</h4>
+                    <div className="bg-white dark:bg-[#2C2C2E] rounded-xl overflow-hidden divide-y divide-[#C6C6C8]/30 dark:divide-[#38383A]">
+                      <button
+                        onClick={() => {
+                          setIsDrawerOpen(false);
+                          setOpenSwipeId(null);
+                          setCurrentScreen('archive');
+                        }}
+                        className="w-full flex items-center justify-between p-3.5 text-left text-[16px] font-medium text-black dark:text-white active:bg-[#E5E5EA] dark:active:bg-[#3A3A3C] transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-[#5856D6] text-white flex items-center justify-center">
+                            <AppleArchiveIcon size={18} />
+                          </div>
+                          <span>Archivo</span>
+                        </div>
+                        <span className="text-[14px] font-semibold text-[#8E8E93] bg-[#F2F2F7] dark:bg-[#3A3A3C] px-2.5 py-0.5 rounded-full">
+                          {totalArchivedCount}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[#8E8E93] text-[13px] uppercase tracking-wider font-semibold mb-2 px-2">Copia de Seguridad</h4>
+                    <div className="bg-white dark:bg-[#2C2C2E] rounded-xl overflow-hidden divide-y divide-[#C6C6C8]/30 dark:divide-[#38383A]">
+                      <button onClick={handleExportBackup} className="w-full flex items-center gap-3 p-3.5 text-left text-[15px] font-medium text-[#007AFF] active:bg-[#E5E5EA] dark:active:bg-[#3A3A3C] transition-colors">
+                        <Download size={18} />
+                        <span>Exportar Notas</span>
+                      </button>
+                      <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center gap-3 p-3.5 text-left text-[15px] font-medium text-[#007AFF] active:bg-[#E5E5EA] dark:active:bg-[#3A3A3C] transition-colors">
+                        <Upload size={18} />
+                        <span>Importar notas</span>
+                      </button>
+                      <button onClick={() => { setIsDrawerOpen(false); handleExportPDF(); }} className="w-full flex items-center gap-3 p-3.5 text-left text-[15px] font-medium text-[#007AFF] active:bg-[#E5E5EA] dark:active:bg-[#3A3A3C] transition-colors">
+                        <Download size={18} />
+                        <span>Exportar como PDF</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 border-t border-[#C6C6C8]/40 dark:border-[#38383A]">
+                  <button onClick={handleLogout} className="w-full py-3 rounded-xl bg-[#FF3B30]/10 text-[#FF3B30] font-semibold text-[16px]">
+                    Cerrar Sesión
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    const mountApplication = () => {
+      const rootElement = document.getElementById('root');
+      if (!rootElement) return;
+      rootElement.innerHTML = '';
+      const root = ReactDOM.createRoot(rootElement);
+      root.render(<App />);
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', mountApplication);
+    } else {
+      mountApplication();
+    }
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
