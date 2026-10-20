@@ -1,1702 +1,1235 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Mis Apuntes</title>
-  <link rel="manifest" href="./manifest.json">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
-  <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
-  <meta name="theme-color" content="#F2F2F7">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Mis Apuntes">
-
+  <meta name="theme-color" content="#fbbc04">
+  <link rel="manifest" href="manifest.json">
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
-            sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', '"SF Pro Display"', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+            sans: ['Roboto', 'sans-serif'],
+            display: ['Google Sans', 'Roboto', 'sans-serif']
           }
         }
       }
     }
   </script>
-
   <style>
-    body {
-      -webkit-tap-highlight-color: transparent;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes slideUp {
-      from { transform: translateY(100%); }
-      to { transform: translateY(0); }
-    }
-    @keyframes slideRight {
-      from { transform: translateX(-100%); }
-      to { transform: translateX(0); }
-    }
-    .animate-fade-in { animation: fadeIn 0.25s ease-out; }
-    .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-    .animate-slide-right { animation: slideRight 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    body { font-family: 'Roboto', sans-serif; -webkit-tap-highlight-color: transparent; }
+    h1, h2, h3, .font-display { font-family: 'Google Sans', 'Roboto', sans-serif; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; user-select: none; }
+    .material-symbols-outlined.filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
     
-    [contenteditable][data-placeholder]:empty:before {
+    /* Masonry Grid */
+    .notes-grid {
+      column-count: 1;
+      column-gap: 16px;
+    }
+    @media (min-width: 640px) { .notes-grid { column-count: 2; } }
+    @media (min-width: 1024px) { .notes-grid { column-count: 3; } }
+    @media (min-width: 1280px) { .notes-grid { column-count: 4; } }
+    .notes-list { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+    .note-card { break-inside: avoid; margin-bottom: 16px; transition: box-shadow 0.2s, border-color 0.2s, background-color 0.2s; }
+    
+    /* Rich text editor placeholder & lists */
+    [contenteditable]:empty:before {
       content: attr(data-placeholder);
-      color: #8E8E93;
+      color: #9aa0a6;
       pointer-events: none;
       display: block;
     }
-    .dark [contenteditable][data-placeholder]:empty:before {
-      color: #636366;
+    .rich-editor ul { list-style-type: disc; padding-left: 1.5rem; margin: 0.25rem 0; }
+    .rich-editor b, .rich-editor strong { font-weight: 700; }
+    .rich-editor u { text-decoration: underline; }
+    .inline-icon {
+      font-family: 'Material Symbols Outlined';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 1.15em;
+      line-height: 1;
+      vertical-align: middle;
+      display: inline-block;
+      margin: 0 2px;
+      user-select: none;
     }
   </style>
-
-  <script crossorigin="anonymous" src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin="anonymous" src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
 </head>
-<body class="bg-[#F2F2F7] dark:bg-[#000000] text-black dark:text-white antialiased selection:bg-[#007AFF]/30">
-  <div id="root"></div>
+<body class="bg-white dark:bg-[#202124] text-[#202124] dark:text-[#e8eaed] min-h-screen flex flex-col transition-colors duration-200">
 
-  <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
-
-    const ChevronLeft = ({ size = 24, className = "" }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m15 18-6-6 6-6"/></svg>
-    );
-    const ChevronDown = ({ size = 24, className = "" }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m6 9 6 6 6-6"/></svg>
-    );
-    const ChevronUp = ({ size = 24, className = "" }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m18 15-6-6-6 6"/></svg>
-    );
-    const Menu = ({ size = 24, className = "" }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-    );
-    const MoreVertical = ({ size = 24, className = "" }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-    );
-    const Plus = ({ size = 24, className = "" }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-    );
-    const Cloud = ({ size = 24, className = "" }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
-    );
-    const CloudLightning = ({ size = 24, className = "" }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973"/><path d="m13 12-3 5h4l-3 5"/></svg>
-    );
-    const User = ({ size = 24, className = "" }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    );
-    const Loader2 = ({ size = 24, className = "" }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-    );
-    const Download = ({ size = 24, className = "" }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-    );
-    const Upload = ({ size = 24, className = "" }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-    );
-
-    // Iconografía estilo SF Symbols de Apple (Bote de basura y Caja de Archivo)
-    const AppleTrashIcon = ({ size = 22, className = "" }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <path d="M3 6h18" />
-        <path d="M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6" />
-        <path d="M19 6l-.8 13.2a2 2 0 0 1-2 1.8H7.8a2 2 0 0 1-2-1.8L5 6" />
-        <line x1="10" y1="11" x2="10" y2="16.5" />
-        <line x1="14" y1="11" x2="14" y2="16.5" />
-      </svg>
-    );
-
-    const AppleArchiveIcon = ({ size = 22, className = "" }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <rect x="2.5" y="4" width="19" height="4.5" rx="1.2" />
-        <path d="M4.5 8.5v9.8a2.2 2.2 0 0 0 2.2 2.2h10.6a2.2 2.2 0 0 0 2.2-2.2V8.5" />
-        <path d="M9.5 13h5" />
-      </svg>
-    );
-
-    const NOTE_COLORS = [
-      '#007AFF',
-      '#FF9500',
-      '#34C759',
-      '#AF52DE',
-      '#FF2D55',
-      '#5856D6',
-      '#00C7BE',
-      '#FFCC00'
-    ];
-
-    const formatNoteDate = (timestamp) => {
-      if (!timestamp) return '';
-      try {
-        const d = new Date(timestamp);
-        return d.toLocaleDateString('es-ES', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric'
-        });
-      } catch (e) {
-        return '';
-      }
-    };
-
-    // --- COMPONENTE DE DESLIZAMIENTO HACIA LA DERECHA ESTILO iOS ---
-    const SwipeableItem = ({ itemId, openSwipeId, setOpenSwipeId, onArchive, onDelete, isArchived, onClick, children }) => {
-      const ACTION_WIDTH = 148;
-      const [offsetX, setOffsetX] = useState(0);
-      const [isDragging, setIsDragging] = useState(false);
-      const startXRef = useRef(0);
-      const startYRef = useRef(0);
-      const currentBaseRef = useRef(0);
-      const swipedRef = useRef(false);
-      const directionLockedRef = useRef(null);
-
-      useEffect(() => {
-        if (openSwipeId !== itemId && offsetX !== 0) {
-          setOffsetX(0);
-          currentBaseRef.current = 0;
-        }
-      }, [openSwipeId, itemId]);
-
-      const beginDrag = (clientX, clientY) => {
-        startXRef.current = clientX;
-        startYRef.current = clientY;
-        currentBaseRef.current = openSwipeId === itemId ? ACTION_WIDTH : 0;
-        swipedRef.current = false;
-        directionLockedRef.current = null;
-        setIsDragging(true);
-      };
-
-      const moveDrag = (clientX, clientY) => {
-        if (!isDragging) return;
-        const dx = clientX - startXRef.current;
-        const dy = clientY - startYRef.current;
-
-        if (!directionLockedRef.current) {
-          if (Math.abs(dx) > 7 || Math.abs(dy) > 7) {
-            directionLockedRef.current = Math.abs(dx) >= Math.abs(dy) ? 'horizontal' : 'vertical';
-          }
-        }
-
-        if (directionLockedRef.current === 'vertical') return;
-
-        if (Math.abs(dx) > 6) {
-          swipedRef.current = true;
-        }
-
-        // Permitir arrastrar hacia la derecha (y cerrar hacia la izquierda si estaba abierto)
-        const nextOffset = Math.max(0, Math.min(ACTION_WIDTH + 24, currentBaseRef.current + dx));
-        setOffsetX(nextOffset);
-      };
-
-      const finishDrag = () => {
-        if (!isDragging) return;
-        setIsDragging(false);
-        if (offsetX > 52) {
-          setOffsetX(ACTION_WIDTH);
-          currentBaseRef.current = ACTION_WIDTH;
-          setOpenSwipeId(itemId);
-        } else {
-          setOffsetX(0);
-          currentBaseRef.current = 0;
-          if (openSwipeId === itemId) setOpenSwipeId(null);
-        }
-      };
-
-      const handleCardClick = () => {
-        if (swipedRef.current) {
-          swipedRef.current = false;
-          return;
-        }
-        if (offsetX > 0) {
-          setOffsetX(0);
-          currentBaseRef.current = 0;
-          setOpenSwipeId(null);
-          return;
-        }
-        if (openSwipeId && openSwipeId !== itemId) {
-          setOpenSwipeId(null);
-        }
-        if (onClick) onClick();
-      };
-
-      return (
-        <div className="relative overflow-hidden rounded-[16px] select-none">
-          {/* Acciones reveladas a la izquierda al arrastrar la tarjeta hacia la derecha */}
-          <div
-            className="absolute inset-y-0 left-0 flex items-stretch overflow-hidden rounded-l-[16px]"
-            style={{
-              width: `${ACTION_WIDTH}px`,
-              opacity: offsetX > 2 ? 1 : 0,
-              pointerEvents: offsetX > 20 ? 'auto' : 'none',
-              transition: isDragging ? 'none' : 'opacity 0.2s ease'
-            }}
-          >
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setOffsetX(0);
-                setOpenSwipeId(null);
-                onArchive();
-              }}
-              className="flex-1 bg-[#5856D6] active:bg-[#4745B5] text-white flex flex-col items-center justify-center gap-1 transition-colors"
-            >
-              <AppleArchiveIcon size={21} />
-              <span className="text-[11px] font-semibold tracking-tight">{isArchived ? 'Desarchivar' : 'Archivar'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setOffsetX(0);
-                setOpenSwipeId(null);
-                onDelete();
-              }}
-              className="flex-1 bg-[#FF3B30] active:bg-[#D7281E] text-white flex flex-col items-center justify-center gap-1 transition-colors"
-            >
-              <AppleTrashIcon size={21} />
-              <span className="text-[11px] font-semibold tracking-tight">Eliminar</span>
-            </button>
-          </div>
-
-          {/* Tarjeta deslizable */}
-          <div
-            onTouchStart={(e) => beginDrag(e.touches[0].clientX, e.touches[0].clientY)}
-            onTouchMove={(e) => moveDrag(e.touches[0].clientX, e.touches[0].clientY)}
-            onTouchEnd={finishDrag}
-            onMouseDown={(e) => beginDrag(e.clientX, e.clientY)}
-            onMouseMove={(e) => moveDrag(e.clientX, e.clientY)}
-            onMouseUp={finishDrag}
-            onMouseLeave={() => { if (isDragging) finishDrag(); }}
-            onClick={handleCardClick}
-            style={{
-              transform: `translateX(${offsetX}px)`,
-              transition: isDragging ? 'none' : 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)'
-            }}
-            className="relative z-10 cursor-pointer"
-          >
-            {children}
-          </div>
+  <!-- Barra Superior -->
+  <header class="sticky top-0 z-30 h-16 px-3 sm:px-6 flex items-center justify-between border-b border-gray-200 dark:border-[#5f6368]/40 bg-white/95 dark:bg-[#202124]/95 backdrop-blur">
+    <div class="flex items-center gap-2 sm:gap-3">
+      <button id="menuBtn" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Menú principal">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <div class="flex items-center gap-2.5 cursor-pointer" onclick="switchView('notes')">
+        <div class="w-9 h-9 rounded-lg bg-[#fbbc04] flex items-center justify-center shadow-sm">
+          <span class="material-symbols-outlined text-white filled">lightbulb</span>
         </div>
-      );
-    };
+        <span id="headerTitle" class="font-display text-xl font-medium tracking-tight">Mis Apuntes</span>
+      </div>
+    </div>
 
-    const programsDB = [
-      {
-        id: 'regional_2026',
-        title: '"Felices para siempre"',
-        year: '2026',
-        days: 3,
-        viernes: [
-          { id: 'v_att_am', title: 'Asistencia (Mañana)', type: 'attendance', hasStream: true },
-          { id: 'v1', time: '9:20', title: 'Video musical', type: 'music' },
-          { id: 'v2', time: '9:30', title: 'Canción 160 y oración', type: 'song' },
-          { id: 'v3', time: '9:40', title: 'DISCURSO DEL PRESIDENTE: ¿Es realista la idea de ser felices para siempre?', type: 'talk' },
-          { id: 'v4', time: '10:10', title: 'PRODUCCIÓN AUDIOVISUAL: Las buenas noticias según Jesús: Episodio 4 "Para eso he venido"', type: 'talk' },
-          { id: 'v5', time: '11:05', title: 'Canción 17 y anuncios', type: 'song' },
-          { id: 'v6', time: '11:15', title: 'SERIE DE DISCURSOS: ¡Las profecías sobre el Mesías se cumplieron!', type: 'symposium',
-            parts: [
-              { id: 'v6-1', title: '• "Él mismo tomó nuestras enfermedades"' },
-              { id: 'v6-2', title: '• "No discutirá"' },
-              { id: 'v6-3', title: '• "Nunca les hablaba sin utilizar alguna comparación"' }
-            ]
-          },
-          { id: 'v7', time: '12:10', title: 'Canción 14 e intermedio', type: 'song' },
-          { id: 'v_att_pm', title: 'Asistencia (Tarde)', type: 'attendance', hasStream: true },
-          { id: 'v8', time: '1:35', title: 'Video musical', type: 'music' },
-          { id: 'v9', time: '1:45', title: 'Canción 23', type: 'song' },
-          { id: 'v10', time: '1:50', title: '¿Qué enseñó Jesús sobre el sábado?', type: 'talk' },
-          { id: 'v11', time: '2:10', title: 'SERIE DE DISCURSOS: Imitemos a los que sirvieron a Jesús', type: 'symposium',
-            parts: [
-              { id: 'v11-1', title: '• Los apóstoles' },
-              { id: 'v11-2', title: '• Muchas mujeres' }
-            ]
-          },
-          { id: 'v12', time: '2:50', title: 'Canción 76 y anuncios', type: 'song' },
-          { id: 'v13', time: '3:00', title: '"Felices los que lavan sus túnicas largas"', type: 'talk' },
-          { id: 'v14', time: '3:30', title: 'Canción 155 y oración de conclusión', type: 'song' },
-        ],
-        sabado: [
-          { id: 's_att_am', title: 'Asistencia (Mañana)', type: 'attendance', hasStream: true },
-          { id: 's1', time: '9:20', title: 'Video musical', type: 'music' },
-          { id: 's2', time: '9:30', title: 'Canción 111 y oración', type: 'song' },
-          { id: 's3', time: '9:40', title: '"Él tomó la palabra y se puso a enseñarles"', type: 'talk' },
-          { id: 's4', time: '9:50', title: 'PRODUCCIÓN AUDIOVISUAL: Las buenas noticias según Jesús: Episodio 5 "Impactados con su manera de enseñar"', type: 'talk' },
-          { id: 's5', time: '10:25', title: 'Canción 89 y anuncios', type: 'song' },
-          { id: 's6', time: '10:35', title: 'Cuatro enemigos de la felicidad', type: 'talk' },
-          { id: 's7', time: '10:50', title: '¿Puede ver el principio detrás de la ley?', type: 'talk' },
-          { id: 's8', time: '11:15', title: 'SERIE DE DISCURSOS: Lecciones sobre la tierra en la que vivió Jesús', type: 'symposium',
-            parts: [
-              { id: 's8-1', title: '• La sal y la luz' },
-              { id: 's8-2', title: '• Las plantas y los animales' }
-            ]
-          },
-          { id: 's9', time: '11:40', title: 'DISCURSO DE BAUTISMO: "Tu Padre, que mira en secreto, te lo pagará"', type: 'talk' },
-          { id: 's10', time: '12:10', title: 'Canción 51 e intermedio', type: 'song' },
-          { id: 's_att_pm', title: 'Asistencia (Tarde)', type: 'attendance', hasStream: true },
-          { id: 's11', time: '1:35', title: 'Video musical', type: 'music' },
-          { id: 's12', time: '1:45', title: 'Canción 125', type: 'song' },
-          { id: 's13', time: '1:50', title: 'SERIE DE DISCURSOS: Felices...', type: 'symposium',
-            parts: [
-              { id: 's13-1', title: '• los que reconocen sus necesidades espirituales' },
-              { id: 's13-2', title: '• los que se lamentan' },
-              { id: 's13-3', title: '• los que son apacibles' },
-              { id: 's13-4', title: '• los que tienen hambre y sed de justicia' },
-              { id: 's13-5', title: '• los que son misericordiosos' },
-              { id: 's13-6', title: '• los que tienen un corazón puro' },
-              { id: 's13-7', title: '• los que fomentan la paz' },
-              { id: 's13-8', title: '• los que han sido perseguidos por causa de la justicia' },
-              { id: 's13-9', title: '• ustedes cuando la gente los insulte' }
-            ]
-          },
-          { id: 's14', time: '3:20', title: 'Canción 81 y anuncios', type: 'song' },
-          { id: 's15', time: '3:30', title: '¿Por qué se angustian?', type: 'talk' },
-          { id: 's16', time: '3:55', title: '"Entren por la puerta angosta"', type: 'talk' },
-          { id: 's17', time: '4:30', title: 'Canción 21 y oración de conclusión', type: 'song' }
-        ],
-        domingo: [
-          { id: 'd_att_am', title: 'Asistencia (Mañana)', type: 'attendance', hasStream: true },
-          { id: 'd1', time: '9:20', title: 'Video musical', type: 'music' },
-          { id: 'd2', time: '9:30', title: 'Canción 68 y oración', type: 'song' },
-          { id: 'd3', time: '9:40', title: 'SERIE DE DISCURSOS: Lecciones de las comparaciones de Jesús', type: 'symposium',
-            parts: [
-              { id: 'd3-1', title: '• Los cuatro tipos de terreno' },
-              { id: 'd3-2', title: '• El trigo y la mala hierba' },
-              { id: 'd3-3', title: '• El grano de mostaza' },
-              { id: 'd3-4', title: '• La levadura' },
-              { id: 'd3-5', title: '• La red de pesca' }
-            ]
-          },
-          { id: 'd4', time: '11:00', title: 'Canción 64 y anuncios', type: 'song' },
-          { id: 'd5', time: '11:10', title: 'DISCURSO PÚBLICO: ¿Ha encontrado el tesoro?', type: 'talk' },
-          { id: 'd6', time: '11:40', title: 'Resumen de La Atalaya', type: 'talk' },
-          { id: 'd7', time: '12:10', title: 'Canción 140 e intermedio', type: 'song' },
-          { id: 'd_att_pm', title: 'Asistencia (Tarde)', type: 'attendance', hasStream: true },
-          { id: 'd8', time: '1:35', title: 'Video musical', type: 'music' },
-          { id: 'd9', time: '1:45', title: 'Canción 108', type: 'song' },
-          { id: 'd10', time: '1:50', title: 'PRODUCCIÓN AUDIOVISUAL: Las buenas noticias según Jesús: Episodio 6 "¿Eres tú el que tiene que venir?"', type: 'talk' },
-          { id: 'd11', time: '2:35', title: 'Canción 120 y anuncios', type: 'song' },
-          { id: 'd12', time: '2:45', title: '¿Qué hemos aprendido?', type: 'talk' },
-          { id: 'd13', time: '2:55', title: '"Felices los ojos de ustedes, que ven"', type: 'talk' },
-          { id: 'd14', time: '3:45', title: 'Canción 163 y oración de conclusión', type: 'song' }
-        ]
-      },
-      {
-        id: 'circuito_confia_2027',
-        title: '"El que confía en Jehová es feliz"',
-        year: '2026-2027 (Sup. Circuito)',
-        days: 1,
-        programa: [
-          { id: 'cc_att_am', title: 'Asistencia (Mañana)', type: 'attendance', hasStream: true },
-          { id: 'cc1', time: '9:40', title: 'Música', type: 'music' },
-          { id: 'cc2', time: '9:50', title: 'Canción 31 y oración', type: 'song' },
-          { id: 'cc3', time: '10:00', title: '¿Por qué debemos confiar en Jehová con todo el corazón?', type: 'talk' },
-          { id: 'cc4', time: '10:15', title: 'SERIE DE DISCURSOS: Imitemos a los que confiaron en Jehová', type: 'symposium',
-            parts: [
-              { id: 'cc4-1', title: '• Barac' },
-              { id: 'cc4-2', title: '• La mujer sunamita' },
-              { id: 'cc4-3', title: '• Daniel, Hananías, Misael y Azarías' }
-            ]
-          },
-          { id: 'cc5', time: '11:05', title: 'Canción 57 y anuncios', type: 'song' },
-          { id: 'cc6', time: '11:15', title: 'Ayudemos a otros a confiar en el "Dios vivo y verdadero"', type: 'talk' },
-          { id: 'cc7', time: '11:35', title: 'Discurso de bautismo: "Tu Padre, que mira en secreto, te lo pagará"', type: 'talk' },
-          { id: 'cc8', time: '12:05', title: 'Canción 29 e intermedio', type: 'song' },
-          { id: 'cc_att_pm', title: 'Asistencia (Tarde)', type: 'attendance', hasStream: true },
-          { id: 'cc9', time: '1:20', title: 'Música', type: 'music' },
-          { id: 'cc10', time: '1:30', title: 'Canción 8 y oración', type: 'song' },
-          { id: 'cc11', time: '1:35', title: 'Discurso público: ¿En quién sí se puede confiar?', type: 'talk' },
-          { id: 'cc12', time: '2:05', title: 'Resumen de La Atalaya', type: 'talk' },
-          { id: 'cc13', time: '2:35', title: 'Canción 135 y anuncios', type: 'song' },
-          { id: 'cc14', time: '2:45', title: 'SERIE DE DISCURSOS: Confíe en la sabiduría de Jehová...', type: 'symposium',
-            parts: [
-              { id: 'cc14-1', title: '• al educar a sus hijos' },
-              { id: 'cc14-2', title: '• al hacer planes para el futuro' },
-              { id: 'cc14-3', title: '• al enfrentar tentaciones' }
-            ]
-          },
-          { id: 'cc15', time: '3:30', title: '"El que confía en Jehová es feliz"', type: 'talk' },
-          { id: 'cc16', time: '4:00', title: 'Canción 54 y oración', type: 'song' }
-        ],
-        repaso: [
-          { id: 'cc_rep1', title: '1. ¿Cómo demostramos que confiamos en Jehová con todo nuestro corazón? (Prov. 3:5, 6)', type: 'talk' },
-          { id: 'cc_rep2', title: '2. ¿Cómo podemos imitar a Barac, a la mujer sunamita y a Daniel, Hananías, Misael y Azarías? (Luc. 16:10; Sal. 50:15; 119:112)', type: 'talk' },
-          { id: 'cc_rep3', title: '3. ¿Qué nos ayudará a iniciar conversaciones con personas que tienen formas de pensar o antecedentes muy diferentes a los nuestros? (1 Cor. 9:19-23)', type: 'talk' },
-          { id: 'cc_rep4', title: '4. ¿Por qué debemos confiar en la sabiduría de Jehová? (Prov. 3:13, 18; 16:3; 22:6; 1 Cor. 10:13)', type: 'talk' },
-          { id: 'cc_rep5', title: '5. ¿Por qué debemos confiar siempre en Jehová? (Prov. 16:20)', type: 'talk' }
-        ]
-      },
-      {
-        id: 'circuito_alegria_2027',
-        title: '"Haz de Jehová tu mayor alegría"',
-        year: '2026-2027 (Rep. Sucursal)',
-        days: 1,
-        programa: [
-          { id: 'ca_att_am', title: 'Asistencia (Mañana)', type: 'attendance', hasStream: true },
-          { id: 'ca1', time: '9:40', title: 'Música', type: 'music' },
-          { id: 'ca2', time: '9:50', title: 'Canción 7 y oración', type: 'song' },
-          { id: 'ca3', time: '10:00', title: '¿Cómo podemos hacer de Jehová nuestra mayor alegría?', type: 'talk' },
-          { id: 'ca4', time: '10:15', title: '"Feliz aquel [...] al que se le perdona su pecado"', type: 'talk' },
-          { id: 'ca5', time: '10:30', title: '"¡Dichosos los que viven en tu casa!"', type: 'talk' },
-          { id: 'ca6', time: '10:55', title: 'Canción 37 y anuncios', type: 'song' },
-          { id: 'ca7', time: '11:05', title: 'Feliz el que se refugia en Jehová', type: 'talk' },
-          { id: 'ca8', time: '11:35', title: 'Discurso de bautismo: "Tu Padre, que mira en secreto, te lo pagará"', type: 'talk' },
-          { id: 'ca9', time: '12:05', title: 'Canción 38 e intermedio', type: 'song' },
-          { id: 'ca_att_pm', title: 'Asistencia (Tarde)', type: 'attendance', hasStream: true },
-          { id: 'ca10', time: '1:20', title: 'Música', type: 'music' },
-          { id: 'ca11', time: '1:30', title: 'Canción 111', type: 'song' },
-          { id: 'ca12', time: '1:35', title: 'Experiencias', type: 'talk' },
-          { id: 'ca13', time: '1:45', title: 'Resumen de La Atalaya', type: 'talk' },
-          { id: 'ca14', time: '2:15', title: 'SERIE DE DISCURSOS: Tres claves para ser felices de verdad', type: 'symposium',
-            parts: [
-              { id: 'ca14-1', title: '• Una vida sencilla' },
-              { id: 'ca14-2', title: '• Los buenos amigos' },
-              { id: 'ca14-3', title: '• Una familia unida' }
-            ]
-          },
-          { id: 'ca15', time: '3:00', title: 'Canción 88 y anuncios', type: 'song' },
-          { id: 'ca16', time: '3:10', title: '"¡Feliz el pueblo que tiene por Dios a Jehová!"', type: 'talk' },
-          { id: 'ca17', time: '3:55', title: 'Canción 161 y oración', type: 'song' }
-        ],
-        repaso: [
-          { id: 'ca_rep1', title: '1. ¿Cómo podemos hacer de Jehová nuestra mayor alegría? (Sal. 37:4)', type: 'talk' },
-          { id: 'ca_rep2', title: '2. ¿Cómo podemos ser felices a pesar de nuestros errores? (Sal. 32:1, 2)', type: 'talk' },
-          { id: 'ca_rep3', title: '3. ¿Por qué debería ser el servicio a Jehová lo más importante en tu vida? (Sal. 84:4, 10)', type: 'talk' },
-          { id: 'ca_rep4', title: '4. ¿Cómo podemos ser felices a pesar de los problemas? (Sal. 34:8; 18:25)', type: 'talk' },
-          { id: 'ca_rep5', title: '5. ¿Qué podemos hacer para no dejarnos engañar por la felicidad ficticia? (1 Tim. 6:7, 8; Prov. 18:24; Sal. 127:1, 2)', type: 'talk' },
-          { id: 'ca_rep6', title: '6. ¿Cómo les ayuda Jehová a sus siervos a ser felices de verdad? (Miq. 2:12; Sant. 3:17; 1 Ped. 5:8)', type: 'talk' }
-        ]
-      }
-    ];
+    <!-- Buscador -->
+    <div class="flex-1 max-w-xl mx-3 sm:mx-8">
+      <div class="relative flex items-center bg-[#f1f3f4] dark:bg-[#525355] rounded-lg px-3 py-2 focus-within:bg-white dark:focus-within:bg-[#303134] focus-within:shadow-md transition">
+        <span class="material-symbols-outlined text-gray-500 dark:text-gray-300 mr-2">search</span>
+        <input id="searchInput" type="text" placeholder="Buscar en Mis Apuntes..." class="w-full bg-transparent focus:outline-none text-sm sm:text-base placeholder-gray-500 dark:placeholder-gray-300">
+        <button id="clearSearchBtn" class="hidden p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
+          <span class="material-symbols-outlined text-sm">close</span>
+        </button>
+      </div>
+    </div>
 
-    const RichNoteEditor = ({ id, value, onChange, placeholder, fontSize, isCustomNote = false }) => {
-      const mountRef = useRef(null);
-      const editorNodeRef = useRef(null);
-      const onChangeRef = useRef(onChange);
-      onChangeRef.current = onChange;
+    <!-- Acciones Derecha -->
+    <div class="flex items-center gap-1 sm:gap-2">
+      <button id="viewToggleBtn" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Cambiar vista">
+        <span id="viewToggleIcon" class="material-symbols-outlined">view_agenda</span>
+      </button>
+      <button id="themeToggleBtn" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Modo oscuro / claro">
+        <span id="themeToggleIcon" class="material-symbols-outlined">dark_mode</span>
+      </button>
+    </div>
+  </header>
 
-      const [activeFormats, setActiveFormats] = useState({ bold: false, underline: false });
-
-      const checkActiveFormats = () => {
-        if (!editorNodeRef.current) return;
-        try {
-          const isBold = document.queryCommandState('bold');
-          const isUnderline = document.queryCommandState('underline');
-          setActiveFormats(prev => (
-            prev.bold === isBold && prev.underline === isUnderline
-              ? prev
-              : { bold: isBold, underline: isUnderline }
-          ));
-        } catch (e) {}
-      };
-
-      useEffect(() => {
-        const container = mountRef.current;
-        if (!container) return;
-
-        container.innerHTML = '';
-        const div = document.createElement('div');
-        div.contentEditable = 'true';
-        div.setAttribute('data-placeholder', placeholder || '');
-        div.className = 'p-4 min-h-[140px] focus:outline-none text-black dark:text-white bg-white dark:bg-[#1C1C1E] leading-relaxed whitespace-pre-wrap break-words';
-        div.style.fontSize = `${fontSize}px`;
-
-        const defaultContent = (!value && !isCustomNote && !id.includes('rep')) ? '<b>Orador: </b><br><br>' : (value || '');
-        div.innerHTML = value || defaultContent;
-
-        const handleInput = () => {
-          if (onChangeRef.current) {
-            onChangeRef.current(div.innerHTML);
-          }
-          checkActiveFormats();
-        };
-
-        div.addEventListener('input', handleInput);
-        div.addEventListener('keyup', checkActiveFormats);
-        div.addEventListener('mouseup', checkActiveFormats);
-        div.addEventListener('touchend', checkActiveFormats);
-        div.addEventListener('focus', checkActiveFormats);
-
-        container.appendChild(div);
-        editorNodeRef.current = div;
-
-        return () => {
-          div.removeEventListener('input', handleInput);
-          div.removeEventListener('keyup', checkActiveFormats);
-          div.removeEventListener('mouseup', checkActiveFormats);
-          div.removeEventListener('touchend', checkActiveFormats);
-          div.removeEventListener('focus', checkActiveFormats);
-        };
-      }, [id]);
-
-      useEffect(() => {
-        if (editorNodeRef.current) {
-          editorNodeRef.current.style.fontSize = `${fontSize}px`;
-        }
-      }, [fontSize]);
-
-      useEffect(() => {
-        const handleSelectionChange = () => {
-          if (editorNodeRef.current && document.activeElement === editorNodeRef.current) {
-            checkActiveFormats();
-          }
-        };
-        document.addEventListener('selectionchange', handleSelectionChange);
-        return () => document.removeEventListener('selectionchange', handleSelectionChange);
-      }, []);
-
-      const applyFormat = (e, command, arg = null) => {
-        e.preventDefault();
-        const ed = editorNodeRef.current;
-        if (!ed) return;
-        try {
-          ed.focus();
-          document.execCommand(command, false, arg);
-          if (onChangeRef.current) {
-            onChangeRef.current(ed.innerHTML);
-          }
-          checkActiveFormats();
-        } catch (err) {}
-      };
-
-      const insertText = (e, text) => {
-        e.preventDefault();
-        const ed = editorNodeRef.current;
-        if (!ed) return;
-        try {
-          ed.focus();
-          document.execCommand('insertText', false, text);
-          if (onChangeRef.current) {
-            onChangeRef.current(ed.innerHTML);
-          }
-        } catch (err) {}
-      };
-
-      return (
-        <div className="mt-3 rounded-[14px] overflow-hidden border border-[#C6C6C8]/60 dark:border-[#38383A] bg-white dark:bg-[#1C1C1E] shadow-sm transition-colors">
-          <div className="flex items-center gap-1.5 px-3 py-2 bg-[#F2F2F7] dark:bg-[#2C2C2E] border-b border-[#C6C6C8]/50 dark:border-[#38383A] overflow-x-auto">
-            <button
-              type="button"
-              onMouseDown={(e) => applyFormat(e, 'bold')}
-              aria-pressed={activeFormats.bold}
-              className={`w-9 h-8 rounded-[8px] font-bold text-[15px] shadow-sm active:scale-95 transition-all flex items-center justify-center shrink-0 ${
-                activeFormats.bold
-                  ? 'bg-[#007AFF] text-white ring-2 ring-[#007AFF]/30'
-                  : 'bg-white dark:bg-[#3A3A3C] text-black dark:text-white'
-              }`}
-            >
-              B
-            </button>
-            <button
-              type="button"
-              onMouseDown={(e) => applyFormat(e, 'underline')}
-              aria-pressed={activeFormats.underline}
-              className={`w-9 h-8 rounded-[8px] underline font-semibold text-[15px] shadow-sm active:scale-95 transition-all flex items-center justify-center shrink-0 ${
-                activeFormats.underline
-                  ? 'bg-[#007AFF] text-white ring-2 ring-[#007AFF]/30'
-                  : 'bg-white dark:bg-[#3A3A3C] text-black dark:text-white'
-              }`}
-            >
-              U
-            </button>
-            <div className="w-px h-5 bg-[#C6C6C8] dark:bg-[#48484A] mx-1 shrink-0"></div>
-            <button type="button" onMouseDown={(e) => insertText(e, '\n• ')} className="w-9 h-8 rounded-[8px] bg-white dark:bg-[#3A3A3C] text-black dark:text-white font-bold text-[18px] shadow-sm active:scale-95 transition-transform flex items-center justify-center shrink-0">•</button>
-            <div className="w-px h-5 bg-[#C6C6C8] dark:bg-[#48484A] mx-1 shrink-0"></div>
-            <button type="button" onMouseDown={(e) => insertText(e, '💎 ')} className="w-9 h-8 rounded-[8px] bg-white dark:bg-[#3A3A3C] text-[16px] shadow-sm active:scale-95 transition-transform flex items-center justify-center shrink-0">💎</button>
-            <button type="button" onMouseDown={(e) => insertText(e, '❤️ ')} className="w-9 h-8 rounded-[8px] bg-white dark:bg-[#3A3A3C] text-[16px] shadow-sm active:scale-95 transition-transform flex items-center justify-center shrink-0">❤️</button>
-            <button type="button" onMouseDown={(e) => insertText(e, '✅ ')} className="w-9 h-8 rounded-[8px] bg-white dark:bg-[#3A3A3C] text-[16px] shadow-sm active:scale-95 transition-transform flex items-center justify-center shrink-0">✅</button>
-          </div>
-          <div ref={mountRef}></div>
+  <!-- Menú Lateral Desplegable (Oculto por defecto, visible solo al tocar el botón menú) -->
+  <div id="drawerBackdrop" class="fixed inset-0 bg-black/40 z-40 hidden opacity-0 transition-opacity duration-200"></div>
+  <aside id="sidebarDrawer" class="fixed top-0 left-0 bottom-0 w-72 bg-white dark:bg-[#202124] z-50 transform -translate-x-full transition-transform duration-200 shadow-2xl flex flex-col py-3 overflow-y-auto">
+    <div class="px-6 py-3 flex items-center justify-between border-b border-gray-100 dark:border-gray-800 mb-2">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-[#fbbc04] flex items-center justify-center">
+          <span class="material-symbols-outlined text-white filled text-lg">lightbulb</span>
         </div>
-      );
-    };
+        <span class="font-display text-lg font-medium">Mis Apuntes</span>
+      </div>
+      <button id="closeDrawerBtn" class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134]">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
 
-    function App() {
-      const rescueAndLoadUserData = (username) => {
-        const cleanU = (username || '').trim().toLowerCase();
-        let mergedNotes = {};
-        let mergedCustomList = [];
-        const seenCustomIds = {};
-
-        try {
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (!key) continue;
-
-            if (key.startsWith('asamblea-notas-')) {
-              try {
-                const parsedN = JSON.parse(localStorage.getItem(key) || '{}');
-                if (parsedN && typeof parsedN === 'object') {
-                  Object.keys(parsedN).forEach(noteKey => {
-                    if (parsedN[noteKey] && (!mergedNotes[noteKey] || String(parsedN[noteKey]).length > String(mergedNotes[noteKey]).length)) {
-                      mergedNotes[noteKey] = parsedN[noteKey];
-                    }
-                  });
-                }
-              } catch (e) {}
-            }
-
-            if (key.startsWith('asamblea-custom-list-')) {
-              try {
-                const parsedL = JSON.parse(localStorage.getItem(key) || '[]');
-                if (Array.isArray(parsedL)) {
-                  parsedL.forEach(item => {
-                    if (item && item.id && !seenCustomIds[item.id]) {
-                      seenCustomIds[item.id] = true;
-                      mergedCustomList.push(item);
-                    }
-                  });
-                }
-              } catch (e) {}
-            }
-          }
-
-          if (cleanU) {
-            const userNotesRaw = localStorage.getItem(`asamblea-notas-${cleanU}`);
-            if (userNotesRaw) {
-              const userNotes = JSON.parse(userNotesRaw);
-              mergedNotes = { ...mergedNotes, ...userNotes };
-            }
-          }
-
-          Object.keys(mergedNotes).forEach(noteId => {
-            if (noteId.startsWith('custom_') && !seenCustomIds[noteId]) {
-              seenCustomIds[noteId] = true;
-              const timestamp = parseInt(noteId.replace('custom_', ''), 10) || Date.now();
-              mergedCustomList.push({
-                id: noteId,
-                title: 'Nota recuperada',
-                createdAt: timestamp
-              });
-            }
-          });
-
-          mergedCustomList.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-          if (cleanU) {
-            localStorage.setItem(`asamblea-notas-${cleanU}`, JSON.stringify(mergedNotes));
-            localStorage.setItem(`asamblea-custom-list-${cleanU}`, JSON.stringify(mergedCustomList));
-          }
-        } catch (e) {}
-
-        return { notes: mergedNotes, customList: mergedCustomList };
-      };
-
-      const [currentUser, setCurrentUser] = useState(() => {
-        try {
-          const savedUser = localStorage.getItem('asamblea-active-user');
-          if (savedUser) return JSON.parse(savedUser);
-          for (let i = 0; i < localStorage.length; i++) {
-            const k = localStorage.key(i);
-            if (k && k.startsWith('asamblea-notas-')) {
-              const extractedUser = k.replace('asamblea-notas-', '').trim();
-              if (extractedUser) {
-                const uObj = { username: extractedUser };
-                localStorage.setItem('asamblea-active-user', JSON.stringify(uObj));
-                return uObj;
-              }
-            }
-          }
-          return null;
-        } catch (e) { return null; }
-      });
-
-      const [currentScreen, setCurrentScreen] = useState(() => {
-        try {
-          if (localStorage.getItem('asamblea-active-user')) return 'programs';
-          for (let i = 0; i < localStorage.length; i++) {
-            const k = localStorage.key(i);
-            if (k && k.startsWith('asamblea-notas-')) return 'programs';
-          }
-          return 'login';
-        } catch (e) { return 'login'; }
-      });
-
-      const [isDbReady] = useState(true);
-      const [loginForm, setLoginForm] = useState({ username: '' });
-      const [loginError, setLoginError] = useState('');
-      const [isLoggingIn, setIsLoggingIn] = useState(false);
-
-      const initialDataRef = useRef(null);
-      if (!initialDataRef.current) {
-        initialDataRef.current = rescueAndLoadUserData(currentUser?.username || '');
-      }
-
-      const [activeProgram, setActiveProgram] = useState(null);
-      const [activeTab, setActiveTab] = useState('');
-      const [notes, setNotes] = useState(initialDataRef.current.notes);
-      const notesRef = useRef(initialDataRef.current.notes);
-      const [expandedItems, setExpandedItems] = useState({});
-      const [isSaving, setIsSaving] = useState(false);
-
-      const [isDarkMode, setIsDarkMode] = useState(() => {
-        try { return localStorage.getItem('asamblea-dark-mode') === 'true'; } catch (e) { return false; }
-      });
-
-      const [fontSize, setFontSize] = useState(() => {
-        try { return parseInt(localStorage.getItem('asamblea-fontsize') || '16', 10); } catch (e) { return 16; }
-      });
-
-      const [archivedItems, setArchivedItems] = useState(() => {
-        try {
-          const u = currentUser?.username || 'default';
-          const saved = localStorage.getItem(`asamblea-archived-${u}`);
-          return saved ? JSON.parse(saved) : {};
-        } catch (e) { return {}; }
-      });
-
-      const [deletedItems, setDeletedItems] = useState(() => {
-        try {
-          const u = currentUser?.username || 'default';
-          const saved = localStorage.getItem(`asamblea-deleted-${u}`);
-          return saved ? JSON.parse(saved) : {};
-        } catch (e) { return {}; }
-      });
-
-      const [customNotesList, setCustomNotesList] = useState(initialDataRef.current.customList);
-
-      const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-      const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-      const [openSwipeId, setOpenSwipeId] = useState(null);
-      const [deferredPrompt, setDeferredPrompt] = useState(null);
-      const [toastMessage, setToastMessage] = useState('');
-
-      const saveTimeoutRef = useRef(null);
-      const fileInputRef = useRef(null);
-
-      const showToast = (msg) => {
-        setToastMessage(msg);
-        setTimeout(() => {
-          setToastMessage('');
-        }, 2800);
-      };
-
-      const handleExportBackup = () => {
-        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-        saveNotesNow(notesRef.current);
-
-        const backupPayload = {
-          version: 1,
-          exportedAt: Date.now(),
-          username: currentUser?.username || 'usuario',
-          notes: notesRef.current,
-          customNotesList: customNotesList,
-          archivedPrograms: archivedItems,
-          deletedPrograms: deletedItems
-        };
-
-        try {
-          const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: 'application/json' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          const dateStr = new Date().toISOString().slice(0, 10);
-          a.href = url;
-          a.download = `Respaldo_Apuntes_${currentUser?.username || 'usuario'}_${dateStr}.json`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-          setIsSettingsOpen(false);
-          setIsDrawerOpen(false);
-          showToast('Copia de seguridad descargada');
-        } catch (e) {
-          showToast('Error al exportar copia');
-        }
-      };
-
-      const handleImportBackup = (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          try {
-            const data = JSON.parse(event.target.result);
-            if (!data || typeof data !== 'object') {
-              showToast('Archivo de respaldo no válido');
-              return;
-            }
-
-            const u = currentUser?.username || 'default';
-            const mergedNotes = { ...notesRef.current, ...(data.notes || {}) };
-            notesRef.current = mergedNotes;
-            setNotes(mergedNotes);
-            localStorage.setItem(`asamblea-notas-${u}`, JSON.stringify(mergedNotes));
-
-            const existingMap = {};
-            customNotesList.forEach(item => {
-              if (item && item.id) existingMap[item.id] = item;
-            });
-            if (Array.isArray(data.customNotesList)) {
-              data.customNotesList.forEach(item => {
-                if (item && item.id) existingMap[item.id] = item;
-              });
-            }
-
-            const mergedList = Object.values(existingMap).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-            setCustomNotesList(mergedList);
-            localStorage.setItem(`asamblea-custom-list-${u}`, JSON.stringify(mergedList));
-
-            if (data.archivedPrograms && typeof data.archivedPrograms === 'object') {
-              const nextArch = { ...archivedItems, ...data.archivedPrograms };
-              setArchivedItems(nextArch);
-              localStorage.setItem(`asamblea-archived-${u}`, JSON.stringify(nextArch));
-            }
-
-            setIsSettingsOpen(false);
-            setIsDrawerOpen(false);
-            showToast('¡Notas restauradas con éxito!');
-          } catch (err) {
-            showToast('No se pudo leer el archivo');
-          }
-        };
-        reader.readAsText(file);
-        e.target.value = '';
-      };
-
-      useEffect(() => {
-        const handleBeforeInstallPrompt = (e) => {
-          e.preventDefault();
-          setDeferredPrompt(e);
-        };
-        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-        return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      }, []);
-
-      const handleInstallClick = async () => {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          setDeferredPrompt(null);
-        }
-        setIsSettingsOpen(false);
-        setIsDrawerOpen(false);
-      };
-
-      useEffect(() => {
-        if (isDarkMode) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-        try { localStorage.setItem('asamblea-dark-mode', isDarkMode); } catch (e) {}
-      }, [isDarkMode]);
-
-      useEffect(() => {
-        if (currentUser?.username) {
-          const u = currentUser.username;
-          try {
-            const rescued = rescueAndLoadUserData(u);
-            notesRef.current = rescued.notes;
-            setNotes(rescued.notes);
-            setCustomNotesList(rescued.customList);
-
-            const savedArch = localStorage.getItem(`asamblea-archived-${u}`);
-            setArchivedItems(savedArch ? JSON.parse(savedArch) : {});
-
-            const savedDel = localStorage.getItem(`asamblea-deleted-${u}`);
-            setDeletedItems(savedDel ? JSON.parse(savedDel) : {});
-          } catch (e) {}
-        }
-      }, [currentUser]);
-
-      const handleLogin = () => {
-        const cleanUser = loginForm.username.trim().toLowerCase();
-        if (!cleanUser) {
-          setLoginError('Por favor, ingresa tu nombre de usuario');
-          return;
-        }
-        setIsLoggingIn(true);
-        setTimeout(() => {
-          const userObj = { username: cleanUser };
-          setCurrentUser(userObj);
-          try { localStorage.setItem('asamblea-active-user', JSON.stringify(userObj)); } catch (e) {}
-          setIsLoggingIn(false);
-          setLoginError('');
-          setCurrentScreen('programs');
-        }, 250);
-      };
-
-      const handleLogout = () => {
-        try { localStorage.removeItem('asamblea-active-user'); } catch (e) {}
-        setCurrentUser(null);
-        setIsSettingsOpen(false);
-        setIsDrawerOpen(false);
-        setCurrentScreen('login');
-      };
-
-      const saveNotesNow = (updatedNotes) => {
-        const u = currentUser?.username || 'default';
-        try {
-          localStorage.setItem(`asamblea-notas-${u}`, JSON.stringify(updatedNotes));
-        } catch (e) {}
-      };
-
-      const handleNoteChange = (id, val) => {
-        setIsSaving(true);
-        const next = { ...notesRef.current, [id]: val };
-        notesRef.current = next;
-        saveNotesNow(next);
-
-        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-        saveTimeoutRef.current = setTimeout(() => {
-          setNotes({ ...notesRef.current });
-          setIsSaving(false);
-        }, 500);
-      };
-
-      const handleOpenProgram = (progId) => {
-        const prog = programsDB.find(p => p.id === progId);
-        if (!prog) return;
-        setOpenSwipeId(null);
-        setActiveProgram(progId);
-        setActiveTab(prog.days === 3 ? 'viernes' : 'programa');
-        setCurrentScreen('program_view');
-        window.scrollTo(0, 0);
-      };
-
-      const createNewCustomNote = () => {
-        const u = currentUser?.username || 'default';
-        const now = Date.now();
-        const newId = `custom_${now}`;
-        const nextColor = NOTE_COLORS[customNotesList.length % NOTE_COLORS.length];
-        const newNote = { id: newId, title: 'Nueva nota', createdAt: now, color: nextColor };
-        const updatedList = [newNote, ...customNotesList];
-        setCustomNotesList(updatedList);
-        try {
-          localStorage.setItem(`asamblea-custom-list-${u}`, JSON.stringify(updatedList));
-        } catch (e) {}
-        setOpenSwipeId(null);
-        setActiveProgram(newId);
-        setCurrentScreen('custom_note');
-        window.scrollTo(0, 0);
-      };
-
-      const handleOpenCustomNote = (noteId) => {
-        setOpenSwipeId(null);
-        setActiveProgram(noteId);
-        setCurrentScreen('custom_note');
-        window.scrollTo(0, 0);
-      };
-
-      const handleUpdateCustomNoteTitle = (e) => {
-        const newTitle = e.target.value;
-        const u = currentUser?.username || 'default';
-        const updatedList = customNotesList.map(n => n.id === activeProgram ? { ...n, title: newTitle } : n);
-        setCustomNotesList(updatedList);
-        try {
-          localStorage.setItem(`asamblea-custom-list-${u}`, JSON.stringify(updatedList));
-        } catch (e) {}
-      };
-
-      const toggleItem = (id) => {
-        setExpandedItems(prev => ({ ...prev, [id]: !prev[id] }));
-      };
-
-      const toggleDarkMode = () => setIsDarkMode(prev => !prev);
+    <nav class="space-y-0.5 pr-3">
+      <button data-nav="notes" class="nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition">
+        <span class="material-symbols-outlined">lightbulb</span>
+        <span>Apuntes</span>
+      </button>
+      <button data-nav="assemblies" class="nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition">
+        <span class="material-symbols-outlined">description</span>
+        <span>Asambleas</span>
+      </button>
       
-      const increaseFontSize = () => {
-        setFontSize(prev => {
-          const next = Math.min(prev + 2, 28);
-          try { localStorage.setItem('asamblea-fontsize', next.toString()); } catch (e) {}
-          return next;
-        });
-      };
+      <div class="pt-2 pb-1 px-6 flex items-center justify-between text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        <span>Etiquetas</span>
+        <button id="editLabelsBtn" class="hover:text-gray-800 dark:hover:text-white">Editar</button>
+      </div>
+      <div id="sidebarLabelsList" class="space-y-0.5"></div>
 
-      const decreaseFontSize = () => {
-        setFontSize(prev => {
-          const next = Math.max(prev - 2, 12);
-          try { localStorage.setItem('asamblea-fontsize', next.toString()); } catch (e) {}
-          return next;
-        });
-      };
+      <div class="border-t border-gray-100 dark:border-gray-800 my-2"></div>
+      <button data-nav="archive" class="nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition">
+        <span class="material-symbols-outlined">archive</span>
+        <span>Archivo</span>
+      </button>
+      <button data-nav="trash" class="nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition">
+        <span class="material-symbols-outlined">delete</span>
+        <span>Papelera</span>
+      </button>
+    </nav>
+  </aside>
 
-      const toggleArchiveItem = (id) => {
-        const u = currentUser?.username || 'default';
-        setArchivedItems(prev => {
-          const willArchive = !prev[id];
-          const newState = { ...prev, [id]: willArchive };
-          try { localStorage.setItem(`asamblea-archived-${u}`, JSON.stringify(newState)); } catch (e) {}
-          showToast(willArchive ? 'Movido a Archivo' : 'Restaurado de Archivo');
-          return newState;
-        });
-      };
+  <!-- Contenido Principal -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6">
 
-      const deleteItem = (id) => {
-        const u = currentUser?.username || 'default';
-        setDeletedItems(prev => {
-          const newState = { ...prev, [id]: true };
-          try { localStorage.setItem(`asamblea-deleted-${u}`, JSON.stringify(newState)); } catch (e) {}
-          return newState;
-        });
-
-        if (String(id).startsWith('custom_')) {
-          setCustomNotesList(prev => {
-            const nextList = prev.filter(n => n.id !== id);
-            try { localStorage.setItem(`asamblea-custom-list-${u}`, JSON.stringify(nextList)); } catch (e) {}
-            return nextList;
-          });
-        }
-        showToast('Elemento eliminado');
-      };
-
-      const handleBackToPrograms = () => {
-        if (saveTimeoutRef.current) {
-          clearTimeout(saveTimeoutRef.current);
-        }
-        saveNotesNow(notesRef.current);
-        setNotes({ ...notesRef.current });
-        setIsSaving(false);
-        setOpenSwipeId(null);
-        setCurrentScreen('programs');
-        setActiveProgram(null);
-        setActiveTab('');
-      };
-
-      const handleExportPDF = () => {
-        setIsSettingsOpen(false);
-        const currentNotes = notesRef.current;
-        const element = document.createElement('div');
-        element.style.padding = '30px';
-        element.style.fontFamily = '-apple-system, BlinkMacSystemFont, Arial, sans-serif';
-        element.style.color = '#1C1C1E';
-
-        let html = `<h1 style="color: #007AFF; text-align: center; margin-bottom: 5px; font-size: 24px;">Mis Apuntes</h1>`;
-        html += `<p style="text-align: center; color: #8E8E93; margin-top: 0; margin-bottom: 30px; font-size: 14px;">Usuario: ${currentUser?.username || ''}</p>`;
-
-        if (currentScreen === 'custom_note' && activeProgram) {
-          const noteObj = customNotesList.find(n => n.id === activeProgram);
-          html += `<h2 style="color: #000; border-bottom: 2px solid #E5E5EA; padding-bottom: 8px;">${noteObj?.title || 'Nota Libre'}</h2>`;
-          html += `<div style="margin-top: 15px; font-size: 15px; line-height: 1.6;">${currentNotes[activeProgram] || 'Sin contenido.'}</div>`;
-        } else {
-          const targetPrograms = activeProgram ? programsDB.filter(p => p.id === activeProgram) : programsDB;
-          targetPrograms.forEach(prog => {
-            html += `<h2 style="color: #007AFF; margin-top: 25px; border-bottom: 2px solid #E5E5EA; padding-bottom: 6px;">${prog.title} (${prog.year})</h2>`;
-            const sections = prog.days === 3 ? ['viernes', 'sabado', 'domingo'] : ['programa', 'repaso'];
-            sections.forEach(sec => {
-              if (!prog[sec]) return;
-              prog[sec].forEach(item => {
-                if (item.type === 'attendance') {
-                  const gen = currentNotes[item.id + '_general'];
-                  const str = currentNotes[item.id + '_stream'];
-                  if (gen || str) {
-                    html += `<p style="font-size: 13px; color: #636366;"><strong>${item.title}:</strong> General: ${gen || 0} | Stream: ${str || 0}</p>`;
-                  }
-                } else {
-                  if (currentNotes[item.id] && currentNotes[item.id].trim() !== '' && currentNotes[item.id] !== '<b>Orador: </b><br><br>') {
-                    html += `<h3 style="color: #000; margin-top: 16px; margin-bottom: 6px; font-size: 16px;">${item.time ? item.time + ' - ' : ''}${item.title}</h3>`;
-                    html += `<div style="background: #F2F2F7; padding: 12px; border-radius: 8px; font-size: 14px; line-height: 1.5;">${currentNotes[item.id]}</div>`;
-                  }
-                  if (item.type === 'symposium' && item.parts) {
-                    item.parts.forEach(part => {
-                      if (currentNotes[part.id] && currentNotes[part.id].trim() !== '' && currentNotes[part.id] !== '<b>Orador: </b><br><br>') {
-                        html += `<h4 style="color: #3A3A3C; margin-top: 12px; margin-left: 15px; margin-bottom: 4px; font-size: 15px;">${part.title}</h4>`;
-                        html += `<div style="background: #F2F2F7; padding: 12px; border-radius: 8px; margin-left: 15px; font-size: 14px; line-height: 1.5;">${currentNotes[part.id]}</div>`;
-                      }
-                    });
-                  }
-                }
-              });
-            });
-          });
-        }
-
-        element.innerHTML = html;
-        if (window.html2pdf) {
-          window.html2pdf().set({
-            margin: 15,
-            filename: `Apuntes_${currentUser?.username || 'Asamblea'}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-          }).from(element).save();
-        }
-      };
-
-      if (currentScreen === 'login') {
-        return (
-          <div className="min-h-screen flex flex-col justify-center px-6 animate-fade-in bg-[#F2F2F7] dark:bg-[#000000]">
-            <div className="max-w-sm w-full mx-auto">
-              <div className="text-center mb-6">
-                <h1 className="text-[34px] font-bold tracking-tight mb-1 text-black dark:text-white">Mis Apuntes</h1>
-                <p className="text-[#8E8E93] text-[17px]">Inicia sesión para continuar</p>
-              </div>
-              
-              {!isDbReady ? (
-                <div className="flex flex-col items-center justify-center py-8">
-                  <Loader2 className="animate-spin text-[#8E8E93] mb-4" size={32} />
-                  <p className="text-[#8E8E93] text-[15px]">Conectando...</p>
-                </div>
-              ) : (
-                <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="space-y-3">
-                  {loginError && (
-                    <div className="bg-[#FF3B30]/10 text-[#FF3B30] p-3 rounded-2xl text-[15px] text-center mb-2">
-                      {loginError}
-                    </div>
-                  )}
-                  
-                  <div className="bg-white dark:bg-[#1C1C1E] rounded-full overflow-hidden border border-[#C6C6C8] dark:border-[#38383A] shadow-sm">
-                    <input 
-                      type="text"
-                      value={loginForm.username}
-                      onChange={(e) => setLoginForm({ username: e.target.value })}
-                      className="w-full px-5 py-3 text-[17px] bg-transparent focus:outline-none text-black dark:text-white placeholder-[#8E8E93]"
-                      placeholder="Tu usuario"
-                      autoCapitalize="none"
-                      autoCorrect="off"
-                    />
-                  </div>
-                  
-                  <button
-                    type="submit"
-                    disabled={isLoggingIn}
-                    className="w-full bg-[#007AFF] text-white font-semibold text-[17px] py-3 rounded-full active:bg-[#0062CC] transition-colors flex justify-center items-center shadow-sm"
-                  >
-                    {isLoggingIn ? <Loader2 className="animate-spin" size={20} /> : 'Continuar'}
-                  </button>
-
-                  <p className="text-[13px] text-[#8E8E93] text-center pt-3 px-4">
-                    Tus apuntes se sincronizarán automáticamente en tu dispositivo.
-                  </p>
-                </form>
-              )}
-            </div>
+    <!-- Compositor de Nuevo Apunte -->
+    <div id="composerSection" class="max-w-xl mx-auto mb-8">
+      <div id="composerContainer" class="rounded-xl border border-gray-300 dark:border-[#5f6368] shadow-md transition-colors duration-200 overflow-hidden bg-white dark:bg-[#202124]">
+        
+        <!-- Estado Colapsado -->
+        <div id="composerCollapsed" class="px-4 py-3 flex items-center justify-between cursor-text">
+          <span class="text-gray-500 dark:text-gray-400 font-medium">Crear un apunte...</span>
+          <div class="flex items-center gap-1">
+            <button id="quickImageBtn" class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10" title="Nueva nota con imagen">
+              <span class="material-symbols-outlined text-gray-600 dark:text-gray-300">image</span>
+            </button>
           </div>
-        );
-      }
-
-      const activeProgramsList = programsDB.filter(p => !archivedItems[p.id] && !deletedItems[p.id]);
-      const activeCustomNotes = customNotesList.filter(n => !archivedItems[n.id] && !deletedItems[n.id]);
-      const archivedProgramsList = programsDB.filter(p => archivedItems[p.id] && !deletedItems[p.id]);
-      const archivedCustomNotes = customNotesList.filter(n => archivedItems[n.id] && !deletedItems[n.id]);
-      const totalArchivedCount = archivedProgramsList.length + archivedCustomNotes.length;
-
-      return (
-        <div className="min-h-screen bg-[#F2F2F7] dark:bg-[#000000] text-black dark:text-white font-sans pb-20 selection:bg-[#007AFF]/30">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".json,application/json"
-            onChange={handleImportBackup}
-            className="hidden"
-          />
-
-          {toastMessage && (
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-black/85 dark:bg-white/90 text-white dark:text-black px-5 py-2.5 rounded-full text-[14px] font-semibold shadow-lg animate-fade-in">
-              {toastMessage}
-            </div>
-          )}
-          
-          <header className="sticky top-0 z-40 bg-[#F2F2F7]/80 dark:bg-[#000000]/80 backdrop-blur-md border-b border-[#C6C6C8]/60 dark:border-[#38383A]">
-            <div className="flex items-center justify-between px-2 h-12 max-w-2xl mx-auto">
-              <div className="w-24 flex items-center justify-start">
-                {(currentScreen === 'program_view' || currentScreen === 'custom_note' || currentScreen === 'archive') ? (
-                  <button onClick={handleBackToPrograms} className="flex items-center text-[#007AFF] font-medium text-[17px] px-2 active:opacity-50">
-                    <ChevronLeft size={24} className="-ml-1" />
-                    <span>Atrás</span>
-                  </button>
-                ) : (
-                  <button onClick={() => setIsDrawerOpen(true)} className="p-2 text-[#007AFF] active:opacity-50" aria-label="Menú">
-                    <Menu size={24} />
-                  </button>
-                )}
-              </div>
-              
-              <div className="flex-1 flex justify-center items-center">
-                {(currentScreen === 'program_view' || currentScreen === 'custom_note') && (
-                  <div className="flex items-center text-[12px] text-[#8E8E93] font-medium gap-1 bg-[#8E8E93]/10 px-2.5 py-1 rounded-full">
-                    {isSaving ? <CloudLightning size={12} className="text-[#007AFF]" /> : <Cloud size={12} />}
-                    <span>{isSaving ? 'Guardando...' : 'Guardado'}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="w-24 flex justify-end">
-                <button onClick={() => setIsSettingsOpen(true)} className="p-2 text-[#007AFF] active:opacity-50" aria-label="Ajustes">
-                  <MoreVertical size={24} />
-                </button>
-              </div>
-            </div>
-          </header>
-
-          <main className="max-w-2xl mx-auto px-4 mt-6">
-            
-            {currentScreen === 'programs' && (
-              <div className="animate-fade-in">
-                <div className="flex justify-between items-center mb-4 px-2">
-                  <h1 className="text-[34px] font-bold tracking-tight">Programas</h1>
-                  <button onClick={createNewCustomNote} className="p-2 bg-[#007AFF]/10 text-[#007AFF] rounded-full active:bg-[#007AFF]/20 transition-colors" aria-label="Nueva nota libre">
-                    <Plus size={24} />
-                  </button>
-                </div>
-                
-                <div className="space-y-3.5">
-                  {activeProgramsList.map(prog => (
-                    <SwipeableItem
-                      key={prog.id}
-                      itemId={prog.id}
-                      openSwipeId={openSwipeId}
-                      setOpenSwipeId={setOpenSwipeId}
-                      isArchived={false}
-                      onArchive={() => toggleArchiveItem(prog.id)}
-                      onDelete={() => deleteItem(prog.id)}
-                      onClick={() => handleOpenProgram(prog.id)}
-                    >
-                      <div className="bg-white dark:bg-[#1C1C1E] rounded-[16px] p-5 shadow-sm">
-                        <h3 className="text-[19px] font-semibold tracking-tight text-black dark:text-white leading-snug mb-1">{prog.title}</h3>
-                        <p className="text-[#8E8E93] text-[15px]">{prog.year} • {prog.days === 1 ? '1 día' : '3 días'}</p>
-                      </div>
-                    </SwipeableItem>
-                  ))}
-                </div>
-
-                {activeCustomNotes.length > 0 && (
-                  <div className="mt-8">
-                    <h2 className="text-[22px] font-bold tracking-tight mb-3.5 px-2 text-black dark:text-white">Mis Notas</h2>
-                    <div className="space-y-3.5">
-                      {activeCustomNotes.map((note, idx) => {
-                        const borderColor = note.color || NOTE_COLORS[idx % NOTE_COLORS.length];
-                        const createdDate = formatNoteDate(note.createdAt || parseInt(String(note.id).replace('custom_', ''), 10));
-                        return (
-                          <SwipeableItem
-                            key={note.id}
-                            itemId={note.id}
-                            openSwipeId={openSwipeId}
-                            setOpenSwipeId={setOpenSwipeId}
-                            isArchived={false}
-                            onArchive={() => toggleArchiveItem(note.id)}
-                            onDelete={() => deleteItem(note.id)}
-                            onClick={() => handleOpenCustomNote(note.id)}
-                          >
-                            <div 
-                              style={{ borderLeftColor: borderColor }}
-                              className="bg-white dark:bg-[#1C1C1E] rounded-[16px] p-5 shadow-sm border-l-[5px]"
-                            >
-                              <div className="flex justify-between items-baseline gap-2 mb-1">
-                                <h3 className="text-[19px] font-semibold tracking-tight text-black dark:text-white leading-snug truncate">{note.title || 'Sin título'}</h3>
-                                {createdDate && (
-                                  <span className="text-[12px] text-[#8E8E93] font-medium shrink-0">{createdDate}</span>
-                                )}
-                              </div>
-                              <p className="text-[#8E8E93] text-[14px]">Nota libre</p>
-                            </div>
-                          </SwipeableItem>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* APARTADO ARCHIVO */}
-            {currentScreen === 'archive' && (
-              <div className="animate-fade-in">
-                <div className="mb-5 px-2">
-                  <h1 className="text-[34px] font-bold tracking-tight">Archivo</h1>
-                  <p className="text-[#8E8E93] text-[15px]">Desliza hacia la derecha para restaurar o eliminar</p>
-                </div>
-
-                {totalArchivedCount === 0 ? (
-                  <div className="bg-white dark:bg-[#1C1C1E] rounded-[16px] p-10 text-center shadow-sm mt-4">
-                    <div className="w-12 h-12 rounded-full bg-[#5856D6]/10 text-[#5856D6] flex items-center justify-center mx-auto mb-3">
-                      <AppleArchiveIcon size={24} />
-                    </div>
-                    <p className="text-black dark:text-white font-semibold text-[17px] mb-1">El archivo está vacío</p>
-                    <p className="text-[#8E8E93] text-[14px]">Arrastra cualquier nota o programa hacia la derecha para archivarlo.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {archivedProgramsList.length > 0 && (
-                      <div>
-                        <h2 className="text-[18px] font-bold tracking-tight mb-3 px-2 text-[#8E8E93] uppercase text-[13px]">Programas Archivados</h2>
-                        <div className="space-y-3.5">
-                          {archivedProgramsList.map(prog => (
-                            <SwipeableItem
-                              key={prog.id}
-                              itemId={prog.id}
-                              openSwipeId={openSwipeId}
-                              setOpenSwipeId={setOpenSwipeId}
-                              isArchived={true}
-                              onArchive={() => toggleArchiveItem(prog.id)}
-                              onDelete={() => deleteItem(prog.id)}
-                              onClick={() => handleOpenProgram(prog.id)}
-                            >
-                              <div className="bg-white dark:bg-[#1C1C1E] rounded-[16px] p-5 shadow-sm">
-                                <h3 className="text-[19px] font-semibold tracking-tight text-black dark:text-white leading-snug mb-1">{prog.title}</h3>
-                                <p className="text-[#8E8E93] text-[15px]">{prog.year} • {prog.days === 1 ? '1 día' : '3 días'}</p>
-                              </div>
-                            </SwipeableItem>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {archivedCustomNotes.length > 0 && (
-                      <div>
-                        <h2 className="text-[13px] font-bold tracking-wider uppercase mb-3 px-2 text-[#8E8E93]">Notas Archivadas</h2>
-                        <div className="space-y-3.5">
-                          {archivedCustomNotes.map((note, idx) => {
-                            const borderColor = note.color || NOTE_COLORS[idx % NOTE_COLORS.length];
-                            const createdDate = formatNoteDate(note.createdAt || parseInt(String(note.id).replace('custom_', ''), 10));
-                            return (
-                              <SwipeableItem
-                                key={note.id}
-                                itemId={note.id}
-                                openSwipeId={openSwipeId}
-                                setOpenSwipeId={setOpenSwipeId}
-                                isArchived={true}
-                                onArchive={() => toggleArchiveItem(note.id)}
-                                onDelete={() => deleteItem(note.id)}
-                                onClick={() => handleOpenCustomNote(note.id)}
-                              >
-                                <div 
-                                  style={{ borderLeftColor: borderColor }}
-                                  className="bg-white dark:bg-[#1C1C1E] rounded-[16px] p-5 shadow-sm border-l-[5px]"
-                                >
-                                  <div className="flex justify-between items-baseline gap-2 mb-1">
-                                    <h3 className="text-[19px] font-semibold tracking-tight text-black dark:text-white leading-snug truncate">{note.title || 'Sin título'}</h3>
-                                    {createdDate && (
-                                      <span className="text-[12px] text-[#8E8E93] font-medium shrink-0">{createdDate}</span>
-                                    )}
-                                  </div>
-                                  <p className="text-[#8E8E93] text-[14px]">Nota libre</p>
-                                </div>
-                              </SwipeableItem>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {currentScreen === 'program_view' && activeProgram && (
-              <div className="animate-fade-in">
-                <h1 className="text-[28px] font-bold tracking-tight mb-1 leading-tight text-black dark:text-white px-2">
-                  {programsDB.find(p => p.id === activeProgram)?.title}
-                </h1>
-                <p className="text-[#8E8E93] text-[14px] px-2 mb-5 uppercase tracking-wider font-semibold">
-                  Asamblea {programsDB.find(p => p.id === activeProgram)?.year}
-                </p>
-
-                {programsDB.find(p => p.id === activeProgram)?.days === 3 ? (
-                  <div className="bg-[#767680]/12 dark:bg-[#767680]/24 p-1 rounded-[10px] flex mb-6 mx-1">
-                    {['viernes', 'sabado', 'domingo'].map(tab => (
-                      <button 
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`flex-1 py-1.5 text-[14px] font-semibold rounded-[8px] capitalize transition-all ${activeTab === tab ? 'bg-white dark:bg-[#636366] text-black dark:text-white shadow-sm' : 'text-[#8E8E93] dark:text-[#EBEBF5]/60'}`}
-                      >
-                        {tab === 'sabado' ? 'Sábado' : tab}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-[#767680]/12 dark:bg-[#767680]/24 p-1 rounded-[10px] flex mb-6 mx-1">
-                    <button onClick={() => setActiveTab('programa')} className={`flex-1 py-1.5 text-[14px] font-semibold rounded-[8px] transition-all ${activeTab === 'programa' ? 'bg-white dark:bg-[#636366] text-black dark:text-white shadow-sm' : 'text-[#8E8E93] dark:text-[#EBEBF5]/60'}`}>Programa</button>
-                    <button onClick={() => setActiveTab('repaso')} className={`flex-1 py-1.5 text-[14px] font-semibold rounded-[8px] transition-all ${activeTab === 'repaso' ? 'bg-white dark:bg-[#636366] text-black dark:text-white shadow-sm' : 'text-[#8E8E93] dark:text-[#EBEBF5]/60'}`}>Repaso</button>
-                  </div>
-                )}
-
-                <div className="space-y-3.5">
-                  {programsDB.find(p => p.id === activeProgram)?.[activeTab]?.map((item) => (
-                    <div key={item.id} className="bg-white dark:bg-[#1C1C1E] rounded-[16px] p-4 sm:p-5 shadow-sm">
-                      {item.type === 'attendance' ? (
-                        <div>
-                          <h3 className="font-semibold text-black dark:text-white mb-3 text-[16px]">{item.title}</h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                            <div className="flex justify-between items-center bg-[#F2F2F7] dark:bg-[#2C2C2E] px-3.5 py-2.5 rounded-xl">
-                              <span className="text-[#8E8E93] text-[15px] font-medium">Asistencia General</span>
-                              <input
-                                type="number"
-                                defaultValue={notesRef.current[item.id + '_general'] || ''}
-                                onChange={(e) => handleNoteChange(item.id + '_general', e.target.value)}
-                                className="w-20 bg-white dark:bg-[#1C1C1E] text-black dark:text-white text-center py-1 rounded-lg border border-[#C6C6C8] dark:border-[#38383A] focus:outline-none focus:border-[#007AFF] font-semibold text-[16px]"
-                                placeholder="0"
-                              />
-                            </div>
-                            {item.hasStream && (
-                              <div className="flex justify-between items-center bg-[#F2F2F7] dark:bg-[#2C2C2E] px-3.5 py-2.5 rounded-xl">
-                                <span className="text-[#8E8E93] text-[15px] font-medium">Conectados (Stream)</span>
-                                <input
-                                  type="number"
-                                  defaultValue={notesRef.current[item.id + '_stream'] || ''}
-                                  onChange={(e) => handleNoteChange(item.id + '_stream', e.target.value)}
-                                  className="w-20 bg-white dark:bg-[#1C1C1E] text-black dark:text-white text-center py-1 rounded-lg border border-[#C6C6C8] dark:border-[#38383A] focus:outline-none focus:border-[#007AFF] font-semibold text-[16px]"
-                                  placeholder="0"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <div>
-                          <div 
-                            className={`flex items-start gap-3 ${(item.type === 'talk' || item.type === 'song') ? 'cursor-pointer select-none' : ''}`}
-                            onClick={() => (item.type === 'talk' || item.type === 'song') && toggleItem(item.id)}
-                          >
-                            {item.time && (
-                              <div className="text-[#007AFF] font-semibold text-[15px] pt-0.5 shrink-0 w-[44px]">
-                                {item.time}
-                              </div>
-                            )}
-                            <div className="flex-1 flex justify-between items-start gap-2">
-                              <h3 className={`font-semibold text-[17px] leading-snug ${item.type === 'music' ? 'text-[#8E8E93]' : 'text-black dark:text-white'}`}>
-                                {item.title}
-                              </h3>
-                              {(item.type === 'talk' || item.type === 'song') && (
-                                expandedItems[item.id] 
-                                  ? <ChevronUp size={20} className="text-[#8E8E93] shrink-0 mt-0.5" /> 
-                                  : <ChevronDown size={20} className="text-[#8E8E93] shrink-0 mt-0.5" />
-                              )}
-                            </div>
-                          </div>
-                          
-                          {(item.type === 'talk' || item.type === 'song') && expandedItems[item.id] && (
-                            <div className="mt-3">
-                              <RichNoteEditor
-                                id={item.id}
-                                value={notesRef.current[item.id] || ''}
-                                onChange={(val) => handleNoteChange(item.id, val)}
-                                placeholder="Escribe tus apuntes aquí..."
-                                fontSize={fontSize}
-                              />
-                            </div>
-                          )}
-                          
-                          {item.type === 'symposium' && (
-                            <div className="mt-3 pt-1 border-t border-[#C6C6C8]/30 dark:border-[#38383A]/60 divide-y divide-[#C6C6C8]/30 dark:divide-[#38383A]/60">
-                              {item.parts.map((part) => (
-                                <div key={part.id} className="py-3 first:pt-2 last:pb-0">
-                                  <div 
-                                    onClick={() => toggleItem(part.id)} 
-                                    className="flex items-start justify-between gap-3 cursor-pointer select-none"
-                                  >
-                                    <div className="flex items-start gap-2.5 flex-1">
-                                      <div className="w-2.5 h-2.5 rounded-full border-2 border-[#007AFF] bg-transparent mt-1.5 shrink-0"></div>
-                                      <h4 className="text-[16px] font-medium text-black dark:text-white leading-snug flex-1">
-                                        {part.title.replace(/^•\s*/, '')}
-                                      </h4>
-                                    </div>
-                                    {expandedItems[part.id] 
-                                      ? <ChevronUp size={18} className="text-[#8E8E93] shrink-0 mt-0.5" /> 
-                                      : <ChevronDown size={18} className="text-[#8E8E93] shrink-0 mt-0.5" />
-                                    }
-                                  </div>
-                                  {expandedItems[part.id] && (
-                                    <div className="mt-2.5">
-                                      <RichNoteEditor
-                                        id={part.id}
-                                        value={notesRef.current[part.id] || ''}
-                                        onChange={(val) => handleNoteChange(part.id, val)}
-                                        placeholder="Escribe tus apuntes aquí..."
-                                        fontSize={fontSize}
-                                      />
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {currentScreen === 'custom_note' && activeProgram && (
-              <div className="animate-fade-in">
-                <input 
-                  type="text" 
-                  value={customNotesList.find(n => n.id === activeProgram)?.title || ''}
-                  onChange={handleUpdateCustomNoteTitle}
-                  className="w-full text-[32px] font-bold tracking-tight mb-0.5 px-1 text-black dark:text-white bg-transparent focus:outline-none placeholder-[#8E8E93]"
-                  placeholder="Título de la nota..."
-                />
-                <p className="text-[12px] text-[#8E8E93] px-1.5 mb-2 font-medium">
-                  Creada el {formatNoteDate(customNotesList.find(n => n.id === activeProgram)?.createdAt || parseInt(String(activeProgram).replace('custom_', ''), 10))}
-                </p>
-                <RichNoteEditor 
-                  id={activeProgram} 
-                  value={notesRef.current[activeProgram] || ''} 
-                  onChange={(val) => handleNoteChange(activeProgram, val)} 
-                  placeholder="Empieza a escribir tu nota..." 
-                  fontSize={fontSize}
-                  isCustomNote={true}
-                />
-              </div>
-            )}
-          </main>
-
-          {}
-          {isSettingsOpen && (
-            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
-              <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={() => setIsSettingsOpen(false)}></div>
-              <div className="bg-[#F2F2F7] dark:bg-[#1C1C1E] w-full max-w-sm rounded-[20px] overflow-hidden z-10 animate-slide-up shadow-2xl">
-                <div className="p-4 border-b border-[#C6C6C8]/50 dark:border-[#38383A]">
-                  <h3 className="text-center font-semibold text-[17px] text-black dark:text-white">Ajustes de Vista</h3>
-                </div>
-                <div className="p-4 space-y-3">
-                  <div className="bg-white dark:bg-[#2C2C2E] rounded-xl overflow-hidden">
-                    <div className="flex justify-between items-center p-4 border-b border-[#C6C6C8]/30 dark:border-[#38383A]">
-                      <span className="text-[17px] text-black dark:text-white">Modo Oscuro</span>
-                      <button onClick={toggleDarkMode} className={`w-12 h-7 rounded-full transition-colors relative ${isDarkMode ? 'bg-[#34C759]' : 'bg-[#E5E5EA] dark:bg-[#3A3A3C]'}`}>
-                        <div className={`w-6 h-6 bg-white rounded-full absolute top-0.5 transition-transform ${isDarkMode ? 'translate-x-5' : 'translate-x-0.5'} shadow-sm`}></div>
-                      </button>
-                    </div>
-                    <div className="flex justify-between items-center p-4">
-                      <span className="text-[17px] text-black dark:text-white">Tamaño de letra</span>
-                      <div className="flex items-center gap-3">
-                        <button onClick={decreaseFontSize} className="w-9 h-8 rounded-lg bg-[#F2F2F7] dark:bg-[#3A3A3C] font-semibold flex items-center justify-center active:opacity-50 text-black dark:text-white">A-</button>
-                        <span className="font-semibold text-[16px] w-7 text-center text-black dark:text-white">{fontSize}</span>
-                        <button onClick={increaseFontSize} className="w-9 h-8 rounded-lg bg-[#F2F2F7] dark:bg-[#3A3A3C] font-semibold flex items-center justify-center active:opacity-50 text-black dark:text-white">A+</button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {currentScreen !== 'programs' && (
-                    <button onClick={() => { setIsSettingsOpen(false); handleBackToPrograms(); }} className="w-full bg-white dark:bg-[#2C2C2E] text-[#007AFF] font-semibold text-[17px] p-3.5 rounded-xl active:bg-[#E5E5EA] dark:active:bg-[#3A3A3C] transition-colors text-center">
-                      Volver al menú de Programas
-                    </button>
-                  )}
-
-                  {deferredPrompt && (
-                    <button onClick={handleInstallClick} className="w-full bg-[#007AFF] text-white font-semibold text-[17px] p-3.5 rounded-xl active:bg-[#0062CC] transition-colors text-center shadow-sm">
-                      Instalar Aplicación en el celular
-                    </button>
-                  )}
-
-                  <button onClick={handleExportPDF} className="w-full bg-white dark:bg-[#2C2C2E] text-[#007AFF] font-semibold text-[17px] p-3.5 rounded-xl active:bg-[#E5E5EA] dark:active:bg-[#3A3A3C] transition-colors text-center">
-                    Exportar como PDF
-                  </button>
-
-                  <div className="bg-white dark:bg-[#2C2C2E] rounded-xl overflow-hidden divide-y divide-[#C6C6C8]/30 dark:divide-[#38383A]">
-                    <button onClick={handleExportBackup} className="w-full text-[#007AFF] font-semibold text-[16px] p-3.5 active:bg-[#E5E5EA] dark:active:bg-[#3A3A3C] transition-colors flex items-center justify-center gap-2">
-                      <Download size={18} />
-                      <span>Exportar Notas</span>
-                    </button>
-                    <button onClick={() => fileInputRef.current?.click()} className="w-full text-[#007AFF] font-semibold text-[16px] p-3.5 active:bg-[#E5E5EA] dark:active:bg-[#3A3A3C] transition-colors flex items-center justify-center gap-2">
-                      <Upload size={18} />
-                      <span>Importar notas</span>
-                    </button>
-                  </div>
-
-                  <button onClick={handleLogout} className="w-full bg-white dark:bg-[#2C2C2E] text-[#FF3B30] font-semibold text-[17px] p-3.5 rounded-xl active:bg-[#E5E5EA] dark:active:bg-[#3A3A3C] transition-colors text-center">
-                    Cerrar Sesión
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {isDrawerOpen && (
-            <div className="fixed inset-0 z-50 flex items-stretch justify-start">
-              <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={() => setIsDrawerOpen(false)}></div>
-              <div className="bg-[#F2F2F7] dark:bg-[#1C1C1E] w-[82%] max-w-sm shadow-2xl z-10 animate-slide-right flex flex-col">
-                <div className="p-6 pt-10 border-b border-[#C6C6C8]/50 dark:border-[#38383A] bg-white dark:bg-[#2C2C2E]">
-                  <div className="w-14 h-14 bg-[#007AFF]/10 text-[#007AFF] rounded-full flex items-center justify-center mb-3 mx-auto">
-                    <User size={28} />
-                  </div>
-                  <h3 className="text-center font-semibold text-[19px] text-black dark:text-white">{currentUser?.username}</h3>
-                  <p className="text-center text-[13px] text-[#8E8E93]">Sesión activa</p>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                  <div>
-                    <h4 className="text-[#8E8E93] text-[13px] uppercase tracking-wider font-semibold mb-2 px-2">Navegación</h4>
-                    <div className="bg-white dark:bg-[#2C2C2E] rounded-xl overflow-hidden divide-y divide-[#C6C6C8]/30 dark:divide-[#38383A]">
-                      <button
-                        onClick={() => {
-                          setIsDrawerOpen(false);
-                          setOpenSwipeId(null);
-                          setCurrentScreen('archive');
-                        }}
-                        className="w-full flex items-center justify-between p-3.5 text-left text-[16px] font-medium text-black dark:text-white active:bg-[#E5E5EA] dark:active:bg-[#3A3A3C] transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-[#5856D6] text-white flex items-center justify-center">
-                            <AppleArchiveIcon size={18} />
-                          </div>
-                          <span>Archivo</span>
-                        </div>
-                        <span className="text-[14px] font-semibold text-[#8E8E93] bg-[#F2F2F7] dark:bg-[#3A3A3C] px-2.5 py-0.5 rounded-full">
-                          {totalArchivedCount}
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-[#8E8E93] text-[13px] uppercase tracking-wider font-semibold mb-2 px-2">Copia de Seguridad</h4>
-                    <div className="bg-white dark:bg-[#2C2C2E] rounded-xl overflow-hidden divide-y divide-[#C6C6C8]/30 dark:divide-[#38383A]">
-                      <button onClick={handleExportBackup} className="w-full flex items-center gap-3 p-3.5 text-left text-[15px] font-medium text-[#007AFF] active:bg-[#E5E5EA] dark:active:bg-[#3A3A3C] transition-colors">
-                        <Download size={18} />
-                        <span>Exportar Notas</span>
-                      </button>
-                      <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center gap-3 p-3.5 text-left text-[15px] font-medium text-[#007AFF] active:bg-[#E5E5EA] dark:active:bg-[#3A3A3C] transition-colors">
-                        <Upload size={18} />
-                        <span>Importar notas</span>
-                      </button>
-                      <button onClick={() => { setIsDrawerOpen(false); handleExportPDF(); }} className="w-full flex items-center gap-3 p-3.5 text-left text-[15px] font-medium text-[#007AFF] active:bg-[#E5E5EA] dark:active:bg-[#3A3A3C] transition-colors">
-                        <Download size={18} />
-                        <span>Exportar como PDF</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4 border-t border-[#C6C6C8]/40 dark:border-[#38383A]">
-                  <button onClick={handleLogout} className="w-full py-3 rounded-xl bg-[#FF3B30]/10 text-[#FF3B30] font-semibold text-[16px]">
-                    Cerrar Sesión
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
         </div>
-      );
-    }
 
-    const mountApplication = () => {
-      const rootElement = document.getElementById('root');
-      if (!rootElement) return;
-      rootElement.innerHTML = '';
-      const root = ReactDOM.createRoot(rootElement);
-      root.render(<App />);
+        <!-- Estado Expandido -->
+        <div id="composerExpanded" class="hidden flex-col">
+          <!-- Barra Superior Transparente de Formato e Iconos -->
+          <div class="flex items-center gap-1 px-3 py-1.5 border-b border-black/10 dark:border-white/10 bg-transparent text-gray-700 dark:text-gray-200 flex-wrap">
+            <button type="button" onclick="applyFormat('bold', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Negrita">
+              <span class="material-symbols-outlined text-[20px]">format_bold</span>
+            </button>
+            <button type="button" onclick="applyFormat('underline', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Subrayado">
+              <span class="material-symbols-outlined text-[20px]">format_underlined</span>
+            </button>
+            <button type="button" onclick="applyFormat('insertUnorderedList', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Viñetas">
+              <span class="material-symbols-outlined text-[20px]">format_list_bulleted</span>
+            </button>
+            <div class="h-4 w-px bg-black/15 dark:bg-white/15 mx-1"></div>
+            <button type="button" onclick="insertMinimalIcon('diamond', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Diamante">
+              <span class="material-symbols-outlined text-[19px]">diamond</span>
+            </button>
+            <button type="button" onclick="insertMinimalIcon('favorite', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Corazón">
+              <span class="material-symbols-outlined text-[19px]">favorite</span>
+            </button>
+            <button type="button" onclick="insertMinimalIcon('check', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Check">
+              <span class="material-symbols-outlined text-[19px]">check</span>
+            </button>
+            <button type="button" onclick="insertMinimalIcon('person', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Persona">
+              <span class="material-symbols-outlined text-[19px]">person</span>
+            </button>
+            <button type="button" onclick="insertMinimalIcon('location_on', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Ubicación">
+              <span class="material-symbols-outlined text-[19px]">location_on</span>
+            </button>
+          </div>
+
+          <!-- Vista Previa Imagen -->
+          <div id="composerImagePreviewWrap" class="hidden relative">
+            <img id="composerImagePreview" src="" class="w-full max-h-64 object-cover">
+            <button id="removeComposerImgBtn" class="absolute bottom-2 right-2 p-1.5 bg-black/60 text-white rounded-full hover:bg-black/80">
+              <span class="material-symbols-outlined text-sm">delete</span>
+            </button>
+          </div>
+
+          <!-- Título y Cuerpo -->
+          <div class="p-4 space-y-2">
+            <div class="flex items-start justify-between gap-2">
+              <input id="composerTitle" type="text" placeholder="Título" class="w-full bg-transparent font-display font-medium text-base focus:outline-none placeholder-gray-500 dark:placeholder-gray-400">
+              <button id="composerPinBtn" type="button" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Fijar apunte">
+                <span id="composerPinIcon" class="material-symbols-outlined text-gray-600 dark:text-gray-300">push_pin</span>
+              </button>
+            </div>
+            <div id="composerBody" contenteditable="true" data-placeholder="Crear un apunte..." class="rich-editor min-h-[72px] max-h-80 overflow-y-auto text-sm leading-relaxed focus:outline-none"></div>
+            <div id="composerLabelsChips" class="flex flex-wrap gap-1.5 pt-1"></div>
+          </div>
+
+          <!-- Barra Inferior del Compositor -->
+          <div class="px-3 py-2 flex items-center justify-between border-t border-black/5 dark:border-white/5 relative">
+            <div class="flex items-center gap-1">
+              <button id="composerColorBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Color de fondo">
+                <span class="material-symbols-outlined text-[20px]">palette</span>
+              </button>
+              <button id="composerImgBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Añadir imagen">
+                <span class="material-symbols-outlined text-[20px]">image</span>
+              </button>
+              <button id="composerLabelBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Etiquetas">
+                <span class="material-symbols-outlined text-[20px]">label</span>
+              </button>
+            </div>
+            <button id="closeComposerBtn" type="button" class="px-4 py-1.5 rounded text-sm font-medium hover:bg-black/10 dark:hover:bg-white/10">
+              Guardar y cerrar
+            </button>
+
+            <!-- Popover Paleta Colores Compositor -->
+            <div id="composerColorMenu" class="hidden absolute bottom-12 left-2 z-20 p-2 bg-white dark:bg-[#303134] rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 flex gap-1.5 flex-wrap max-w-[260px]"></div>
+
+            <!-- Popover Etiquetas Compositor -->
+            <div id="composerLabelMenu" class="hidden absolute bottom-12 left-20 z-20 p-3 bg-white dark:bg-[#303134] rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 w-52 space-y-1.5"></div>
+          </div>
+        </div>
+      </div>
+      <input id="hiddenImageInput" type="file" accept="image/*" class="hidden">
+    </div>
+
+    <!-- Sección Fijadas -->
+    <section id="pinnedSection" class="hidden mb-8">
+      <h2 class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 px-2">Fijados</h2>
+      <div id="pinnedGrid" class="notes-grid"></div>
+    </section>
+
+    <!-- Sección Otras Notas -->
+    <section id="othersSection">
+      <h2 id="othersHeading" class="hidden text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 px-2">Otros</h2>
+      <div id="notesGrid" class="notes-grid"></div>
+    </section>
+
+    <!-- Estado Vacío -->
+    <div id="emptyState" class="hidden flex-col items-center justify-center py-20 text-center text-gray-400 dark:text-gray-500">
+      <span id="emptyStateIcon" class="material-symbols-outlined text-6xl mb-3">lightbulb</span>
+      <p id="emptyStateText" class="text-base">Los apuntes que agregues aparecerán aquí</p>
+    </div>
+
+  </main>
+
+  <!-- Modal Edición de Nota / Programa de Asamblea -->
+  <div id="editModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-3 sm:p-6 backdrop-blur-sm">
+    <div id="editModalCard" class="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl border border-gray-300 dark:border-[#5f6368] shadow-2xl overflow-hidden bg-white dark:bg-[#202124] transition-colors duration-200">
+      
+      <!-- Barra Superior Transparente de Formato -->
+      <div class="flex items-center justify-between px-3 py-2 border-b border-black/10 dark:border-white/10 bg-transparent text-gray-700 dark:text-gray-200 flex-wrap">
+        <div class="flex items-center gap-1">
+          <button type="button" onclick="applyFormatModal('bold')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Negrita">
+            <span class="material-symbols-outlined text-[20px]">format_bold</span>
+          </button>
+          <button type="button" onclick="applyFormatModal('underline')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Subrayado">
+            <span class="material-symbols-outlined text-[20px]">format_underlined</span>
+          </button>
+          <button type="button" onclick="applyFormatModal('insertUnorderedList')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Viñetas">
+            <span class="material-symbols-outlined text-[20px]">format_list_bulleted</span>
+          </button>
+          <div class="h-4 w-px bg-black/15 dark:bg-white/15 mx-1"></div>
+          <button type="button" onclick="insertMinimalIconModal('diamond')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Diamante">
+            <span class="material-symbols-outlined text-[19px]">diamond</span>
+          </button>
+          <button type="button" onclick="insertMinimalIconModal('favorite')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Corazón">
+            <span class="material-symbols-outlined text-[19px]">favorite</span>
+          </button>
+          <button type="button" onclick="insertMinimalIconModal('check')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Check">
+            <span class="material-symbols-outlined text-[19px]">check</span>
+          </button>
+          <button type="button" onclick="insertMinimalIconModal('person')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Persona">
+            <span class="material-symbols-outlined text-[19px]">person</span>
+          </button>
+          <button type="button" onclick="insertMinimalIconModal('location_on')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Ubicación">
+            <span class="material-symbols-outlined text-[19px]">location_on</span>
+          </button>
+        </div>
+
+        <button id="modalPinBtn" type="button" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Fijar">
+          <span id="modalPinIcon" class="material-symbols-outlined">push_pin</span>
+        </button>
+      </div>
+
+      <!-- Cuerpo Scrollable del Modal -->
+      <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3">
+        <div id="modalImageWrap" class="hidden relative rounded-lg overflow-hidden mb-2">
+          <img id="modalImage" src="" class="w-full max-h-72 object-cover">
+          <button id="modalRemoveImgBtn" class="absolute bottom-2 right-2 p-1.5 bg-black/60 text-white rounded-full hover:bg-black/80">
+            <span class="material-symbols-outlined text-sm">delete</span>
+          </button>
+        </div>
+
+        <input id="modalTitle" type="text" placeholder="Título" class="w-full bg-transparent font-display font-medium text-lg sm:text-xl focus:outline-none">
+
+        <!-- Cuerpo de Apunte Regular -->
+        <div id="modalBody" contenteditable="true" data-placeholder="Apunte..." class="rich-editor min-h-[120px] text-sm sm:text-base leading-relaxed focus:outline-none"></div>
+
+        <!-- Contenedor Programa de Asamblea -->
+        <div id="modalAssemblyContainer" class="hidden space-y-5 pt-2"></div>
+
+        <div id="modalLabelsChips" class="flex flex-wrap gap-1.5 pt-2"></div>
+      </div>
+
+      <!-- Barra Inferior del Modal -->
+      <div class="px-4 py-2.5 border-t border-black/10 dark:border-white/10 flex items-center justify-between relative">
+        <div class="flex items-center gap-1">
+          <button id="modalColorBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Color">
+            <span class="material-symbols-outlined text-[20px]">palette</span>
+          </button>
+          <button id="modalArchiveBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Archivar">
+            <span class="material-symbols-outlined text-[20px]">archive</span>
+          </button>
+          <button id="modalDeleteBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Borrar">
+            <span class="material-symbols-outlined text-[20px]">delete</span>
+          </button>
+        </div>
+        <button id="modalSaveCloseBtn" type="button" class="px-5 py-1.5 rounded-lg font-medium text-sm bg-black/10 dark:bg-white/10 hover:bg-black/15 dark:hover:bg-white/20 transition">
+          Guardar y cerrar
+        </button>
+
+        <div id="modalColorMenu" class="hidden absolute bottom-14 left-3 z-30 p-2 bg-white dark:bg-[#303134] rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 flex gap-1.5 flex-wrap max-w-[260px]"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Editar Etiquetas -->
+  <div id="labelsModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+    <div class="bg-white dark:bg-[#303134] w-full max-w-sm rounded-xl shadow-2xl p-4 space-y-3 border border-gray-200 dark:border-gray-700">
+      <h3 class="font-display font-medium text-base">Editar etiquetas</h3>
+      <div class="flex items-center gap-2 border-b border-gray-200 dark:border-gray-600 pb-2">
+        <input id="newLabelInput" type="text" placeholder="Crear nueva etiqueta" class="flex-1 bg-transparent text-sm focus:outline-none">
+        <button id="addLabelBtn" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+          <span class="material-symbols-outlined text-lg">check</span>
+        </button>
+      </div>
+      <div id="editLabelsModalList" class="max-h-52 overflow-y-auto space-y-1"></div>
+      <div class="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
+        <button id="closeLabelsModalBtn" class="px-4 py-1.5 text-sm font-medium rounded hover:bg-gray-100 dark:hover:bg-gray-700">Listo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts de la Aplicación y Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+    import { getFirestore, collection, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+
+    // Tus credenciales reales de Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyD7faGohDt5oknciF9l3c89Y1b3i1cokQM",
+      authDomain: "mis-apuntes-9ca97.firebaseapp.com",
+      projectId: "mis-apuntes-9ca97",
+      storageBucket: "mis-apuntes-9ca97.firebasestorage.app",
+      messagingSenderId: "674283641481",
+      appId: "1:674283641481:web:fbbcea8d704011cc3ac458"
     };
 
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', mountApplication);
-    } else {
-      mountApplication();
-    }
-  </script>
+    // Paleta de colores estilo Google Keep
+    const KEEP_COLORS = {
+      default: { light: '#ffffff', dark: '#202124', borderLight: '#e0e0e0', borderDark: '#5f6368', name: 'Predeterminado' },
+      coral:   { light: '#faafa8', dark: '#77172e', borderLight: '#f28b82', borderDark: '#77172e', name: 'Coral' },
+      peach:   { light: '#f39f76', dark: '#692b17', borderLight: '#fbbc04', borderDark: '#692b17', name: 'Durazno' },
+      sand:    { light: '#fff8b8', dark: '#7c4a03', borderLight: '#fff475', borderDark: '#7c4a03', name: 'Arena' },
+      mint:    { light: '#e2f6d3', dark: '#264d3b', borderLight: '#ccff90', borderDark: '#264d3b', name: 'Menta' },
+      sage:    { light: '#b4ddd3', dark: '#0c625d', borderLight: '#a7ffeb', borderDark: '#0c625d', name: 'Salvia' },
+      fog:     { light: '#d4e4ed', dark: '#256377', borderLight: '#cbf0f8', borderDark: '#256377', name: 'Niebla' },
+      storm:   { light: '#aeccdc', dark: '#284255', borderLight: '#aecbfa', borderDark: '#284255', name: 'Tormenta' },
+      dusk:    { light: '#d3bfdb', dark: '#472e5b', borderLight: '#d7aefb', borderDark: '#472e5b', name: 'Atardecer' },
+      blossom: { light: '#f6e2dd', dark: '#6c394f', borderLight: '#fdcfe8', borderDark: '#6c394f', name: 'Flor' }
+    };
 
-  <script>
+    // Programas de Asamblea Pre-cargados
+    const ASSEMBLY_ID_1 = 'asamblea-confia-jehova-2026-2027';
+    const ASSEMBLY_ID_2 = 'asamblea-haz-de-jehova-2026-2027';
+
+    function createAssembly1() {
+      return {
+        id: ASSEMBLY_ID_1,
+        type: 'assembly',
+        title: '"El que confía en Jehová es feliz" (Proverbios 16:20)',
+        subtitle: 'Asamblea de circuito con el superintendente de circuito | 2026-2027',
+        body: '',
+        color: 'sand',
+        pinned: true,
+        archived: false,
+        trashed: false,
+        labels: [],
+        updatedAt: Date.now(),
+        assemblyData: {
+          sessions: [
+            {
+              name: 'MAÑANA',
+              items: [
+                { id: 'm1', time: '9:40', title: 'Música', isNoteable: false, notes: '' },
+                { id: 'm2', time: '9:50', title: 'Canción 31 y oración', isNoteable: false, notes: '' },
+                { id: 'm3', time: '10:00', title: '¿Por qué debemos confiar en Jehová con todo el corazón?', isNoteable: true, notes: '' },
+                { id: 'm4', time: '10:15', title: 'Serie de discursos: Imitemos a los que confiaron en Jehová — Barac', isNoteable: true, notes: '' },
+                { id: 'm5', time: '10:35', title: 'La mujer sunamita', isNoteable: true, notes: '' },
+                { id: 'm6', time: '10:50', title: 'Daniel, Hananías, Misael y Azarías', isNoteable: true, notes: '' },
+                { id: 'm7', time: '11:05', title: 'Canción 57 y anuncios', isNoteable: false, notes: '' },
+                { id: 'm8', time: '11:15', title: 'Ayudemos a otros a confiar en el "Dios vivo y verdadero"', isNoteable: true, notes: '' },
+                { id: 'm9', time: '11:35', title: 'Discurso de bautismo: "Tu Padre, que mira en secreto, te lo pagará"', isNoteable: true, notes: '' },
+                { id: 'm10', time: '12:05', title: 'Canción 29', isNoteable: false, notes: '' }
+              ]
+            },
+            {
+              name: 'TARDE',
+              items: [
+                { id: 't1', time: '1:20', title: 'Música', isNoteable: false, notes: '' },
+                { id: 't2', time: '1:30', title: 'Canción 8 y oración', isNoteable: false, notes: '' },
+                { id: 't3', time: '1:35', title: 'Discurso público: ¿En quién sí se puede confiar?', isNoteable: true, notes: '' },
+                { id: 't4', time: '2:05', title: 'Resumen de La Atalaya', isNoteable: true, notes: '' },
+                { id: 't5', time: '2:35', title: 'Canción 135 y anuncios', isNoteable: false, notes: '' },
+                { id: 't6', time: '2:45', title: 'Serie de discursos: Confíe en la sabiduría de Jehová... al educar a sus hijos', isNoteable: true, notes: '' },
+                { id: 't7', time: '3:00', title: 'al hacer planes para el futuro', isNoteable: true, notes: '' },
+                { id: 't8', time: '3:15', title: 'al enfrentar tentaciones', isNoteable: true, notes: '' },
+                { id: 't9', time: '3:30', title: '"El que confía en Jehová es feliz"', isNoteable: true, notes: '' },
+                { id: 't10', time: '4:00', title: 'Canción 54 y oración', isNoteable: false, notes: '' }
+              ]
+            },
+            {
+              name: 'PREGUNTAS DE REPASO',
+              items: [
+                { id: 'q1', time: '1.', title: '¿Cómo demostramos que confiamos en Jehová con todo nuestro corazón? (Prov. 3:5, 6)', isNoteable: true, notes: '' },
+                { id: 'q2', time: '2.', title: '¿Cómo podemos imitar a Barac, a la mujer sunamita y a Daniel, Hananías, Misael y Azarías? (Luc. 16:10; Sal. 50:15; 119:112)', isNoteable: true, notes: '' },
+                { id: 'q3', time: '3.', title: '¿Qué nos ayudará a iniciar conversaciones con personas que tienen formas de pensar o antecedentes muy diferentes a los nuestros? (1 Cor. 9:19-23)', isNoteable: true, notes: '' },
+                { id: 'q4', time: '4.', title: '¿Por qué debemos confiar en la sabiduría de Jehová? (Prov. 3:13, 18; 16:3; 22:6; 1 Cor. 10:13)', isNoteable: true, notes: '' },
+                { id: 'q5', time: '5.', title: '¿Por qué debemos confiar siempre en Jehová? (Prov. 16:20)', isNoteable: true, notes: '' }
+              ]
+            }
+          ]
+        }
+      };
+    }
+
+    function createAssembly2() {
+      return {
+        id: ASSEMBLY_ID_2,
+        type: 'assembly',
+        title: '"Haz de Jehová tu mayor alegría" (Salmo 37:4, nota)',
+        subtitle: 'Asamblea de circuito con representante de la sucursal | 2026-2027',
+        body: '',
+        color: 'mint',
+        pinned: true,
+        archived: false,
+        trashed: false,
+        labels: [],
+        updatedAt: Date.now(),
+        assemblyData: {
+          sessions: [
+            {
+              name: 'MAÑANA',
+              items: [
+                { id: 'am1', time: '9:40', title: 'Música', isNoteable: false, notes: '' },
+                { id: 'am2', time: '9:50', title: 'Canción 7 y oración', isNoteable: false, notes: '' },
+                { id: 'am3', time: '10:00', title: '¿Cómo podemos hacer de Jehová nuestra mayor alegría?', isNoteable: true, notes: '' },
+                { id: 'am4', time: '10:15', title: '"Feliz aquel [...] al que se le perdona su pecado"', isNoteable: true, notes: '' },
+                { id: 'am5', time: '10:30', title: '"¡Dichosos los que viven in tu casa!"', isNoteable: true, notes: '' },
+                { id: 'am6', time: '10:55', title: 'Canción 37 y anuncios', isNoteable: false, notes: '' },
+                { id: 'am7', time: '11:05', title: 'Feliz el que se refugia en Jehová', isNoteable: true, notes: '' },
+                { id: 'am8', time: '11:35', title: 'Discurso de bautismo: "Tu Padre, que mira en secreto, te lo pagará"', isNoteable: true, notes: '' },
+                { id: 'am9', time: '12:05', title: 'Canción 38', isNoteable: false, notes: '' }
+              ]
+            },
+            {
+              name: 'TARDE',
+              items: [
+                { id: 'at1', time: '1:20', title: 'Música', isNoteable: false, notes: '' },
+                { id: 'at2', time: '1:30', title: 'Canción 111', isNoteable: false, notes: '' },
+                { id: 'at3', time: '1:35', title: 'Experiencias', isNoteable: true, notes: '' },
+                { id: 'at4', time: '1:45', title: 'Resumen de La Atalaya', isNoteable: true, notes: '' },
+                { id: 'at5', time: '2:15', title: 'Serie de discursos: Tres claves para ser felices de verdad — Una vida sencilla', isNoteable: true, notes: '' },
+                { id: 'at6', time: '2:30', title: 'Los buenos amigos', isNoteable: true, notes: '' },
+                { id: 'at7', time: '2:45', title: 'Una familia unida', isNoteable: true, notes: '' },
+                { id: 'at8', time: '3:00', title: 'Canción 88 y anuncios', isNoteable: false, notes: '' },
+                { id: 'at9', time: '3:10', title: '"¡Feliz el pueblo que tiene por Dios a Jehová!"', isNoteable: true, notes: '' },
+                { id: 'at10', time: '3:55', title: 'Canción 161 y oración', isNoteable: false, notes: '' }
+              ]
+            },
+            {
+              name: 'PREGUNTAS DE REPASO',
+              items: [
+                { id: 'aq1', time: '1.', title: '¿Cómo podemos hacer de Jehová nuestra mayor alegría? (Sal. 37:4)', isNoteable: true, notes: '' },
+                { id: 'aq2', time: '2.', title: '¿Cómo podemos ser felices a pesar de nuestros errores? (Sal. 32:1, 2)', isNoteable: true, notes: '' },
+                { id: 'aq3', time: '3.', title: '¿Por qué debería ser el servicio a Jehová lo más importante en tu vida? (Sal. 84:4, 10)', isNoteable: true, notes: '' },
+                { id: 'aq4', time: '4.', title: '¿Cómo podemos ser felices a pesar de los problemas? (Sal. 34:8; 18:25)', isNoteable: true, notes: '' },
+                { id: 'aq5', time: '5.', title: '¿Qué podemos hacer para no dejarnos engañar por la felicidad ficticia? (1 Tim. 6:7, 8; Prov. 18:24; Sal. 127:1, 2)', isNoteable: true, notes: '' },
+                { id: 'aq6', time: '6.', title: '¿Cómo les ayuda Jehová a sus siervos a ser felices de verdad? (Miq. 2:12; Sant. 3:17; 1 Ped. 5:8)', isNoteable: true, notes: '' }
+              ]
+            }
+          ]
+        }
+      };
+    }
+
+    // Estado Global
+    let notes = [];
+    let labels = ['Reuniones', 'Revisitas', 'Ideas'];
+    let currentView = 'notes';
+    let isListView = false;
+    let searchQuery = '';
+    let activeEditorElement = null;
+
+    let composerState = {
+      pinned: false,
+      color: 'default',
+      labels: [],
+      image: null
+    };
+
+    let activeModalNoteId = null;
+
+    function loadFromLocalStorage() {
+      const savedLabels = localStorage.getItem('mis_apuntes_labels_v2');
+      if (savedLabels) {
+        labels = JSON.parse(savedLabels);
+      } else {
+        localStorage.setItem('mis_apuntes_labels_v2', JSON.stringify(labels));
+      }
+
+      const savedNotes = localStorage.getItem('mis_apuntes_notes_v4');
+      if (savedNotes) {
+        notes = JSON.parse(savedNotes);
+      } else {
+        notes = [
+          {
+            id: 'welcome-note-1',
+            type: 'note',
+            title: '¡Bienvenido a Mis Apuntes! ✨',
+            body: 'Esta es tu app para tomar los mejores apuntes y notas.<br><br><ul><li>Usa la barra superior transparente para poner <b>negrita</b>, <u>subrayado</u> o viñetas.</li><li>Inserta iconos minimalistas directamente en tus textos: <span class="inline-icon">diamond</span> <span class="inline-icon">favorite</span> <span class="inline-icon">check</span> <span class="inline-icon">person</span> <span class="inline-icon">location_on</span></li></ul>',
+            color: 'sand',
+            pinned: true,
+            archived: false,
+            trashed: false,
+            labels: ['Ideas'],
+            image: null,
+            updatedAt: Date.now()
+          },
+          createAssembly1(),
+          createAssembly2()
+        ];
+        saveToLocalStorage();
+      }
+
+      if (!notes.some(n => n.id === ASSEMBLY_ID_1)) {
+        notes.push(createAssembly1());
+        saveToLocalStorage();
+      }
+      if (!notes.some(n => n.id === ASSEMBLY_ID_2)) {
+        notes.push(createAssembly2());
+        saveToLocalStorage();
+      }
+    }
+
+    function saveToLocalStorage() {
+      localStorage.setItem('mis_apuntes_notes_v4', JSON.stringify(notes));
+      localStorage.setItem('mis_apuntes_labels_v2', JSON.stringify(labels));
+    }
+
+    // Conexión con Firebase
+    let db = null;
+    let currentUser = null;
+    try {
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      db = getFirestore(app);
+      signInAnonymously(auth).catch(console.error);
+      onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        if (user) {
+          const notesRef = collection(db, 'users', user.uid, 'notes');
+          onSnapshot(notesRef, (snapshot) => {
+            if (!snapshot.empty) {
+              const cloudNotes = snapshot.docs.map(d => d.data());
+              // Fusionar sin perder las asambleas oficiales
+              cloudNotes.forEach(cn => {
+                const idx = notes.findIndex(n => n.id === cn.id);
+                if (idx >= 0) notes[idx] = cn;
+                else notes.push(cn);
+              });
+              saveToLocalStorage();
+              renderApp();
+            }
+          });
+        }
+      });
+    } catch (e) {
+      console.warn('Modo local en funcionamiento:', e);
+    }
+
+    async function persistNote(note) {
+      const idx = notes.findIndex(n => n.id === note.id);
+      if (idx >= 0) notes[idx] = note;
+      else notes.unshift(note);
+      saveToLocalStorage();
+      renderApp();
+      if (db && currentUser) {
+        try {
+          await setDoc(doc(db, 'users', currentUser.uid, 'notes', note.id), note);
+        } catch (e) { console.error(e); }
+      }
+    }
+
+    function isDarkMode() {
+      return document.documentElement.classList.contains('dark');
+    }
+
+    function getColorStyles(colorKey) {
+      const entry = KEEP_COLORS[colorKey] || KEEP_COLORS.default;
+      const dark = isDarkMode();
+      return {
+        bg: dark ? entry.dark : entry.light,
+        border: dark ? entry.borderDark : entry.borderLight
+      };
+    }
+
+    window.applyFormat = function(command, targetId) {
+      const el = document.getElementById(targetId);
+      if (!el) return;
+      el.focus();
+      document.execCommand(command, false, null);
+    };
+
+    window.insertMinimalIcon = function(iconName, targetId) {
+      const el = document.getElementById(targetId);
+      if (!el) return;
+      el.focus();
+      const html = `<span class="inline-icon" contenteditable="false">${iconName}</span>&nbsp;`;
+      document.execCommand('insertHTML', false, html);
+    };
+
+    window.applyFormatModal = function(command) {
+      const target = activeEditorElement || document.getElementById('modalBody');
+      if (!target) return;
+      target.focus();
+      document.execCommand(command, false, null);
+    };
+
+    window.insertMinimalIconModal = function(iconName) {
+      const target = activeEditorElement || document.getElementById('modalBody');
+      if (!target) return;
+      target.focus();
+      const html = `<span class="inline-icon" contenteditable="false">${iconName}</span>&nbsp;`;
+      document.execCommand('insertHTML', false, html);
+    };
+
+    window.switchView = function(view) {
+      currentView = view;
+      closeDrawer();
+      const titleMap = {
+        notes: 'Mis Apuntes',
+        assemblies: 'Asambleas',
+        archive: 'Archivo',
+        trash: 'Papelera'
+      };
+      if (view.startsWith('label:')) {
+        document.getElementById('headerTitle').textContent = view.replace('label:', '');
+      } else {
+        document.getElementById('headerTitle').textContent = titleMap[view] || 'Mis Apuntes';
+      }
+
+      const composerSec = document.getElementById('composerSection');
+      if (view === 'notes' || view.startsWith('label:')) {
+        composerSec.classList.remove('hidden');
+      } else {
+        composerSec.classList.add('hidden');
+      }
+      renderApp();
+    };
+
+    const drawerBackdrop = document.getElementById('drawerBackdrop');
+    const sidebarDrawer = document.getElementById('sidebarDrawer');
+
+    function openDrawer() {
+      drawerBackdrop.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        drawerBackdrop.classList.remove('opacity-0');
+        sidebarDrawer.classList.remove('-translate-x-full');
+      });
+    }
+
+    function closeDrawer() {
+      drawerBackdrop.classList.add('opacity-0');
+      sidebarDrawer.classList.add('-translate-x-full');
+      setTimeout(() => drawerBackdrop.classList.add('hidden'), 200);
+    }
+
+    document.getElementById('menuBtn').addEventListener('click', openDrawer);
+    document.getElementById('closeDrawerBtn').addEventListener('click', closeDrawer);
+    drawerBackdrop.addEventListener('click', closeDrawer);
+
+    function renderApp() {
+      renderSidebarNav();
+      renderNotesGrids();
+    }
+
+    function renderSidebarNav() {
+      const labelsContainer = document.getElementById('sidebarLabelsList');
+      labelsContainer.innerHTML = '';
+      labels.forEach(label => {
+        const btn = document.createElement('button');
+        btn.dataset.nav = `label:${label}`;
+        btn.className = 'nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition';
+        btn.innerHTML = `<span class="material-symbols-outlined">label</span><span>${label}</span>`;
+        btn.onclick = () => switchView(`label:${label}`);
+        labelsContainer.appendChild(btn);
+      });
+
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        const nav = btn.dataset.nav;
+        if (nav === currentView) {
+          btn.classList.add('bg-[#feefc3]', 'dark:bg-[#41331c]', 'text-[#202124]', 'dark:text-[#e8eaed]');
+        } else {
+          btn.classList.remove('bg-[#feefc3]', 'dark:bg-[#41331c]');
+        }
+      });
+    }
+
+    function createNoteCardElement(note) {
+      const card = document.createElement('div');
+      const styles = getColorStyles(note.color);
+      card.className = 'note-card rounded-xl border p-4 cursor-pointer hover:shadow-md relative group';
+      card.style.backgroundColor = styles.bg;
+      card.style.borderColor = styles.border;
+
+      const isAssembly = note.type === 'assembly';
+
+      let html = '';
+      if (note.image) {
+        html += `<img src="${note.image}" class="w-full max-h-48 object-cover rounded-lg mb-3">`;
+      }
+
+      if (isAssembly) {
+        html += `
+          <div class="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider opacity-75 mb-1">
+            <span class="material-symbols-outlined text-sm">description</span>
+            <span>Programa de Asamblea</span>
+          </div>
+        `;
+      }
+
+      if (note.title) {
+        html += `<h3 class="font-display font-medium text-base mb-1.5 pr-6">${note.title}</h3>`;
+      }
+
+      if (isAssembly && note.subtitle) {
+        html += `<p class="text-xs opacity-80 mb-2">${note.subtitle}</p>`;
+        let totalNotes = 0;
+        note.assemblyData?.sessions?.forEach(s => s.items.forEach(it => {
+          if (it.notes && it.notes.trim() !== '') totalNotes++;
+        }));
+        html += `<div class="text-xs font-medium px-2.5 py-1 rounded-md bg-black/5 dark:bg-white/10 inline-block">
+          ${totalNotes} ${totalNotes === 1 ? 'tema con apuntes' : 'temas con apuntes'}
+        </div>`;
+      } else if (note.body) {
+        html += `<div class="rich-editor text-sm leading-relaxed line-clamp-6 break-words">${note.body}</div>`;
+      }
+
+      if (note.labels && note.labels.length > 0) {
+        html += `<div class="flex flex-wrap gap-1 mt-3">
+          ${note.labels.map(l => `<span class="text-xs px-2 py-0.5 rounded-full bg-black/10 dark:bg-white/10">${l}</span>`).join('')}
+        </div>`;
+      }
+
+      card.innerHTML = html;
+      card.addEventListener('click', () => openEditModal(note.id));
+      return card;
+    }
+
+    function renderNotesGrids() {
+      const pinnedGrid = document.getElementById('pinnedGrid');
+      const notesGrid = document.getElementById('notesGrid');
+      const pinnedSection = document.getElementById('pinnedSection');
+      const othersHeading = document.getElementById('othersHeading');
+      const emptyState = document.getElementById('emptyState');
+
+      pinnedGrid.innerHTML = '';
+      notesGrid.innerHTML = '';
+
+      const filtered = notes.filter(note => {
+        if (searchQuery) {
+          const q = searchQuery.toLowerCase();
+          const inTitle = (note.title || '').toLowerCase().includes(q);
+          const inBody = (note.body || '').toLowerCase().includes(q);
+          return !note.trashed && (inTitle || inBody);
+        }
+        if (currentView === 'trash') return note.trashed;
+        if (currentView === 'archive') return !note.trashed && note.archived;
+        if (currentView === 'assemblies') return !note.trashed && !note.archived && note.type === 'assembly';
+        if (currentView.startsWith('label:')) {
+          const lbl = currentView.replace('label:', '');
+          return !note.trashed && !note.archived && (note.labels || []).includes(lbl);
+        }
+        return !note.trashed && !note.archived && note.type !== 'assembly';
+      });
+
+      if (filtered.length === 0) {
+        pinnedSection.classList.add('hidden');
+        othersHeading.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+        emptyState.classList.add('flex');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      emptyState.classList.remove('flex');
+
+      const pinned = filtered.filter(n => n.pinned);
+      const others = filtered.filter(n => !n.pinned);
+
+      if (pinned.length > 0) {
+        pinnedSection.classList.remove('hidden');
+        othersHeading.classList.toggle('hidden', others.length === 0);
+        pinned.forEach(n => pinnedGrid.appendChild(createNoteCardElement(n)));
+      } else {
+        pinnedSection.classList.add('hidden');
+        othersHeading.classList.add('hidden');
+      }
+
+      others.forEach(n => notesGrid.appendChild(createNoteCardElement(n)));
+    }
+
+    const composerCollapsed = document.getElementById('composerCollapsed');
+    const composerExpanded = document.getElementById('composerExpanded');
+    const composerContainer = document.getElementById('composerContainer');
+    const composerTitle = document.getElementById('composerTitle');
+    const composerBody = document.getElementById('composerBody');
+
+    function expandComposer() {
+      composerCollapsed.classList.add('hidden');
+      composerExpanded.classList.remove('hidden');
+      composerExpanded.classList.add('flex');
+      composerBody.focus();
+    }
+
+    function saveAndCollapseComposer() {
+      const title = composerTitle.value.trim();
+      const body = composerBody.innerHTML.trim();
+      if (title || (body && body !== '<br>') || composerState.image) {
+        const newNote = {
+          id: 'note-' + Date.now(),
+          type: 'note',
+          title,
+          body,
+          color: composerState.color,
+          pinned: composerState.pinned,
+          archived: false,
+          trashed: false,
+          labels: [...composerState.labels],
+          image: composerState.image,
+          updatedAt: Date.now()
+        };
+        persistNote(newNote);
+      }
+      composerTitle.value = '';
+      composerBody.innerHTML = '';
+      composerState = { pinned: false, color: 'default', labels: [], image: null };
+      updateComposerAppearance();
+      composerExpanded.classList.add('hidden');
+      composerExpanded.classList.remove('flex');
+      composerCollapsed.classList.remove('hidden');
+      document.getElementById('composerColorMenu').classList.add('hidden');
+      document.getElementById('composerLabelMenu').classList.add('hidden');
+    }
+
+    function updateComposerAppearance() {
+      const styles = getColorStyles(composerState.color);
+      composerContainer.style.backgroundColor = styles.bg;
+      composerContainer.style.borderColor = styles.border;
+      document.getElementById('composerPinIcon').classList.toggle('filled', composerState.pinned);
+
+      const imgWrap = document.getElementById('composerImagePreviewWrap');
+      if (composerState.image) {
+        imgWrap.classList.remove('hidden');
+        document.getElementById('composerImagePreview').src = composerState.image;
+      } else {
+        imgWrap.classList.add('hidden');
+      }
+
+      const chips = document.getElementById('composerLabelsChips');
+      chips.innerHTML = composerState.labels.map(l => `<span class="text-xs px-2 py-0.5 rounded-full bg-black/10 dark:bg-white/10">${l}</span>`).join('');
+    }
+
+    composerCollapsed.addEventListener('click', expandComposer);
+    document.getElementById('closeComposerBtn').addEventListener('click', saveAndCollapseComposer);
+    document.getElementById('composerPinBtn').addEventListener('click', () => {
+      composerState.pinned = !composerState.pinned;
+      updateComposerAppearance();
+    });
+
+    function buildColorPalette(containerId, onSelect) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      Object.keys(KEEP_COLORS).forEach(key => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        const styles = getColorStyles(key);
+        btn.className = 'w-7 h-7 rounded-full border transition transform hover:scale-110';
+        btn.style.backgroundColor = styles.bg;
+        btn.style.borderColor = styles.border;
+        btn.title = KEEP_COLORS[key].name;
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          onSelect(key);
+          container.classList.add('hidden');
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    document.getElementById('composerColorBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      buildColorPalette('composerColorMenu', (colorKey) => {
+        composerState.color = colorKey;
+        updateComposerAppearance();
+      });
+      document.getElementById('composerColorMenu').classList.toggle('hidden');
+    });
+
+    function renderComposerLabelCheckboxes() {
+      const menu = document.getElementById('composerLabelMenu');
+      menu.innerHTML = '<div class="text-xs font-medium opacity-75 mb-1">Etiquetar apunte</div>';
+      labels.forEach(lbl => {
+        const row = document.createElement('label');
+        row.className = 'flex items-center gap-2 text-sm cursor-pointer py-1';
+        const checked = composerState.labels.includes(lbl);
+        row.innerHTML = `<input type="checkbox" ${checked ? 'checked' : ''} class="rounded"> <span>${lbl}</span>`;
+        row.querySelector('input').onchange = (e) => {
+          if (e.target.checked) composerState.labels.push(lbl);
+          else composerState.labels = composerState.labels.filter(x => x !== lbl);
+          updateComposerAppearance();
+        };
+        menu.appendChild(row);
+      });
+    }
+
+    document.getElementById('composerLabelBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      renderComposerLabelCheckboxes();
+      document.getElementById('composerLabelMenu').classList.toggle('hidden');
+    });
+
+    const editModal = document.getElementById('editModal');
+    const editModalCard = document.getElementById('editModalCard');
+
+    function openEditModal(noteId) {
+      const note = notes.find(n => n.id === noteId);
+      if (!note) return;
+      activeModalNoteId = noteId;
+      activeEditorElement = null;
+
+      const styles = getColorStyles(note.color);
+      editModalCard.style.backgroundColor = styles.bg;
+      editModalCard.style.borderColor = styles.border;
+
+      document.getElementById('modalTitle').value = note.title || '';
+      document.getElementById('modalPinIcon').classList.toggle('filled', !!note.pinned);
+
+      const modalBody = document.getElementById('modalBody');
+      const assemblyContainer = document.getElementById('modalAssemblyContainer');
+
+      if (note.type === 'assembly') {
+        modalBody.classList.add('hidden');
+        assemblyContainer.classList.remove('hidden');
+        renderAssemblyProgramInsideModal(note);
+      } else {
+        assemblyContainer.classList.add('hidden');
+        modalBody.classList.remove('hidden');
+        modalBody.innerHTML = note.body || '';
+        activeEditorElement = modalBody;
+      }
+
+      editModal.classList.remove('hidden');
+      editModal.classList.add('flex');
+    }
+
+    function renderAssemblyProgramInsideModal(note) {
+      const container = document.getElementById('modalAssemblyContainer');
+      container.innerHTML = '';
+
+      if (note.subtitle) {
+        const sub = document.createElement('p');
+        sub.className = 'text-xs font-medium opacity-75 pb-2 border-b border-black/10 dark:border-white/10';
+        sub.textContent = note.subtitle;
+        container.appendChild(sub);
+      }
+
+      note.assemblyData.sessions.forEach((session, sIdx) => {
+        const sec = document.createElement('div');
+        sec.className = 'space-y-2';
+        sec.innerHTML = `<h4 class="font-display font-bold text-xs tracking-wider uppercase px-2 py-1 rounded bg-black/10 dark:bg-white/10 inline-block">${session.name}</h4>`;
+
+        const list = document.createElement('div');
+        list.className = 'space-y-1.5';
+
+        session.items.forEach((item, iIdx) => {
+          const itemBox = document.createElement('div');
+          itemBox.className = 'rounded-lg border border-black/10 dark:border-white/10 overflow-hidden bg-white/40 dark:bg-black/20';
+
+          if (!item.isNoteable) {
+            itemBox.innerHTML = `
+              <div class="px-3 py-2 flex items-center gap-3 text-xs sm:text-sm opacity-75">
+                <span class="font-mono font-medium min-w-[42px]">${item.time}</span>
+                <span>${item.title}</span>
+              </div>
+            `;
+          } else {
+            const hasNotes = item.notes && item.notes.trim() !== '';
+            itemBox.innerHTML = `
+              <button type="button" class="w-full px-3 py-2.5 flex items-start justify-between gap-2 text-left hover:bg-black/5 dark:hover:bg-white/5 transition">
+                <div class="flex items-start gap-3 text-sm font-medium">
+                  <span class="font-mono text-xs opacity-75 mt-0.5 min-w-[42px]">${item.time}</span>
+                  <span>${item.title}</span>
+                </div>
+                <span class="material-symbols-outlined text-base opacity-60 expand-icon">${hasNotes ? 'expand_less' : 'expand_more'}</span>
+              </button>
+              <div class="assembly-editor-wrap ${hasNotes ? '' : 'hidden'} px-3 pb-3 pt-1 border-t border-black/5 dark:border-white/5">
+                <div contenteditable="true" data-sidx="${sIdx}" data-iidx="${iIdx}" data-placeholder="Escribe tus apuntes de este tema aquí..." class="rich-editor assembly-topic-editor min-h-[70px] text-sm leading-relaxed focus:outline-none p-2 rounded bg-white/60 dark:bg-black/30">${item.notes || ''}</div>
+              </div>
+            `;
+
+            const headerBtn = itemBox.querySelector('button');
+            const editorWrap = itemBox.querySelector('.assembly-editor-wrap');
+            const editorDiv = itemBox.querySelector('.assembly-topic-editor');
+            const icon = itemBox.querySelector('.expand-icon');
+
+            headerBtn.addEventListener('click', () => {
+              const hidden = editorWrap.classList.toggle('hidden');
+              icon.textContent = hidden ? 'expand_more' : 'expand_less';
+              if (!hidden) {
+                activeEditorElement = editorDiv;
+                editorDiv.focus();
+              }
+            });
+
+            editorDiv.addEventListener('focus', () => {
+              activeEditorElement = editorDiv;
+            });
+
+            editorDiv.addEventListener('input', () => {
+              note.assemblyData.sessions[sIdx].items[iIdx].notes = editorDiv.innerHTML;
+            });
+          }
+
+          list.appendChild(itemBox);
+        });
+
+        sec.appendChild(list);
+        container.appendChild(sec);
+      });
+    }
+
+    function saveAndCloseModal() {
+      if (activeModalNoteId) {
+        const note = notes.find(n => n.id === activeModalNoteId);
+        if (note) {
+          note.title = document.getElementById('modalTitle').value.trim();
+          if (note.type !== 'assembly') {
+            note.body = document.getElementById('modalBody').innerHTML.trim();
+          }
+          note.updatedAt = Date.now();
+          persistNote(note);
+        }
+      }
+      activeModalNoteId = null;
+      activeEditorElement = null;
+      editModal.classList.add('hidden');
+      editModal.classList.remove('flex');
+      document.getElementById('modalColorMenu').classList.add('hidden');
+    }
+
+    document.getElementById('modalSaveCloseBtn').addEventListener('click', saveAndCloseModal);
+    editModal.addEventListener('click', (e) => {
+      if (e.target === editModal) saveAndCloseModal();
+    });
+
+    document.getElementById('modalPinBtn').addEventListener('click', () => {
+      const note = notes.find(n => n.id === activeModalNoteId);
+      if (!note) return;
+      note.pinned = !note.pinned;
+      document.getElementById('modalPinIcon').classList.toggle('filled', note.pinned);
+    });
+
+    document.getElementById('modalColorBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      buildColorPalette('modalColorMenu', (colorKey) => {
+        const note = notes.find(n => n.id === activeModalNoteId);
+        if (!note) return;
+        note.color = colorKey;
+        const styles = getColorStyles(colorKey);
+        editModalCard.style.backgroundColor = styles.bg;
+        editModalCard.style.borderColor = styles.border;
+      });
+      document.getElementById('modalColorMenu').classList.toggle('hidden');
+    });
+
+    document.getElementById('modalArchiveBtn').addEventListener('click', () => {
+      const note = notes.find(n => n.id === activeModalNoteId);
+      if (!note) return;
+      note.archived = !note.archived;
+      saveAndCloseModal();
+    });
+
+    document.getElementById('modalDeleteBtn').addEventListener('click', () => {
+      const note = notes.find(n => n.id === activeModalNoteId);
+      if (!note) return;
+      note.trashed = !note.trashed;
+      saveAndCloseModal();
+    });
+
+    document.querySelectorAll('[data-nav]').forEach(btn => {
+      btn.addEventListener('click', () => switchView(btn.dataset.nav));
+    });
+
+    const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value.trim();
+      clearSearchBtn.classList.toggle('hidden', !searchQuery);
+      renderNotesGrids();
+    });
+    clearSearchBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      searchQuery = '';
+      clearSearchBtn.classList.add('hidden');
+      renderNotesGrids();
+    });
+
+    document.getElementById('viewToggleBtn').addEventListener('click', () => {
+      isListView = !isListView;
+      document.getElementById('viewToggleIcon').textContent = isListView ? 'grid_view' : 'view_agenda';
+      document.getElementById('pinnedGrid').className = isListView ? 'notes-list' : 'notes-grid';
+      document.getElementById('notesGrid').className = isListView ? 'notes-list' : 'notes-grid';
+    });
+
+    document.getElementById('themeToggleBtn').addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      const dark = isDarkMode();
+      document.getElementById('themeToggleIcon').textContent = dark ? 'light_mode' : 'dark_mode';
+      updateComposerAppearance();
+      renderApp();
+    });
+
+    const hiddenImageInput = document.getElementById('hiddenImageInput');
+    document.getElementById('composerImgBtn').addEventListener('click', () => hiddenImageInput.click());
+    document.getElementById('quickImageBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      expandComposer();
+      hiddenImageInput.click();
+    });
+    hiddenImageInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        composerState.image = ev.target.result;
+        updateComposerAppearance();
+      };
+      reader.readAsDataURL(file);
+    });
+    document.getElementById('removeComposerImgBtn').addEventListener('click', () => {
+      composerState.image = null;
+      updateComposerAppearance();
+    });
+
+    const labelsModal = document.getElementById('labelsModal');
+    function renderLabelsModalList() {
+      const list = document.getElementById('editLabelsModalList');
+      list.innerHTML = '';
+      labels.forEach((lbl, idx) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between py-1 px-2 rounded hover:bg-black/5 dark:hover:bg-white/5';
+        row.innerHTML = `
+          <span class="text-sm">${lbl}</span>
+          <button class="p-1 text-gray-400 hover:text-red-500"><span class="material-symbols-outlined text-base">delete</span></button>
+        `;
+        row.querySelector('button').onclick = () => {
+          labels.splice(idx, 1);
+          saveToLocalStorage();
+          renderLabelsModalList();
+          renderApp();
+        };
+        list.appendChild(row);
+      });
+    }
+    document.getElementById('editLabelsBtn').addEventListener('click', () => {
+      closeDrawer();
+      renderLabelsModalList();
+      labelsModal.classList.remove('hidden');
+      labelsModal.classList.add('flex');
+    });
+    document.getElementById('closeLabelsModalBtn').addEventListener('click', () => {
+      labelsModal.classList.add('hidden');
+      labelsModal.classList.remove('flex');
+    });
+    document.getElementById('addLabelBtn').addEventListener('click', () => {
+      const val = document.getElementById('newLabelInput').value.trim();
+      if (val && !labels.includes(val)) {
+        labels.push(val);
+        document.getElementById('newLabelInput').value = '';
+        saveToLocalStorage();
+        renderLabelsModalList();
+        renderApp();
+      }
+    });
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
+        navigator.serviceWorker.register('sw.js').catch(() => {});
       });
     }
+
+    loadFromLocalStorage();
+    renderApp();
   </script>
 </body>
 </html>
