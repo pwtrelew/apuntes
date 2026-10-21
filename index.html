@@ -110,7 +110,13 @@
       display: inline-block;
       margin: 0 2px;
       user-select: none;
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
     }
+    /* Colores de contorno para los iconos minimalistas */
+    .icon-diamond { color: #38bdf8; }
+    .icon-favorite { color: #ef4444; }
+    .icon-check { color: #22c55e; }
+    .icon-location_on { color: #eab308; }
   </style>
 </head>
 <body class="bg-white dark:bg-[#202124] text-[#202124] dark:text-[#e8eaed] min-h-screen flex flex-col transition-colors duration-200">
@@ -261,7 +267,7 @@
           <span class="material-symbols-outlined">arrow_back</span>
         </button>
 
-        <!-- Herramientas de Formato y Emojis Minimalistas -->
+        <!-- Herramientas de Formato y Emojis Minimalistas con contorno en color -->
         <div class="flex items-center gap-0.5 sm:gap-1 overflow-x-auto py-0.5">
           <button id="btnFormatBold" type="button" onmousedown="event.preventDefault()" onclick="applyFormatModal('bold')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Negrita">
             <span class="material-symbols-outlined text-[20px]">format_bold</span>
@@ -274,19 +280,19 @@
           </button>
           <div class="h-4 w-px bg-black/15 dark:bg-white/15 mx-0.5"></div>
           <button type="button" onmousedown="event.preventDefault()" onclick="insertMinimalIconModal('diamond')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Diamante">
-            <span class="material-symbols-outlined text-[19px]">diamond</span>
+            <span class="material-symbols-outlined text-[19px] icon-diamond">diamond</span>
           </button>
           <button type="button" onmousedown="event.preventDefault()" onclick="insertMinimalIconModal('favorite')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Corazón">
-            <span class="material-symbols-outlined text-[19px]">favorite</span>
+            <span class="material-symbols-outlined text-[19px] icon-favorite">favorite</span>
           </button>
           <button type="button" onmousedown="event.preventDefault()" onclick="insertMinimalIconModal('check')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Check">
-            <span class="material-symbols-outlined text-[19px]">check</span>
+            <span class="material-symbols-outlined text-[19px] icon-check">check</span>
           </button>
           <button type="button" onmousedown="event.preventDefault()" onclick="insertMinimalIconModal('person')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Persona">
             <span class="material-symbols-outlined text-[19px]">person</span>
           </button>
           <button type="button" onmousedown="event.preventDefault()" onclick="insertMinimalIconModal('location_on')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Ubicación">
-            <span class="material-symbols-outlined text-[19px]">location_on</span>
+            <span class="material-symbols-outlined text-[19px] icon-location_on">location_on</span>
           </button>
         </div>
 
@@ -532,9 +538,20 @@
     const LABELS_STORAGE_KEY = 'mis_apuntes_labels_permanent';
     const THEME_STORAGE_KEY = 'mis_apuntes_theme';
 
+    // Colorea automáticamente cualquier icono minimalista existente o nuevo
+    function upgradeInlineIconsInHTML(htmlStr) {
+      if (!htmlStr || typeof htmlStr !== 'string') return htmlStr;
+      return htmlStr.replace(/<span([^>]*class="[^"]*inline-icon[^"]*"[^>]*)>\s*(diamond|favorite|check|person|location_on)\s*<\/span>/gi, (match, attrs, iconName) => {
+        const key = iconName.trim().toLowerCase();
+        return `<span class="inline-icon icon-${key}" contenteditable="false">${key}</span>`;
+      });
+    }
+
     function mergeAssemblyStructurePreservingUserNotes(existingAssembly, officialTemplate) {
       if (!existingAssembly || !existingAssembly.assemblyData) return officialTemplate;
       const merged = JSON.parse(JSON.stringify(officialTemplate));
+      merged.type = 'assembly';
+      merged.labels = []; // Las asambleas nunca llevan etiquetas de notas comunes
       merged.color = existingAssembly.color || officialTemplate.color;
       merged.pinned = existingAssembly.pinned !== undefined ? existingAssembly.pinned : officialTemplate.pinned;
       merged.archived = !!existingAssembly.archived;
@@ -544,7 +561,7 @@
       const userNotesMap = {};
       existingAssembly.assemblyData.sessions?.forEach(sec => {
         sec.items?.forEach(it => {
-          if (it.id && it.notes) userNotesMap[it.id] = it.notes;
+          if (it.id && it.notes) userNotesMap[it.id] = upgradeInlineIconsInHTML(it.notes);
         });
       });
 
@@ -556,6 +573,33 @@
         });
       });
       return merged;
+    }
+
+    function sanitizeNotesAndAssemblies() {
+      let changed = false;
+      notes.forEach(n => {
+        // Garantizar que cualquier asamblea tenga su tipo correcto y no tenga etiquetas de apuntes
+        if (n.id === ASSEMBLY_ID_1 || n.id === ASSEMBLY_ID_2 || n.assemblyData || n.type === 'assembly') {
+          if (n.type !== 'assembly') { n.type = 'assembly'; changed = true; }
+          if (Array.isArray(n.labels) && n.labels.length > 0) {
+            n.labels = [];
+            changed = true;
+          }
+        } else {
+          if (!Array.isArray(n.labels)) {
+            n.labels = [];
+            changed = true;
+          }
+          if (n.body) {
+            const upgraded = upgradeInlineIconsInHTML(n.body);
+            if (upgraded !== n.body) {
+              n.body = upgraded;
+              changed = true;
+            }
+          }
+        }
+      });
+      return changed;
     }
 
     function ensureBuiltInAssemblies() {
@@ -571,6 +615,10 @@
           notes[idx] = mergeAssemblyStructurePreservingUserNotes(notes[idx], template);
         }
       });
+
+      if (sanitizeNotesAndAssemblies()) {
+        changed = true;
+      }
 
       if (changed) saveToLocalStorage();
     }
@@ -600,7 +648,7 @@
             id: 'welcome-note-1',
             type: 'note',
             title: '¡Bienvenido a Mis Apuntes! ✨',
-            body: 'Esta es tu app para tomar los mejores apuntes y notas.<br><br><ul><li>Usa la barra superior transparente para poner <b>negrita</b>, <u>subrayado</u> o viñetas.</li><li>Inserta iconos minimalistas directamente en tus textos: <span class="inline-icon">diamond</span> <span class="inline-icon">favorite</span> <span class="inline-icon">check</span> <span class="inline-icon">person</span> <span class="inline-icon">location_on</span></li></ul>',
+            body: 'Esta es tu app para tomar los mejores apuntes y notas.<br><br><ul><li>Usa la barra superior transparente para poner <b>negrita</b>, <u>subrayado</u> o viñetas.</li><li>Inserta iconos minimalistas directamente en tus textos: <span class="inline-icon icon-diamond" contenteditable="false">diamond</span> <span class="inline-icon icon-favorite" contenteditable="false">favorite</span> <span class="inline-icon icon-check" contenteditable="false">check</span> <span class="inline-icon icon-person" contenteditable="false">person</span> <span class="inline-icon icon-location_on" contenteditable="false">location_on</span></li></ul>',
             color: 'sand',
             pinned: true,
             archived: false,
@@ -672,6 +720,9 @@
     }
 
     async function persistNote(note) {
+      if (note.type === 'assembly') {
+        note.labels = [];
+      }
       note.updatedAt = Date.now();
       const idx = notes.findIndex(n => n.id === note.id);
       if (idx >= 0) notes[idx] = note;
@@ -762,7 +813,7 @@
       }
 
       const iconSpan = document.createElement('span');
-      iconSpan.className = 'inline-icon';
+      iconSpan.className = `inline-icon icon-${iconName}`;
       iconSpan.setAttribute('contenteditable', 'false');
       iconSpan.textContent = iconName;
 
@@ -846,7 +897,6 @@
       renderSidebarNav();
       renderNotesGrids();
 
-      // Si hay una nota abierta en pantalla completa y cambia el tema, actualizar su color
       if (activeModalNoteId) {
         const note = notes.find(n => n.id === activeModalNoteId);
         if (note) {
@@ -879,6 +929,10 @@
       });
     }
 
+    function isAssemblyNote(note) {
+      return note.type === 'assembly' || note.id === ASSEMBLY_ID_1 || note.id === ASSEMBLY_ID_2 || !!note.assemblyData;
+    }
+
     // Creación de Tarjetas con Botón de Fijar (Pin) en TODAS las notas
     function createNoteCardElement(note) {
       const card = document.createElement('div');
@@ -887,7 +941,7 @@
       card.style.backgroundColor = styles.bg;
       card.style.borderColor = styles.border;
 
-      const isAssembly = note.type === 'assembly';
+      const isAssembly = isAssemblyNote(note);
 
       // Botón de Fijar directo en cada tarjeta
       const pinBtn = document.createElement('button');
@@ -932,11 +986,11 @@
         </div>`;
       } else if (note.body) {
         const clampClass = isListView ? 'line-clamp-8' : 'line-clamp-5';
-        topContent += `<div class="rich-editor text-xs sm:text-sm leading-relaxed ${clampClass} break-words overflow-hidden">${note.body}</div>`;
+        topContent += `<div class="rich-editor text-xs sm:text-sm leading-relaxed ${clampClass} break-words overflow-hidden">${upgradeInlineIconsInHTML(note.body)}</div>`;
       }
 
       let bottomContent = '';
-      if (note.labels && note.labels.length > 0) {
+      if (!isAssembly && Array.isArray(note.labels) && note.labels.length > 0) {
         bottomContent = `<div class="flex flex-wrap gap-1 mt-2.5 pt-1">
           ${note.labels.map(l => `<span class="text-[11px] px-2 py-0.5 rounded-full bg-black/10 dark:bg-white/10 truncate max-w-full">${l}</span>`).join('')}
         </div>`;
@@ -963,20 +1017,24 @@
       notesGrid.innerHTML = '';
 
       const filtered = notes.filter(note => {
+        const isAssembly = isAssemblyNote(note);
+
         if (searchQuery) {
           const q = searchQuery.toLowerCase();
           const inTitle = (note.title || '').toLowerCase().includes(q);
           const inBody = (note.body || '').toLowerCase().includes(q);
           return !note.trashed && (inTitle || inBody);
         }
-        if (currentView === 'trash') return note.trashed;
-        if (currentView === 'archive') return !note.trashed && note.archived;
-        if (currentView === 'assemblies') return !note.trashed && !note.archived && note.type === 'assembly';
+        if (currentView === 'trash') return !!note.trashed;
+        if (currentView === 'archive') return !note.trashed && !!note.archived;
+        if (currentView === 'assemblies') return !note.trashed && !note.archived && isAssembly;
         if (currentView.startsWith('label:')) {
-          const lbl = currentView.replace('label:', '');
-          return !note.trashed && !note.archived && (note.labels || []).includes(lbl);
+          const lbl = currentView.replace('label:', '').trim();
+          // Las asambleas nunca se muestran dentro de etiquetas comunes; y las notas solo si tienen exactamente esa etiqueta
+          return !note.trashed && !note.archived && !isAssembly && Array.isArray(note.labels) && note.labels.includes(lbl);
         }
-        return !note.trashed && !note.archived && note.type !== 'assembly';
+        // Vista principal "Apuntes": solo notas normales (no asambleas)
+        return !note.trashed && !note.archived && !isAssembly;
       });
 
       if (filtered.length === 0) {
@@ -1025,12 +1083,12 @@
       });
     }
 
-    // Editor a Pantalla Completa (tanto para crear un apunte nuevo como para abrir uno existente)
+    // Editor a Pantalla Completa
     const editModal = document.getElementById('editModal');
     const editModalCard = document.getElementById('editModalCard');
 
     function startNewFullScreenNote(withImagePicker = false) {
-      const defaultLabels = currentView.startsWith('label:') ? [currentView.replace('label:', '')] : [];
+      const defaultLabels = currentView.startsWith('label:') ? [currentView.replace('label:', '').trim()] : [];
       const draftNote = {
         id: 'note-' + Date.now(),
         type: 'note',
@@ -1040,7 +1098,7 @@
         pinned: false,
         archived: false,
         trashed: false,
-        labels: defaultLabels,
+        labels: [...defaultLabels],
         image: null,
         updatedAt: Date.now()
       };
@@ -1062,7 +1120,7 @@
 
     function renderModalLabelsChips(note) {
       const chips = document.getElementById('modalLabelsChips');
-      if (!note || !note.labels) {
+      if (!note || isAssemblyNote(note) || !Array.isArray(note.labels)) {
         chips.innerHTML = '';
         return;
       }
@@ -1087,6 +1145,8 @@
       activeModalNoteId = noteId;
       activeEditorElement = null;
 
+      const isAssembly = isAssemblyNote(note);
+
       const styles = getColorStyles(note.color);
       editModalCard.style.backgroundColor = styles.bg;
 
@@ -1097,27 +1157,35 @@
       document.getElementById('modalTitle').value = note.title || '';
       document.getElementById('modalPinIcon').classList.toggle('filled', !!note.pinned);
 
+      // Ocultar botón de etiquetas cuando se abre un programa de asamblea para que solo pertenezca a Asambleas
+      const modalLabelBtn = document.getElementById('modalLabelBtn');
+      if (modalLabelBtn) {
+        modalLabelBtn.classList.toggle('hidden', isAssembly);
+      }
+      document.getElementById('modalColorMenu').classList.add('hidden');
+      document.getElementById('modalLabelMenu').classList.add('hidden');
+
       renderModalImage(note);
       renderModalLabelsChips(note);
 
       const modalBody = document.getElementById('modalBody');
       const assemblyContainer = document.getElementById('modalAssemblyContainer');
 
-      if (note.type === 'assembly') {
+      if (isAssembly) {
         modalBody.classList.add('hidden');
         assemblyContainer.classList.remove('hidden');
         renderAssemblyProgramInsideModal(note);
       } else {
         assemblyContainer.classList.add('hidden');
         modalBody.classList.remove('hidden');
-        modalBody.innerHTML = note.body || '';
+        modalBody.innerHTML = upgradeInlineIconsInHTML(note.body || '');
         activeEditorElement = modalBody;
       }
 
       editModal.classList.remove('hidden');
       editModal.classList.add('flex');
 
-      if (focusBody && note.type !== 'assembly') {
+      if (focusBody && !isAssembly) {
         setTimeout(() => {
           modalBody.focus();
           updateFormatButtonsState();
@@ -1168,7 +1236,7 @@
                 <span class="material-symbols-outlined text-base opacity-60 expand-icon">${hasNotes ? 'expand_less' : 'expand_more'}</span>
               </button>
               <div class="assembly-editor-wrap ${hasNotes ? '' : 'hidden'} px-3 pb-3 pt-1 border-t border-black/5 dark:border-white/5">
-                <div contenteditable="true" data-sidx="${sIdx}" data-iidx="${iIdx}" data-placeholder="Escribe tus apuntes de este tema aquí..." class="rich-editor assembly-topic-editor min-h-[70px] text-sm leading-relaxed focus:outline-none p-2 rounded bg-white/60 dark:bg-black/30">${item.notes || ''}</div>
+                <div contenteditable="true" data-sidx="${sIdx}" data-iidx="${iIdx}" data-placeholder="Escribe tus apuntes de este tema aquí..." class="rich-editor assembly-topic-editor min-h-[70px] text-sm leading-relaxed focus:outline-none p-2 rounded bg-white/60 dark:bg-black/30">${upgradeInlineIconsInHTML(item.notes || '')}</div>
               </div>
             `;
 
@@ -1211,13 +1279,14 @@
         if (idx >= 0) {
           const note = notes[idx];
           note.title = document.getElementById('modalTitle').value.trim();
-          if (note.type !== 'assembly') {
+          if (!isAssemblyNote(note)) {
             note.body = document.getElementById('modalBody').innerHTML.trim();
+          } else {
+            note.labels = [];
           }
 
           const isEmptyText = (!note.body || note.body === '<br>') && !note.title && !note.image;
-          if (isCreatingNewNote && note.type === 'note' && isEmptyText) {
-            // Si creó un apunte nuevo en blanco y salió sin escribir nada, descartarlo como hace Google Keep
+          if (isCreatingNewNote && !isAssemblyNote(note) && isEmptyText) {
             notes.splice(idx, 1);
             saveToLocalStorage();
             renderApp();
@@ -1264,8 +1333,8 @@
 
     function renderModalLabelCheckboxes() {
       const note = notes.find(n => n.id === activeModalNoteId);
-      if (!note) return;
-      if (!note.labels) note.labels = [];
+      if (!note || isAssemblyNote(note)) return;
+      if (!Array.isArray(note.labels)) note.labels = [];
       const menu = document.getElementById('modalLabelMenu');
       menu.innerHTML = '<div class="text-xs font-medium opacity-75 mb-1">Etiquetas</div>';
       labels.forEach(lbl => {
@@ -1387,7 +1456,13 @@
           <button type="button" class="p-1 text-gray-400 hover:text-red-500"><span class="material-symbols-outlined text-base">delete</span></button>
         `;
         row.querySelector('button').onclick = () => {
+          const removedLabel = labels[idx];
           labels.splice(idx, 1);
+          notes.forEach(n => {
+            if (Array.isArray(n.labels)) {
+              n.labels = n.labels.filter(l => l !== removedLabel);
+            }
+          });
           saveToLocalStorage();
           renderLabelsModalList();
           renderApp();
