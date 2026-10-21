@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="es" class="light"><head>
+<html lang="es" class="dark">
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Mis Apuntes</title>
-  <meta name="theme-color" content="#fbbc04">
+  <!-- El color de la barra superior del sistema se sincroniza con el tema elegido -->
+  <meta id="themeColorMeta" name="theme-color" content="#202124">
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=Google+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -21,25 +21,43 @@
           }
         }
       }
-    }
+    };
+
+    // Aplicar el tema guardado inmediatamente antes de renderizar para evitar destellos y actualizar la barra superior del celular
+    (function() {
+      const savedTheme = localStorage.getItem('mis_apuntes_theme') || 'dark';
+      const htmlEl = document.documentElement;
+      const metaEl = document.getElementById('themeColorMeta');
+      if (savedTheme === 'dark') {
+        htmlEl.classList.add('dark');
+        htmlEl.classList.remove('light');
+        if (metaEl) metaEl.setAttribute('content', '#202124');
+      } else {
+        htmlEl.classList.remove('dark');
+        htmlEl.classList.add('light');
+        if (metaEl) metaEl.setAttribute('content', '#ffffff');
+      }
+    })();
   </script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
   <style>
     body { font-family: 'Roboto', sans-serif; -webkit-tap-highlight-color: transparent; }
     h1, h2, h3, .font-display { font-family: 'Google Sans', 'Roboto', sans-serif; }
     .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; user-select: none; }
     .material-symbols-outlined.filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
     
-    /* Vista Cuadrada (Cuadrícula tipo Google Keep: 2 columnas en móvil, 3 en tablet, 4 en escritorio) */
+    /* Vista Cuadrícula estilo Google Keep (Masonry adaptable sin recortar el botón de fijar) */
     .notes-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
+      gap: 10px;
       align-items: start;
     }
     @media (min-width: 768px) {
       .notes-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 16px;
+        gap: 14px;
       }
     }
     @media (min-width: 1024px) {
@@ -49,7 +67,7 @@
       }
     }
     .notes-grid .note-card {
-      aspect-ratio: 1 / 1;
+      min-height: 120px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -58,7 +76,7 @@
 
     /* Vista Rectangular (Lista vertical de 1 columna a lo ancho) */
     .notes-list {
-      max-width: 600px;
+      max-width: 640px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
@@ -66,7 +84,6 @@
     }
     .notes-list .note-card {
       width: 100%;
-      aspect-ratio: auto;
     }
 
     .note-card {
@@ -95,13 +112,13 @@
       user-select: none;
     }
   </style>
-<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:Roboto, sans-serif;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.sticky{position:sticky}.inset-0{inset:0px}.bottom-0{bottom:0px}.bottom-12{bottom:3rem}.bottom-14{bottom:3.5rem}.bottom-2{bottom:0.5rem}.bottom-4{bottom:1rem}.left-0{left:0px}.left-2{left:0.5rem}.left-20{left:5rem}.left-3{left:0.75rem}.left-4{left:1rem}.right-2{right:0.5rem}.right-4{right:1rem}.top-0{top:0px}.z-20{z-index:20}.z-30{z-index:30}.z-40{z-index:40}.z-50{z-index:50}.mx-1{margin-left:0.25rem;margin-right:0.25rem}.mx-3{margin-left:0.75rem;margin-right:0.75rem}.mx-auto{margin-left:auto;margin-right:auto}.my-2{margin-top:0.5rem;margin-bottom:0.5rem}.mb-2{margin-bottom:0.5rem}.mb-3{margin-bottom:0.75rem}.mb-8{margin-bottom:2rem}.mr-2{margin-right:0.5rem}.mt-0\.5{margin-top:0.125rem}.mt-3{margin-top:0.75rem}.mb-1\.5{margin-bottom:0.375rem}.mt-2{margin-top:0.5rem}.line-clamp-2{overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}.line-clamp-4{overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4}.flex{display:flex}.hidden{display:none}.h-11{height:2.75rem}.h-16{height:4rem}.h-4{height:1rem}.max-h-52{max-height:13rem}.max-h-64{max-height:16rem}.max-h-72{max-height:18rem}.max-h-80{max-height:20rem}.max-h-\[90vh\]{max-height:90vh}.min-h-\[120px\]{min-height:120px}.min-h-\[72px\]{min-height:72px}.min-h-screen{min-height:100vh}.w-11{width:2.75rem}.w-52{width:13rem}.w-72{width:18rem}.w-full{width:100%}.w-px{width:1px}.min-w-0{min-width:0px}.max-w-2xl{max-width:42rem}.max-w-6xl{max-width:72rem}.max-w-\[260px\]{max-width:260px}.max-w-sm{max-width:24rem}.max-w-xl{max-width:36rem}.max-w-full{max-width:100%}.flex-1{flex:1 1 0%}.flex-shrink-0{flex-shrink:0}.-translate-x-full{--tw-translate-x:-100%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.transform{transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.cursor-pointer{cursor:pointer}.cursor-text{cursor:text}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-start{align-items:flex-start}.items-center{align-items:center}.justify-end{justify-content:flex-end}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-2\.5{gap:0.625rem}.gap-3{gap:0.75rem}.gap-5{gap:1.25rem}.space-y-0\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.125rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.125rem * var(--tw-space-y-reverse))}.space-y-1 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.25rem * var(--tw-space-y-reverse))}.space-y-1\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.375rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.375rem * var(--tw-space-y-reverse))}.space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.space-y-5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.25rem * var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.break-words{overflow-wrap:break-word}.rounded{border-radius:0.25rem}.rounded-2xl{border-radius:1rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-xl{border-radius:0.75rem}.rounded-r-full{border-top-right-radius:9999px;border-bottom-right-radius:9999px}.border{border-width:1px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-black\/10{border-color:rgb(0 0 0 / 0.1)}.border-black\/5{border-color:rgb(0 0 0 / 0.05)}.border-gray-100{--tw-border-opacity:1;border-color:rgb(243 244 246 / var(--tw-border-opacity, 1))}.border-gray-200{--tw-border-opacity:1;border-color:rgb(229 231 235 / var(--tw-border-opacity, 1))}.border-gray-300{--tw-border-opacity:1;border-color:rgb(209 213 219 / var(--tw-border-opacity, 1))}.bg-\[\#f1f3f4\]{--tw-bg-opacity:1;background-color:rgb(241 243 244 / var(--tw-bg-opacity, 1))}.bg-\[\#fbbc04\]{--tw-bg-opacity:1;background-color:rgb(251 188 4 / var(--tw-bg-opacity, 1))}.bg-black\/10{background-color:rgb(0 0 0 / 0.1)}.bg-black\/15{background-color:rgb(0 0 0 / 0.15)}.bg-black\/40{background-color:rgb(0 0 0 / 0.4)}.bg-black\/50{background-color:rgb(0 0 0 / 0.5)}.bg-black\/60{background-color:rgb(0 0 0 / 0.6)}.bg-transparent{background-color:transparent}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-white\/95{background-color:rgb(255 255 255 / 0.95)}.bg-\[\#feefc3\]{--tw-bg-opacity:1;background-color:rgb(254 239 195 / var(--tw-bg-opacity, 1))}.object-cover{object-fit:cover}.p-1{padding:0.25rem}.p-1\.5{padding:0.375rem}.p-2{padding:0.5rem}.p-2\.5{padding:0.625rem}.p-3{padding:0.75rem}.p-4{padding:1rem}.p-3\.5{padding:0.875rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-4{padding-left:1rem;padding-right:1rem}.px-5{padding-left:1.25rem;padding-right:1.25rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.py-20{padding-top:5rem;padding-bottom:5rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.pb-1{padding-bottom:0.25rem}.pb-2{padding-bottom:0.5rem}.pr-3{padding-right:0.75rem}.pt-1{padding-top:0.25rem}.pt-2{padding-top:0.5rem}.text-center{text-align:center}.font-display{font-family:Google Sans, Roboto, sans-serif}.text-6xl{font-size:3.75rem;line-height:1}.text-\[19px\]{font-size:19px}.text-\[20px\]{font-size:20px}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.text-\[11px\]{font-size:11px}.font-medium{font-weight:500}.uppercase{text-transform:uppercase}.leading-relaxed{line-height:1.625}.tracking-tight{letter-spacing:-0.025em}.tracking-wider{letter-spacing:0.05em}.text-\[\#202124\]{--tw-text-opacity:1;color:rgb(32 33 36 / var(--tw-text-opacity, 1))}.text-gray-400{--tw-text-opacity:1;color:rgb(156 163 175 / var(--tw-text-opacity, 1))}.text-gray-500{--tw-text-opacity:1;color:rgb(107 114 128 / var(--tw-text-opacity, 1))}.text-gray-600{--tw-text-opacity:1;color:rgb(75 85 99 / var(--tw-text-opacity, 1))}.text-gray-700{--tw-text-opacity:1;color:rgb(55 65 81 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.placeholder-gray-500::placeholder{--tw-placeholder-opacity:1;color:rgb(107 114 128 / var(--tw-placeholder-opacity, 1))}.opacity-0{opacity:0}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-xl{--tw-shadow:0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.backdrop-blur{--tw-backdrop-blur:blur(8px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-colors{transition-property:color, background-color, border-color, fill, stroke, -webkit-text-decoration-color;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, -webkit-text-decoration-color;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-opacity{transition-property:opacity;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-transform{transition-property:transform;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-200{transition-duration:200ms}.duration-300{transition-duration:300ms}.focus-within\:bg-white:focus-within{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.focus-within\:shadow-md:focus-within{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.hover\:bg-black\/10:hover{background-color:rgb(0 0 0 / 0.1)}.hover\:bg-black\/15:hover{background-color:rgb(0 0 0 / 0.15)}.hover\:bg-black\/5:hover{background-color:rgb(0 0 0 / 0.05)}.hover\:bg-black\/80:hover{background-color:rgb(0 0 0 / 0.8)}.hover\:bg-gray-100:hover{--tw-bg-opacity:1;background-color:rgb(243 244 246 / var(--tw-bg-opacity, 1))}.hover\:bg-gray-200:hover{--tw-bg-opacity:1;background-color:rgb(229 231 235 / var(--tw-bg-opacity, 1))}.hover\:text-gray-800:hover{--tw-text-opacity:1;color:rgb(31 41 55 / var(--tw-text-opacity, 1))}.hover\:shadow-md:hover{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.hover\:brightness-95:hover{--tw-brightness:brightness(.95);filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.active\:scale-95:active{--tw-scale-x:.95;--tw-scale-y:.95;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.dark\:border-\[\#5f6368\]:is(.dark *){--tw-border-opacity:1;border-color:rgb(95 99 104 / var(--tw-border-opacity, 1))}.dark\:border-\[\#5f6368\]\/40:is(.dark *){border-color:rgb(95 99 104 / 0.4)}.dark\:border-gray-600:is(.dark *){--tw-border-opacity:1;border-color:rgb(75 85 99 / var(--tw-border-opacity, 1))}.dark\:border-gray-700:is(.dark *){--tw-border-opacity:1;border-color:rgb(55 65 81 / var(--tw-border-opacity, 1))}.dark\:border-gray-800:is(.dark *){--tw-border-opacity:1;border-color:rgb(31 41 55 / var(--tw-border-opacity, 1))}.dark\:border-white\/10:is(.dark *){border-color:rgb(255 255 255 / 0.1)}.dark\:border-white\/5:is(.dark *){border-color:rgb(255 255 255 / 0.05)}.dark\:bg-\[\#202124\]:is(.dark *){--tw-bg-opacity:1;background-color:rgb(32 33 36 / var(--tw-bg-opacity, 1))}.dark\:bg-\[\#202124\]\/95:is(.dark *){background-color:rgb(32 33 36 / 0.95)}.dark\:bg-\[\#303134\]:is(.dark *){--tw-bg-opacity:1;background-color:rgb(48 49 52 / var(--tw-bg-opacity, 1))}.dark\:bg-\[\#525355\]:is(.dark *){--tw-bg-opacity:1;background-color:rgb(82 83 85 / var(--tw-bg-opacity, 1))}.dark\:bg-white\/10:is(.dark *){background-color:rgb(255 255 255 / 0.1)}.dark\:bg-white\/15:is(.dark *){background-color:rgb(255 255 255 / 0.15)}.dark\:bg-\[\#41331c\]:is(.dark *){--tw-bg-opacity:1;background-color:rgb(65 51 28 / var(--tw-bg-opacity, 1))}.dark\:text-\[\#e8eaed\]:is(.dark *){--tw-text-opacity:1;color:rgb(232 234 237 / var(--tw-text-opacity, 1))}.dark\:text-gray-200:is(.dark *){--tw-text-opacity:1;color:rgb(229 231 235 / var(--tw-text-opacity, 1))}.dark\:text-gray-300:is(.dark *){--tw-text-opacity:1;color:rgb(209 213 219 / var(--tw-text-opacity, 1))}.dark\:text-gray-400:is(.dark *){--tw-text-opacity:1;color:rgb(156 163 175 / var(--tw-text-opacity, 1))}.dark\:text-gray-500:is(.dark *){--tw-text-opacity:1;color:rgb(107 114 128 / var(--tw-text-opacity, 1))}.dark\:placeholder-gray-300:is(.dark *)::placeholder{--tw-placeholder-opacity:1;color:rgb(209 213 219 / var(--tw-placeholder-opacity, 1))}.dark\:placeholder-gray-400:is(.dark *)::placeholder{--tw-placeholder-opacity:1;color:rgb(156 163 175 / var(--tw-placeholder-opacity, 1))}.dark\:focus-within\:bg-\[\#303134\]:focus-within:is(.dark *){--tw-bg-opacity:1;background-color:rgb(48 49 52 / var(--tw-bg-opacity, 1))}.dark\:hover\:bg-\[\#303134\]:hover:is(.dark *){--tw-bg-opacity:1;background-color:rgb(48 49 52 / var(--tw-bg-opacity, 1))}.dark\:hover\:bg-gray-600:hover:is(.dark *){--tw-bg-opacity:1;background-color:rgb(75 85 99 / var(--tw-bg-opacity, 1))}.dark\:hover\:bg-gray-700:hover:is(.dark *){--tw-bg-opacity:1;background-color:rgb(55 65 81 / var(--tw-bg-opacity, 1))}.dark\:hover\:bg-white\/10:hover:is(.dark *){background-color:rgb(255 255 255 / 0.1)}.dark\:hover\:bg-white\/20:hover:is(.dark *){background-color:rgb(255 255 255 / 0.2)}.dark\:hover\:text-white:hover:is(.dark *){--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}@media (min-width: 640px){.sm\:left-auto{left:auto}.sm\:right-6{right:1.5rem}.sm\:mx-8{margin-left:2rem;margin-right:2rem}.sm\:w-96{width:24rem}.sm\:gap-2{gap:0.5rem}.sm\:gap-3{gap:0.75rem}.sm\:p-5{padding:1.25rem}.sm\:p-6{padding:1.5rem}.sm\:p-4{padding:1rem}.sm\:px-6{padding-left:1.5rem;padding-right:1.5rem}.sm\:text-base{font-size:1rem;line-height:1.5rem}.sm\:text-xl{font-size:1.25rem;line-height:1.75rem}.sm\:text-sm{font-size:0.875rem;line-height:1.25rem}}</style></head>
+</head>
 <body class="bg-white dark:bg-[#202124] text-[#202124] dark:text-[#e8eaed] min-h-screen flex flex-col transition-colors duration-200">
 
   <!-- Barra Superior -->
   <header class="sticky top-0 z-30 h-16 px-3 sm:px-6 flex items-center justify-between border-b border-gray-200 dark:border-[#5f6368]/40 bg-white/95 dark:bg-[#202124]/95 backdrop-blur">
     <div class="flex items-center gap-2 sm:gap-3">
-      <button id="menuBtn" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Menú principal">
+      <button id="menuBtn" type="button" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Menú principal">
         <span class="material-symbols-outlined">menu</span>
       </button>
       <div class="flex items-center gap-2.5 cursor-pointer" onclick="switchView('notes')">
@@ -110,11 +127,11 @@
     </div>
 
     <!-- Buscador -->
-    <div class="flex-1 max-w-xl mx-3 sm:mx-8">
-      <div class="relative flex items-center bg-[#f1f3f4] dark:bg-[#525355] rounded-lg px-3 py-2 focus-within:bg-white dark:focus-within:bg-[#303134] focus-within:shadow-md transition">
-        <span class="material-symbols-outlined text-gray-500 dark:text-gray-300 mr-2">search</span>
-        <input id="searchInput" type="text" placeholder="Buscar en Mis Apuntes..." class="w-full bg-transparent focus:outline-none text-sm sm:text-base placeholder-gray-500 dark:placeholder-gray-300">
-        <button id="clearSearchBtn" class="hidden p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
+    <div class="flex-1 max-w-xl mx-2 sm:mx-8">
+      <div class="relative flex items-center bg-[#f1f3f4] dark:bg-[#303134] rounded-full px-4 py-2 focus-within:bg-white dark:focus-within:bg-[#3c4043] focus-within:shadow-md transition">
+        <span class="material-symbols-outlined text-gray-500 dark:text-gray-300 mr-2 text-[20px]">search</span>
+        <input id="searchInput" type="text" placeholder="Buscar tus notas" class="w-full bg-transparent focus:outline-none text-sm sm:text-base placeholder-gray-500 dark:placeholder-gray-400">
+        <button id="clearSearchBtn" type="button" class="hidden p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
           <span class="material-symbols-outlined text-sm">close</span>
         </button>
       </div>
@@ -122,49 +139,49 @@
 
     <!-- Acciones Derecha -->
     <div class="flex items-center gap-1 sm:gap-2">
-      <button id="viewToggleBtn" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Cambiar entre notas cuadradas y rectangulares">
+      <button id="viewToggleBtn" type="button" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Cambiar entre vista de cuadrícula y lista">
         <span id="viewToggleIcon" class="material-symbols-outlined">view_agenda</span>
       </button>
-      <button id="themeToggleBtn" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Modo oscuro / claro">
-        <span id="themeToggleIcon" class="material-symbols-outlined">dark_mode</span>
+      <button id="themeToggleBtn" type="button" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Modo oscuro / claro">
+        <span id="themeToggleIcon" class="material-symbols-outlined">light_mode</span>
       </button>
     </div>
   </header>
 
   <!-- Menú Lateral Desplegable -->
-  <div id="drawerBackdrop" class="fixed inset-0 bg-black/40 z-40 hidden opacity-0 transition-opacity duration-200"></div>
+  <div id="drawerBackdrop" class="fixed inset-0 bg-black/50 z-40 hidden opacity-0 transition-opacity duration-200"></div>
   <aside id="sidebarDrawer" class="fixed top-0 left-0 bottom-0 w-72 bg-white dark:bg-[#202124] z-50 transform -translate-x-full transition-transform duration-200 shadow-2xl flex flex-col py-3 overflow-y-auto">
     <div class="px-6 py-3 flex items-center justify-between border-b border-gray-100 dark:border-gray-800 mb-2">
       <div class="flex items-center gap-2.5">
         <span class="font-display text-lg font-medium">Mis Apuntes</span>
       </div>
-      <button id="closeDrawerBtn" class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134]">
+      <button id="closeDrawerBtn" type="button" class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134]">
         <span class="material-symbols-outlined">close</span>
       </button>
     </div>
 
     <nav class="space-y-0.5 pr-3">
-      <button data-nav="notes" class="nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition bg-[#feefc3] dark:bg-[#41331c] text-[#202124] dark:text-[#e8eaed]">
+      <button data-nav="notes" type="button" class="nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition">
         <span class="material-symbols-outlined">edit_note</span>
         <span>Apuntes</span>
       </button>
-      <button data-nav="assemblies" class="nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition">
+      <button data-nav="assemblies" type="button" class="nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition">
         <span class="material-symbols-outlined">description</span>
         <span>Asambleas</span>
       </button>
       
-      <div class="pt-2 pb-1 px-6 flex items-center justify-between text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+      <div class="pt-3 pb-1 px-6 flex items-center justify-between text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
         <span>Etiquetas</span>
-        <button id="editLabelsBtn" class="hover:text-gray-800 dark:hover:text-white">Editar</button>
+        <button id="editLabelsBtn" type="button" class="hover:text-gray-800 dark:hover:text-white">Editar</button>
       </div>
-      <div id="sidebarLabelsList" class="space-y-0.5"><button data-nav="label:Reuniones" class="nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition"><span class="material-symbols-outlined">label</span><span>Reuniones</span></button><button data-nav="label:Revisitas" class="nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition"><span class="material-symbols-outlined">label</span><span>Revisitas</span></button><button data-nav="label:Ideas" class="nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition"><span class="material-symbols-outlined">label</span><span>Ideas</span></button></div>
+      <div id="sidebarLabelsList" class="space-y-0.5"></div>
 
       <div class="border-t border-gray-100 dark:border-gray-800 my-2"></div>
-      <button data-nav="archive" class="nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition">
+      <button data-nav="archive" type="button" class="nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition">
         <span class="material-symbols-outlined">archive</span>
         <span>Archivo</span>
       </button>
-      <button data-nav="trash" class="nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition">
+      <button data-nav="trash" type="button" class="nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition">
         <span class="material-symbols-outlined">delete</span>
         <span>Papelera</span>
       </button>
@@ -172,112 +189,30 @@
   </aside>
 
   <!-- Contenido Principal -->
-  <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-6">
+  <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-5 pb-24">
 
-    <!-- Compositor de Nuevo Apunte -->
-    <div id="composerSection" class="max-w-xl mx-auto mb-8">
-      <div id="composerContainer" class="rounded-xl border border-gray-300 dark:border-[#5f6368] shadow-md transition-colors duration-200 overflow-hidden bg-white dark:bg-[#202124]">
-        
-        <!-- Estado Colapsado -->
-        <div id="composerCollapsed" class="px-4 py-3 flex items-center justify-between cursor-text hidden">
-          <span class="text-gray-500 dark:text-gray-400 font-medium">Crear un apunte...</span>
-          <div class="flex items-center gap-1">
-            <button id="quickImageBtn" class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10" title="Nueva nota con imagen">
-              <span class="material-symbols-outlined text-gray-600 dark:text-gray-300">image</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Estado Expandido -->
-        <div id="composerExpanded" class="flex-col flex">
-          <!-- Barra Superior Transparente de Formato e Iconos -->
-          <div class="flex items-center gap-1 px-3 py-1.5 border-b border-black/10 dark:border-white/10 bg-transparent text-gray-700 dark:text-gray-200 flex-wrap">
-            <button type="button" onclick="applyFormat('bold', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Negrita">
-              <span class="material-symbols-outlined text-[20px]">format_bold</span>
-            </button>
-            <button type="button" onclick="applyFormat('underline', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Subrayado">
-              <span class="material-symbols-outlined text-[20px]">format_underlined</span>
-            </button>
-            <button type="button" onclick="applyFormat('insertUnorderedList', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Viñetas">
-              <span class="material-symbols-outlined text-[20px]">format_list_bulleted</span>
-            </button>
-            <div class="h-4 w-px bg-black/15 dark:bg-white/15 mx-1"></div>
-            <button type="button" onclick="insertMinimalIcon('diamond', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Diamante">
-              <span class="material-symbols-outlined text-[19px]">diamond</span>
-            </button>
-            <button type="button" onclick="insertMinimalIcon('favorite', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Corazón">
-              <span class="material-symbols-outlined text-[19px]">favorite</span>
-            </button>
-            <button type="button" onclick="insertMinimalIcon('check', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Check">
-              <span class="material-symbols-outlined text-[19px]">check</span>
-            </button>
-            <button type="button" onclick="insertMinimalIcon('person', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Persona">
-              <span class="material-symbols-outlined text-[19px]">person</span>
-            </button>
-            <button type="button" onclick="insertMinimalIcon('location_on', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Ubicación">
-              <span class="material-symbols-outlined text-[19px]">location_on</span>
-            </button>
-          </div>
-
-          <!-- Vista Previa Imagen -->
-          <div id="composerImagePreviewWrap" class="hidden relative">
-            <img id="composerImagePreview" src="" class="w-full max-h-64 object-cover">
-            <button id="removeComposerImgBtn" class="absolute bottom-2 right-2 p-1.5 bg-black/60 text-white rounded-full hover:bg-black/80">
-              <span class="material-symbols-outlined text-sm">delete</span>
-            </button>
-          </div>
-
-          <!-- Título y Cuerpo -->
-          <div class="p-4 space-y-2">
-            <div class="flex items-start justify-between gap-2">
-              <input id="composerTitle" type="text" placeholder="Título" class="w-full bg-transparent font-display font-medium text-base focus:outline-none placeholder-gray-500 dark:placeholder-gray-400">
-              <button id="composerPinBtn" type="button" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Fijar apunte">
-                <span id="composerPinIcon" class="material-symbols-outlined text-gray-600 dark:text-gray-300">push_pin</span>
-              </button>
-            </div>
-            <div id="composerBody" contenteditable="true" data-placeholder="Crear un apunte..." class="rich-editor min-h-[72px] max-h-80 overflow-y-auto text-sm leading-relaxed focus:outline-none">america</div>
-            <div id="composerLabelsChips" class="flex flex-wrap gap-1.5 pt-1"></div>
-          </div>
-
-          <!-- Barra Inferior del Compositor -->
-          <div class="px-3 py-2 flex items-center justify-between border-t border-black/5 dark:border-white/5 relative">
-            <div class="flex items-center gap-1">
-              <button id="composerColorBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Color de fondo">
-                <span class="material-symbols-outlined text-[20px]">palette</span>
-              </button>
-              <button id="composerImgBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Añadir imagen">
-                <span class="material-symbols-outlined text-[20px]">image</span>
-              </button>
-              <button id="composerLabelBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Etiquetas">
-                <span class="material-symbols-outlined text-[20px]">label</span>
-              </button>
-            </div>
-            <button id="closeComposerBtn" type="button" class="px-4 py-1.5 rounded text-sm font-medium hover:bg-black/10 dark:hover:bg-white/10">
-              Guardar y cerrar
-            </button>
-
-            <!-- Popover Paleta Colores Compositor -->
-            <div id="composerColorMenu" class="hidden absolute bottom-12 left-2 z-20 p-2 bg-white dark:bg-[#303134] rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 flex gap-1.5 flex-wrap max-w-[260px]"></div>
-
-            <!-- Popover Etiquetas Compositor -->
-            <div id="composerLabelMenu" class="hidden absolute bottom-12 left-20 z-20 p-3 bg-white dark:bg-[#303134] rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 w-52 space-y-1.5"></div>
-          </div>
+    <!-- Barra rápida para crear nuevo apunte (Al tocarla abre el editor a pantalla completa como Google Keep) -->
+    <div id="composerSection" class="max-w-xl mx-auto mb-6">
+      <div id="composerCollapsed" class="rounded-2xl border border-gray-300 dark:border-[#5f6368] shadow-sm px-4 py-3 flex items-center justify-between cursor-pointer bg-white dark:bg-[#303134] hover:shadow-md transition">
+        <span class="text-gray-500 dark:text-gray-300 font-medium text-sm sm:text-base">Crear un apunte...</span>
+        <div class="flex items-center gap-1">
+          <button id="quickImageBtn" type="button" class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10" title="Nueva nota con imagen">
+            <span class="material-symbols-outlined text-gray-600 dark:text-gray-300">image</span>
+          </button>
         </div>
       </div>
       <input id="hiddenImageInput" type="file" accept="image/*" class="hidden">
     </div>
 
     <!-- Sección Fijadas -->
-    <section id="pinnedSection" class="mb-8">
-      <h2 class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 px-2">Fijados</h2>
-      <div id="pinnedGrid" class="notes-grid"><div class="note-card rounded-xl border p-3.5 sm:p-4 cursor-pointer hover:shadow-md relative group" style="background-color: rgb(255, 248, 184); border-color: rgb(255, 244, 117);"><div class="overflow-hidden"><h3 class="font-display font-medium text-sm sm:text-base mb-1.5 line-clamp-2">¡Bienvenido a Mis Apuntes! ✨</h3><div class="rich-editor text-xs sm:text-sm leading-relaxed line-clamp-4 break-words overflow-hidden">Esta es tu app para tomar los mejores apuntes y notas.<br><br><ul><li>Usa la barra superior transparente para poner <b>negrita</b>, <u>subrayado</u> o viñetas.</li><li>Inserta iconos minimalistas directamente en tus textos: <span class="inline-icon">diamond</span> <span class="inline-icon">favorite</span> <span class="inline-icon">check</span> <span class="inline-icon">person</span> <span class="inline-icon">location_on</span></li></ul></div></div><div class="flex flex-wrap gap-1 mt-2 pt-1">
-          <span class="text-[11px] px-2 py-0.5 rounded-full bg-black/10 dark:bg-white/10 truncate max-w-full">Ideas</span>
-        </div></div></div>
+    <section id="pinnedSection" class="hidden mb-7">
+      <h2 class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2.5 px-2">Fijados</h2>
+      <div id="pinnedGrid" class="notes-grid"></div>
     </section>
 
     <!-- Sección Otras Notas -->
     <section id="othersSection">
-      <h2 id="othersHeading" class="hidden text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 px-2">Otros</h2>
+      <h2 id="othersHeading" class="hidden text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2.5 px-2">Otros</h2>
       <div id="notesGrid" class="notes-grid"></div>
     </section>
 
@@ -289,17 +224,22 @@
 
   </main>
 
+  <!-- Botón flotante (+) estilo Google Keep para crear apunte rápido -->
+  <button id="fabNewNoteBtn" type="button" class="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-2xl bg-[#303134] dark:bg-[#8ab4f8] text-white dark:text-[#202124] shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition" title="Nuevo apunte">
+    <span class="material-symbols-outlined text-3xl">add</span>
+  </button>
+
   <!-- Cartel Flotante de Instalación Directa PWA -->
   <div id="pwaInstallBanner" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-40 hidden bg-white dark:bg-[#303134] border border-gray-200 dark:border-[#5f6368] rounded-2xl shadow-2xl p-4 transition-all duration-300">
     <div class="flex items-start gap-3">
-      <img src="./icon-192.png" alt="Mis Apuntes" onerror="this.style.display='none'" class="w-11 h-11 rounded-xl object-cover flex-shrink-0" style="display: none;">
+      <img src="./icon-192.png" alt="Mis Apuntes" onerror="this.style.display='none'" class="w-11 h-11 rounded-xl object-cover flex-shrink-0">
       <div class="flex-1 min-w-0">
         <h4 class="font-display font-medium text-sm text-[#202124] dark:text-[#e8eaed]">Instalar Mis Apuntes</h4>
         <p id="pwaBannerText" class="text-xs text-gray-600 dark:text-gray-300 mt-0.5 leading-relaxed">
           Instala la aplicación para abrirla directo desde tu pantalla de inicio y usarla sin conexión.
         </p>
         <div class="flex items-center gap-2 mt-3">
-          <button id="pwaInstallActionBtn" type="button" class="px-4 py-1.5 rounded-lg bg-[#fbbc04] text-[#202124] font-medium text-xs hover:brightness-95 active:scale-95 transition shadow-sm">
+          <button id="pwaInstallActionBtn" type="button" class="px-4 py-1.5 rounded-lg bg-[#8ab4f8] text-[#202124] font-medium text-xs hover:brightness-95 active:scale-95 transition shadow-sm">
             Instalar aplicación
           </button>
           <button id="pwaDismissBtn" type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition">
@@ -310,13 +250,19 @@
     </div>
   </div>
 
-  <!-- Modal Edición de Nota / Programa de Asamblea -->
-  <div id="editModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-3 sm:p-6 backdrop-blur-sm">
-    <div id="editModalCard" class="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl border border-gray-300 dark:border-[#5f6368] shadow-2xl overflow-hidden bg-white dark:bg-[#202124] transition-colors duration-200">
+  <!-- Editor de Apuntes y Asambleas a PANTALLA COMPLETA (Dinámica idéntica a Google Keep) -->
+  <div id="editModal" class="fixed inset-0 z-50 hidden flex-col bg-white dark:bg-[#202124] transition-colors duration-200">
+    <div id="editModalCard" class="w-full h-full flex flex-col overflow-hidden bg-white dark:bg-[#202124] transition-colors duration-200">
       
-      <!-- Barra Superior Transparente de Formato -->
-      <div class="flex items-center justify-between px-3 py-2 border-b border-black/10 dark:border-white/10 bg-transparent text-gray-700 dark:text-gray-200 flex-wrap">
-        <div class="flex items-center gap-1">
+      <!-- Barra Superior de Navegación y Formato Transparente -->
+      <div class="flex items-center justify-between px-2 sm:px-4 py-2 border-b border-black/10 dark:border-white/10 bg-transparent text-gray-800 dark:text-gray-100 gap-1">
+        <!-- Botón Atrás (Guarda y cierra como en Google Keep) -->
+        <button id="modalBackBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition flex-shrink-0" title="Guardar y volver">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+
+        <!-- Herramientas de Formato y Emojis Minimalistas -->
+        <div class="flex items-center gap-0.5 sm:gap-1 overflow-x-auto py-0.5">
           <button type="button" onclick="applyFormatModal('bold')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Negrita">
             <span class="material-symbols-outlined text-[20px]">format_bold</span>
           </button>
@@ -326,7 +272,7 @@
           <button type="button" onclick="applyFormatModal('insertUnorderedList')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Viñetas">
             <span class="material-symbols-outlined text-[20px]">format_list_bulleted</span>
           </button>
-          <div class="h-4 w-px bg-black/15 dark:bg-white/15 mx-1"></div>
+          <div class="h-4 w-px bg-black/15 dark:bg-white/15 mx-0.5"></div>
           <button type="button" onclick="insertMinimalIconModal('diamond')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Diamante">
             <span class="material-symbols-outlined text-[19px]">diamond</span>
           </button>
@@ -344,66 +290,80 @@
           </button>
         </div>
 
-        <button id="modalPinBtn" type="button" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Fijar">
-          <span id="modalPinIcon" class="material-symbols-outlined">push_pin</span>
-        </button>
+        <!-- Acciones derechas: Fijar y Archivar -->
+        <div class="flex items-center gap-0.5 flex-shrink-0">
+          <button id="modalPinBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Fijar apunte">
+            <span id="modalPinIcon" class="material-symbols-outlined">push_pin</span>
+          </button>
+          <button id="modalArchiveBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Archivar">
+            <span class="material-symbols-outlined">archive</span>
+          </button>
+        </div>
       </div>
 
-      <!-- Cuerpo Scrollable del Modal -->
-      <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3">
-        <div id="modalImageWrap" class="hidden relative rounded-lg overflow-hidden mb-2">
-          <img id="modalImage" src="" class="w-full max-h-72 object-cover">
-          <button id="modalRemoveImgBtn" class="absolute bottom-2 right-2 p-1.5 bg-black/60 text-white rounded-full hover:bg-black/80">
+      <!-- Cuerpo Scrollable a Pantalla Completa -->
+      <div class="flex-1 overflow-y-auto px-4 sm:px-8 py-4 max-w-4xl w-full mx-auto space-y-3">
+        <div id="modalImageWrap" class="hidden relative rounded-xl overflow-hidden mb-3">
+          <img id="modalImage" src="" class="w-full max-h-96 object-contain bg-black/5 dark:bg-white/5">
+          <button id="modalRemoveImgBtn" type="button" class="absolute bottom-3 right-3 p-2 bg-black/60 text-white rounded-full hover:bg-black/80">
             <span class="material-symbols-outlined text-sm">delete</span>
           </button>
         </div>
 
-        <input id="modalTitle" type="text" placeholder="Título" class="w-full bg-transparent font-display font-medium text-lg sm:text-xl focus:outline-none">
+        <input id="modalTitle" type="text" placeholder="Título" class="w-full bg-transparent font-display font-medium text-xl sm:text-2xl focus:outline-none placeholder-gray-500 dark:placeholder-gray-400">
 
         <!-- Cuerpo de Apunte Regular -->
-        <div id="modalBody" contenteditable="true" data-placeholder="Apunte..." class="rich-editor min-h-[120px] text-sm sm:text-base leading-relaxed focus:outline-none"></div>
+        <div id="modalBody" contenteditable="true" data-placeholder="Apunte" class="rich-editor min-h-[60vh] text-base leading-relaxed focus:outline-none"></div>
 
         <!-- Contenedor Programa de Asamblea -->
-        <div id="modalAssemblyContainer" class="hidden space-y-5 pt-2"></div>
+        <div id="modalAssemblyContainer" class="hidden space-y-5 pt-2 pb-10"></div>
 
         <div id="modalLabelsChips" class="flex flex-wrap gap-1.5 pt-2"></div>
       </div>
 
-      <!-- Barra Inferior del Modal -->
-      <div class="px-4 py-2.5 border-t border-black/10 dark:border-white/10 flex items-center justify-between relative">
+      <!-- Barra Inferior del Editor a Pantalla Completa -->
+      <div class="px-4 py-2.5 border-t border-black/10 dark:border-white/10 flex items-center justify-between relative bg-transparent">
         <div class="flex items-center gap-1">
-          <button id="modalColorBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Color">
-            <span class="material-symbols-outlined text-[20px]">palette</span>
+          <button id="modalColorBtn" type="button" class="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Color de fondo">
+            <span class="material-symbols-outlined text-[21px]">palette</span>
           </button>
-          <button id="modalArchiveBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Archivar">
-            <span class="material-symbols-outlined text-[20px]">archive</span>
+          <button id="modalImgBtn" type="button" class="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Agregar imagen">
+            <span class="material-symbols-outlined text-[21px]">image</span>
           </button>
-          <button id="modalDeleteBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Borrar">
-            <span class="material-symbols-outlined text-[20px]">delete</span>
+          <button id="modalLabelBtn" type="button" class="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Etiquetas">
+            <span class="material-symbols-outlined text-[21px]">label</span>
+          </button>
+          <button id="modalDeleteBtn" type="button" class="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Enviar a la papelera">
+            <span class="material-symbols-outlined text-[21px]">delete</span>
           </button>
         </div>
-        <button id="modalSaveCloseBtn" type="button" class="px-5 py-1.5 rounded-lg font-medium text-sm bg-black/10 dark:bg-white/10 hover:bg-black/15 dark:hover:bg-white/20 transition">
-          Guardar y cerrar
+
+        <button id="modalSaveCloseBtn" type="button" class="px-5 py-2 rounded-full font-medium text-sm bg-black/10 dark:bg-white/10 hover:bg-black/15 dark:hover:bg-white/20 transition">
+          Listo
         </button>
 
-        <div id="modalColorMenu" class="hidden absolute bottom-14 left-3 z-30 p-2 bg-white dark:bg-[#303134] rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 flex gap-1.5 flex-wrap max-w-[260px]"></div>
+        <!-- Menú emergente de Colores -->
+        <div id="modalColorMenu" class="hidden absolute bottom-14 left-3 z-30 p-2.5 bg-white dark:bg-[#303134] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex gap-2 flex-wrap max-w-[280px]"></div>
+
+        <!-- Menú emergente de Etiquetas -->
+        <div id="modalLabelMenu" class="hidden absolute bottom-14 left-24 z-30 p-3 bg-white dark:bg-[#303134] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-56 space-y-1.5"></div>
       </div>
     </div>
   </div>
 
   <!-- Modal Editar Etiquetas -->
   <div id="labelsModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
-    <div class="bg-white dark:bg-[#303134] w-full max-w-sm rounded-xl shadow-2xl p-4 space-y-3 border border-gray-200 dark:border-gray-700">
+    <div class="bg-white dark:bg-[#303134] w-full max-w-sm rounded-2xl shadow-2xl p-4 space-y-3 border border-gray-200 dark:border-gray-700">
       <h3 class="font-display font-medium text-base">Editar etiquetas</h3>
       <div class="flex items-center gap-2 border-b border-gray-200 dark:border-gray-600 pb-2">
         <input id="newLabelInput" type="text" placeholder="Crear nueva etiqueta" class="flex-1 bg-transparent text-sm focus:outline-none">
-        <button id="addLabelBtn" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+        <button id="addLabelBtn" type="button" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
           <span class="material-symbols-outlined text-lg">check</span>
         </button>
       </div>
       <div id="editLabelsModalList" class="max-h-52 overflow-y-auto space-y-1"></div>
       <div class="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
-        <button id="closeLabelsModalBtn" class="px-4 py-1.5 text-sm font-medium rounded hover:bg-gray-100 dark:hover:bg-gray-700">Listo</button>
+        <button id="closeLabelsModalBtn" type="button" class="px-4 py-1.5 text-sm font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">Listo</button>
       </div>
     </div>
   </div>
@@ -565,18 +525,12 @@
     let isListView = localStorage.getItem('mis_apuntes_view_mode') === 'list';
     let searchQuery = '';
     let activeEditorElement = null;
-
-    let composerState = {
-      pinned: false,
-      color: 'default',
-      labels: [],
-      image: null
-    };
-
     let activeModalNoteId = null;
+    let isCreatingNewNote = false;
 
     const NOTES_STORAGE_KEY = 'mis_apuntes_notes_permanent';
     const LABELS_STORAGE_KEY = 'mis_apuntes_labels_permanent';
+    const THEME_STORAGE_KEY = 'mis_apuntes_theme';
 
     function mergeAssemblyStructurePreservingUserNotes(existingAssembly, officialTemplate) {
       if (!existingAssembly || !existingAssembly.assemblyData) return officialTemplate;
@@ -731,8 +685,20 @@
       }
     }
 
+    // Gestión de Tema Oscuro / Claro persistente + color de la barra de estado del celular
     function isDarkMode() {
       return document.documentElement.classList.contains('dark');
+    }
+
+    function syncThemeUI() {
+      const dark = isDarkMode();
+      const iconEl = document.getElementById('themeToggleIcon');
+      if (iconEl) iconEl.textContent = dark ? 'light_mode' : 'dark_mode';
+
+      const metaTheme = document.getElementById('themeColorMeta');
+      if (metaTheme) {
+        metaTheme.setAttribute('content', dark ? '#202124' : '#ffffff');
+      }
     }
 
     function getColorStyles(colorKey) {
@@ -743,21 +709,6 @@
         border: dark ? entry.borderDark : entry.borderLight
       };
     }
-
-    window.applyFormat = function(command, targetId) {
-      const el = document.getElementById(targetId);
-      if (!el) return;
-      el.focus();
-      document.execCommand(command, false, null);
-    };
-
-    window.insertMinimalIcon = function(iconName, targetId) {
-      const el = document.getElementById(targetId);
-      if (!el) return;
-      el.focus();
-      const html = `<span class="inline-icon" contenteditable="false">${iconName}</span>&nbsp;`;
-      document.execCommand('insertHTML', false, html);
-    };
 
     window.applyFormatModal = function(command) {
       const target = activeEditorElement || document.getElementById('modalBody');
@@ -790,10 +741,13 @@
       }
 
       const composerSec = document.getElementById('composerSection');
+      const fabBtn = document.getElementById('fabNewNoteBtn');
       if (view === 'notes' || view.startsWith('label:')) {
         composerSec.classList.remove('hidden');
+        fabBtn.classList.remove('hidden');
       } else {
         composerSec.classList.add('hidden');
+        fabBtn.classList.add('hidden');
       }
       renderApp();
     };
@@ -830,9 +784,19 @@
     }
 
     function renderApp() {
+      syncThemeUI();
       applyLayoutModeUI();
       renderSidebarNav();
       renderNotesGrids();
+
+      // Si hay una nota abierta en pantalla completa y cambia el tema, actualizar su color
+      if (activeModalNoteId) {
+        const note = notes.find(n => n.id === activeModalNoteId);
+        if (note) {
+          const styles = getColorStyles(note.color);
+          editModalCard.style.backgroundColor = styles.bg;
+        }
+      }
     }
 
     function renderSidebarNav() {
@@ -840,6 +804,7 @@
       labelsContainer.innerHTML = '';
       labels.forEach(label => {
         const btn = document.createElement('button');
+        btn.type = 'button';
         btn.dataset.nav = `label:${label}`;
         btn.className = 'nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition';
         btn.innerHTML = `<span class="material-symbols-outlined">label</span><span>${label}</span>`;
@@ -857,23 +822,36 @@
       });
     }
 
+    // Creación de Tarjetas con Botón de Fijar (Pin) en TODAS las notas
     function createNoteCardElement(note) {
       const card = document.createElement('div');
       const styles = getColorStyles(note.color);
-      card.className = 'note-card rounded-xl border p-3.5 sm:p-4 cursor-pointer hover:shadow-md relative group';
+      card.className = 'note-card rounded-2xl border p-3.5 sm:p-4 cursor-pointer hover:shadow-md relative group';
       card.style.backgroundColor = styles.bg;
       card.style.borderColor = styles.border;
 
       const isAssembly = note.type === 'assembly';
 
+      // Botón de Fijar directo en cada tarjeta
+      const pinBtn = document.createElement('button');
+      pinBtn.type = 'button';
+      pinBtn.className = `absolute top-2.5 right-2.5 z-10 p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition ${note.pinned ? 'opacity-100' : 'opacity-70 sm:opacity-0 sm:group-hover:opacity-100'}`;
+      pinBtn.title = note.pinned ? 'Desfijar apunte' : 'Fijar apunte';
+      pinBtn.innerHTML = `<span class="material-symbols-outlined text-[20px] ${note.pinned ? 'filled' : ''}">push_pin</span>`;
+      pinBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        note.pinned = !note.pinned;
+        persistNote(note);
+      });
+
       let topContent = '';
       if (note.image) {
-        topContent += `<img src="${note.image}" class="w-full ${isListView ? 'max-h-48' : 'h-24'} object-cover rounded-lg mb-2.5">`;
+        topContent += `<img src="${note.image}" class="w-full ${isListView ? 'max-h-52' : 'h-28'} object-cover rounded-xl mb-2.5">`;
       }
 
       if (isAssembly) {
         topContent += `
-          <div class="flex items-center gap-1 text-[11px] font-medium uppercase tracking-wider opacity-75 mb-1">
+          <div class="flex items-center gap-1 text-[11px] font-medium uppercase tracking-wider opacity-75 mb-1 pr-7">
             <span class="material-symbols-outlined text-sm">description</span>
             <span class="truncate">Asamblea</span>
           </div>
@@ -881,7 +859,9 @@
       }
 
       if (note.title) {
-        topContent += `<h3 class="font-display font-medium text-sm sm:text-base mb-1.5 line-clamp-2">${note.title}</h3>`;
+        topContent += `<h3 class="font-display font-medium text-sm sm:text-base mb-1.5 pr-7 line-clamp-2">${note.title}</h3>`;
+      } else {
+        topContent += `<div class="h-4"></div>`;
       }
 
       if (isAssembly && note.subtitle) {
@@ -890,22 +870,27 @@
         note.assemblyData?.sessions?.forEach(s => s.items.forEach(it => {
           if (it.notes && it.notes.trim() !== '') totalNotes++;
         }));
-        topContent += `<div class="text-[11px] font-medium px-2 py-1 rounded-md bg-black/5 dark:bg-white/10 inline-block">
+        topContent += `<div class="text-[11px] font-medium px-2.5 py-1 rounded-md bg-black/5 dark:bg-white/10 inline-block">
           ${totalNotes} ${totalNotes === 1 ? 'apunte' : 'apuntes'}
         </div>`;
       } else if (note.body) {
-        const clampClass = isListView ? 'line-clamp-6' : 'line-clamp-4';
+        const clampClass = isListView ? 'line-clamp-8' : 'line-clamp-5';
         topContent += `<div class="rich-editor text-xs sm:text-sm leading-relaxed ${clampClass} break-words overflow-hidden">${note.body}</div>`;
       }
 
       let bottomContent = '';
       if (note.labels && note.labels.length > 0) {
-        bottomContent = `<div class="flex flex-wrap gap-1 mt-2 pt-1">
+        bottomContent = `<div class="flex flex-wrap gap-1 mt-2.5 pt-1">
           ${note.labels.map(l => `<span class="text-[11px] px-2 py-0.5 rounded-full bg-black/10 dark:bg-white/10 truncate max-w-full">${l}</span>`).join('')}
         </div>`;
       }
 
-      card.innerHTML = `<div class="overflow-hidden">${topContent}</div>${bottomContent}`;
+      const contentWrap = document.createElement('div');
+      contentWrap.className = 'overflow-hidden flex-1 flex flex-col justify-between';
+      contentWrap.innerHTML = `<div class="overflow-hidden">${topContent}</div>${bottomContent}`;
+
+      card.appendChild(pinBtn);
+      card.appendChild(contentWrap);
       card.addEventListener('click', () => openEditModal(note.id));
       return card;
     }
@@ -963,74 +948,6 @@
       others.forEach(n => notesGrid.appendChild(createNoteCardElement(n)));
     }
 
-    const composerCollapsed = document.getElementById('composerCollapsed');
-    const composerExpanded = document.getElementById('composerExpanded');
-    const composerContainer = document.getElementById('composerContainer');
-    const composerTitle = document.getElementById('composerTitle');
-    const composerBody = document.getElementById('composerBody');
-
-    function expandComposer() {
-      composerCollapsed.classList.add('hidden');
-      composerExpanded.classList.remove('hidden');
-      composerExpanded.classList.add('flex');
-      composerBody.focus();
-    }
-
-    function saveAndCollapseComposer() {
-      const title = composerTitle.value.trim();
-      const body = composerBody.innerHTML.trim();
-      if (title || (body && body !== '<br>') || composerState.image) {
-        const newNote = {
-          id: 'note-' + Date.now(),
-          type: 'note',
-          title,
-          body,
-          color: composerState.color,
-          pinned: composerState.pinned,
-          archived: false,
-          trashed: false,
-          labels: [...composerState.labels],
-          image: composerState.image,
-          updatedAt: Date.now()
-        };
-        persistNote(newNote);
-      }
-      composerTitle.value = '';
-      composerBody.innerHTML = '';
-      composerState = { pinned: false, color: 'default', labels: [], image: null };
-      updateComposerAppearance();
-      composerExpanded.classList.add('hidden');
-      composerExpanded.classList.remove('flex');
-      composerCollapsed.classList.remove('hidden');
-      document.getElementById('composerColorMenu').classList.add('hidden');
-      document.getElementById('composerLabelMenu').classList.add('hidden');
-    }
-
-    function updateComposerAppearance() {
-      const styles = getColorStyles(composerState.color);
-      composerContainer.style.backgroundColor = styles.bg;
-      composerContainer.style.borderColor = styles.border;
-      document.getElementById('composerPinIcon').classList.toggle('filled', composerState.pinned);
-
-      const imgWrap = document.getElementById('composerImagePreviewWrap');
-      if (composerState.image) {
-        imgWrap.classList.remove('hidden');
-        document.getElementById('composerImagePreview').src = composerState.image;
-      } else {
-        imgWrap.classList.add('hidden');
-      }
-
-      const chips = document.getElementById('composerLabelsChips');
-      chips.innerHTML = composerState.labels.map(l => `<span class="text-xs px-2 py-0.5 rounded-full bg-black/10 dark:bg-white/10">${l}</span>`).join('');
-    }
-
-    composerCollapsed.addEventListener('click', expandComposer);
-    document.getElementById('closeComposerBtn').addEventListener('click', saveAndCollapseComposer);
-    document.getElementById('composerPinBtn').addEventListener('click', () => {
-      composerState.pinned = !composerState.pinned;
-      updateComposerAppearance();
-    });
-
     function buildColorPalette(containerId, onSelect) {
       const container = document.getElementById(containerId);
       container.innerHTML = '';
@@ -1038,7 +955,7 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         const styles = getColorStyles(key);
-        btn.className = 'w-7 h-7 rounded-full border transition transform hover:scale-110';
+        btn.className = 'w-8 h-8 rounded-full border transition transform hover:scale-110';
         btn.style.backgroundColor = styles.bg;
         btn.style.borderColor = styles.border;
         btn.title = KEEP_COLORS[key].name;
@@ -1051,42 +968,63 @@
       });
     }
 
-    document.getElementById('composerColorBtn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      buildColorPalette('composerColorMenu', (colorKey) => {
-        composerState.color = colorKey;
-        updateComposerAppearance();
-      });
-      document.getElementById('composerColorMenu').classList.toggle('hidden');
-    });
-
-    function renderComposerLabelCheckboxes() {
-      const menu = document.getElementById('composerLabelMenu');
-      menu.innerHTML = '<div class="text-xs font-medium opacity-75 mb-1">Etiquetar apunte</div>';
-      labels.forEach(lbl => {
-        const row = document.createElement('label');
-        row.className = 'flex items-center gap-2 text-sm cursor-pointer py-1';
-        const checked = composerState.labels.includes(lbl);
-        row.innerHTML = `<input type="checkbox" ${checked ? 'checked' : ''} class="rounded"> <span>${lbl}</span>`;
-        row.querySelector('input').onchange = (e) => {
-          if (e.target.checked) composerState.labels.push(lbl);
-          else composerState.labels = composerState.labels.filter(x => x !== lbl);
-          updateComposerAppearance();
-        };
-        menu.appendChild(row);
-      });
-    }
-
-    document.getElementById('composerLabelBtn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      renderComposerLabelCheckboxes();
-      document.getElementById('composerLabelMenu').classList.toggle('hidden');
-    });
-
+    // Editor a Pantalla Completa (tanto para crear un apunte nuevo como para abrir uno existente)
     const editModal = document.getElementById('editModal');
     const editModalCard = document.getElementById('editModalCard');
 
-    function openEditModal(noteId) {
+    function startNewFullScreenNote(withImagePicker = false) {
+      const defaultLabels = currentView.startsWith('label:') ? [currentView.replace('label:', '')] : [];
+      const draftNote = {
+        id: 'note-' + Date.now(),
+        type: 'note',
+        title: '',
+        body: '',
+        color: 'default',
+        pinned: false,
+        archived: false,
+        trashed: false,
+        labels: defaultLabels,
+        image: null,
+        updatedAt: Date.now()
+      };
+      notes.unshift(draftNote);
+      isCreatingNewNote = true;
+      openEditModal(draftNote.id, true);
+
+      if (withImagePicker) {
+        document.getElementById('hiddenImageInput').click();
+      }
+    }
+
+    document.getElementById('composerCollapsed').addEventListener('click', () => startNewFullScreenNote(false));
+    document.getElementById('fabNewNoteBtn').addEventListener('click', () => startNewFullScreenNote(false));
+    document.getElementById('quickImageBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      startNewFullScreenNote(true);
+    });
+
+    function renderModalLabelsChips(note) {
+      const chips = document.getElementById('modalLabelsChips');
+      if (!note || !note.labels) {
+        chips.innerHTML = '';
+        return;
+      }
+      chips.innerHTML = note.labels.map(l => `<span class="text-xs px-2.5 py-1 rounded-full bg-black/10 dark:bg-white/10">${l}</span>`).join('');
+    }
+
+    function renderModalImage(note) {
+      const wrap = document.getElementById('modalImageWrap');
+      const img = document.getElementById('modalImage');
+      if (note && note.image) {
+        img.src = note.image;
+        wrap.classList.remove('hidden');
+      } else {
+        img.src = '';
+        wrap.classList.add('hidden');
+      }
+    }
+
+    function openEditModal(noteId, focusBody = false) {
       const note = notes.find(n => n.id === noteId);
       if (!note) return;
       activeModalNoteId = noteId;
@@ -1094,10 +1032,16 @@
 
       const styles = getColorStyles(note.color);
       editModalCard.style.backgroundColor = styles.bg;
-      editModalCard.style.borderColor = styles.border;
+
+      // Actualizar también el color de la barra superior del teléfono mientras la nota está a pantalla completa
+      const metaTheme = document.getElementById('themeColorMeta');
+      if (metaTheme) metaTheme.setAttribute('content', styles.bg);
 
       document.getElementById('modalTitle').value = note.title || '';
       document.getElementById('modalPinIcon').classList.toggle('filled', !!note.pinned);
+
+      renderModalImage(note);
+      renderModalLabelsChips(note);
 
       const modalBody = document.getElementById('modalBody');
       const assemblyContainer = document.getElementById('modalAssemblyContainer');
@@ -1115,6 +1059,10 @@
 
       editModal.classList.remove('hidden');
       editModal.classList.add('flex');
+
+      if (focusBody && note.type !== 'assembly') {
+        setTimeout(() => modalBody.focus(), 60);
+      }
     }
 
     function renderAssemblyProgramInsideModal(note) {
@@ -1197,27 +1145,38 @@
 
     function saveAndCloseModal() {
       if (activeModalNoteId) {
-        const note = notes.find(n => n.id === activeModalNoteId);
-        if (note) {
+        const idx = notes.findIndex(n => n.id === activeModalNoteId);
+        if (idx >= 0) {
+          const note = notes[idx];
           note.title = document.getElementById('modalTitle').value.trim();
           if (note.type !== 'assembly') {
             note.body = document.getElementById('modalBody').innerHTML.trim();
           }
-          note.updatedAt = Date.now();
-          persistNote(note);
+
+          const isEmptyText = (!note.body || note.body === '<br>') && !note.title && !note.image;
+          if (isCreatingNewNote && note.type === 'note' && isEmptyText) {
+            // Si creó un apunte nuevo en blanco y salió sin escribir nada, descartarlo como hace Google Keep
+            notes.splice(idx, 1);
+            saveToLocalStorage();
+            renderApp();
+          } else {
+            note.updatedAt = Date.now();
+            persistNote(note);
+          }
         }
       }
+      isCreatingNewNote = false;
       activeModalNoteId = null;
       activeEditorElement = null;
       editModal.classList.add('hidden');
       editModal.classList.remove('flex');
       document.getElementById('modalColorMenu').classList.add('hidden');
+      document.getElementById('modalLabelMenu').classList.add('hidden');
+      syncThemeUI();
     }
 
+    document.getElementById('modalBackBtn').addEventListener('click', saveAndCloseModal);
     document.getElementById('modalSaveCloseBtn').addEventListener('click', saveAndCloseModal);
-    editModal.addEventListener('click', (e) => {
-      if (e.target === editModal) saveAndCloseModal();
-    });
 
     document.getElementById('modalPinBtn').addEventListener('click', () => {
       const note = notes.find(n => n.id === activeModalNoteId);
@@ -1228,15 +1187,58 @@
 
     document.getElementById('modalColorBtn').addEventListener('click', (e) => {
       e.stopPropagation();
+      document.getElementById('modalLabelMenu').classList.add('hidden');
       buildColorPalette('modalColorMenu', (colorKey) => {
         const note = notes.find(n => n.id === activeModalNoteId);
         if (!note) return;
         note.color = colorKey;
         const styles = getColorStyles(colorKey);
         editModalCard.style.backgroundColor = styles.bg;
-        editModalCard.style.borderColor = styles.border;
+        const metaTheme = document.getElementById('themeColorMeta');
+        if (metaTheme) metaTheme.setAttribute('content', styles.bg);
       });
       document.getElementById('modalColorMenu').classList.toggle('hidden');
+    });
+
+    function renderModalLabelCheckboxes() {
+      const note = notes.find(n => n.id === activeModalNoteId);
+      if (!note) return;
+      if (!note.labels) note.labels = [];
+      const menu = document.getElementById('modalLabelMenu');
+      menu.innerHTML = '<div class="text-xs font-medium opacity-75 mb-1">Etiquetas</div>';
+      labels.forEach(lbl => {
+        const row = document.createElement('label');
+        row.className = 'flex items-center gap-2 text-sm cursor-pointer py-1';
+        const checked = note.labels.includes(lbl);
+        row.innerHTML = `<input type="checkbox" ${checked ? 'checked' : ''} class="rounded"> <span>${lbl}</span>`;
+        row.querySelector('input').onchange = (e) => {
+          if (e.target.checked) {
+            if (!note.labels.includes(lbl)) note.labels.push(lbl);
+          } else {
+            note.labels = note.labels.filter(x => x !== lbl);
+          }
+          renderModalLabelsChips(note);
+        };
+        menu.appendChild(row);
+      });
+    }
+
+    document.getElementById('modalLabelBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('modalColorMenu').classList.add('hidden');
+      renderModalLabelCheckboxes();
+      document.getElementById('modalLabelMenu').classList.toggle('hidden');
+    });
+
+    document.getElementById('modalImgBtn').addEventListener('click', () => {
+      document.getElementById('hiddenImageInput').click();
+    });
+
+    document.getElementById('modalRemoveImgBtn').addEventListener('click', () => {
+      const note = notes.find(n => n.id === activeModalNoteId);
+      if (!note) return;
+      note.image = null;
+      renderModalImage(note);
     });
 
     document.getElementById('modalArchiveBtn').addEventListener('click', () => {
@@ -1271,41 +1273,44 @@
       renderNotesGrids();
     });
 
-    // Botón para alternar entre notas cuadradas (cuadrícula) y rectangulares (lista)
     document.getElementById('viewToggleBtn').addEventListener('click', () => {
       isListView = !isListView;
       localStorage.setItem('mis_apuntes_view_mode', isListView ? 'list' : 'grid');
       renderApp();
     });
 
+    // Alternar Tema Oscuro / Claro y guardarlo permanentemente en localStorage
     document.getElementById('themeToggleBtn').addEventListener('click', () => {
-      document.documentElement.classList.toggle('dark');
-      const dark = isDarkMode();
-      document.getElementById('themeToggleIcon').textContent = dark ? 'light_mode' : 'dark_mode';
-      updateComposerAppearance();
+      const htmlEl = document.documentElement;
+      const willBeDark = !htmlEl.classList.contains('dark');
+      if (willBeDark) {
+        htmlEl.classList.add('dark');
+        htmlEl.classList.remove('light');
+        localStorage.setItem(THEME_STORAGE_KEY, 'dark');
+      } else {
+        htmlEl.classList.remove('dark');
+        htmlEl.classList.add('light');
+        localStorage.setItem(THEME_STORAGE_KEY, 'light');
+      }
       renderApp();
     });
 
     const hiddenImageInput = document.getElementById('hiddenImageInput');
-    document.getElementById('composerImgBtn').addEventListener('click', () => hiddenImageInput.click());
-    document.getElementById('quickImageBtn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      expandComposer();
-      hiddenImageInput.click();
-    });
     hiddenImageInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (ev) => {
-        composerState.image = ev.target.result;
-        updateComposerAppearance();
+        if (activeModalNoteId) {
+          const note = notes.find(n => n.id === activeModalNoteId);
+          if (note) {
+            note.image = ev.target.result;
+            renderModalImage(note);
+          }
+        }
       };
       reader.readAsDataURL(file);
-    });
-    document.getElementById('removeComposerImgBtn').addEventListener('click', () => {
-      composerState.image = null;
-      updateComposerAppearance();
+      hiddenImageInput.value = '';
     });
 
     const labelsModal = document.getElementById('labelsModal');
@@ -1317,7 +1322,7 @@
         row.className = 'flex items-center justify-between py-1 px-2 rounded hover:bg-black/5 dark:hover:bg-white/5';
         row.innerHTML = `
           <span class="text-sm">${lbl}</span>
-          <button class="p-1 text-gray-400 hover:text-red-500"><span class="material-symbols-outlined text-base">delete</span></button>
+          <button type="button" class="p-1 text-gray-400 hover:text-red-500"><span class="material-symbols-outlined text-base">delete</span></button>
         `;
         row.querySelector('button').onclick = () => {
           labels.splice(idx, 1);
@@ -1395,8 +1400,11 @@
       });
     }
 
+    // Garantizar que al iniciar nunca haya ninguna nota abierta
+    editModal.classList.add('hidden');
+    editModal.classList.remove('flex');
     loadFromLocalStorage();
     renderApp();
   </script>
-
-</body></html>
+</body>
+</html>
