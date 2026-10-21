@@ -1,8 +1,10 @@
-const CACHE_NAME = 'mis-apuntes-pwa-v7';
+const CACHE_NAME = 'mis-apuntes-pwa-v9';
 const ASSETS = [
   './',
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
