@@ -4,7 +4,1382 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Mis Apuntes</title>
+  <meta name="theme-color" content="#fbbc04"><!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mis Apuntes</title>
   <meta name="theme-color" content="#fbbc04">
+  <link rel="manifest" href="manifest.json">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Roboto', 'sans-serif'],
+            display: ['Google Sans', 'Roboto', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Roboto', sans-serif; -webkit-tap-highlight-color: transparent; }
+    h1, h2, h3, .font-display { font-family: 'Google Sans', 'Roboto', sans-serif; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; user-select: none; }
+    .material-symbols-outlined.filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    
+    /* Masonry Grid */
+    .notes-grid {
+      column-count: 1;
+      column-gap: 16px;
+    }
+    @media (min-width: 640px) { .notes-grid { column-count: 2; } }
+    @media (min-width: 1024px) { .notes-grid { column-count: 3; } }
+    @media (min-width: 1280px) { .notes-grid { column-count: 4; } }
+    .notes-list { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+    .note-card { break-inside: avoid; margin-bottom: 16px; transition: box-shadow 0.2s, border-color 0.2s, background-color 0.2s; }
+    
+    /* Rich text editor placeholder & lists */
+    [contenteditable]:empty:before {
+      content: attr(data-placeholder);
+      color: #9aa0a6;
+      pointer-events: none;
+      display: block;
+    }
+    .rich-editor ul { list-style-type: disc; padding-left: 1.5rem; margin: 0.25rem 0; }
+    .rich-editor b, .rich-editor strong { font-weight: 700; }
+    .rich-editor u { text-decoration: underline; }
+    .inline-icon {
+      font-family: 'Material Symbols Outlined';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 1.15em;
+      line-height: 1;
+      vertical-align: middle;
+      display: inline-block;
+      margin: 0 2px;
+      user-select: none;
+    }
+  </style>
+</head>
+<body class="bg-white dark:bg-[#202124] text-[#202124] dark:text-[#e8eaed] min-h-screen flex flex-col transition-colors duration-200">
+
+  <!-- Barra Superior -->
+  <header class="sticky top-0 z-30 h-16 px-3 sm:px-6 flex items-center justify-between border-b border-gray-200 dark:border-[#5f6368]/40 bg-white/95 dark:bg-[#202124]/95 backdrop-blur">
+    <div class="flex items-center gap-2 sm:gap-3">
+      <button id="menuBtn" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Menú principal">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <div class="flex items-center gap-2.5 cursor-pointer" onclick="switchView('notes')">
+        <span id="headerTitle" class="font-display text-xl font-medium tracking-tight">Mis Apuntes</span>
+      </div>
+    </div>
+
+    <!-- Buscador -->
+    <div class="flex-1 max-w-xl mx-3 sm:mx-8">
+      <div class="relative flex items-center bg-[#f1f3f4] dark:bg-[#525355] rounded-lg px-3 py-2 focus-within:bg-white dark:focus-within:bg-[#303134] focus-within:shadow-md transition">
+        <span class="material-symbols-outlined text-gray-500 dark:text-gray-300 mr-2">search</span>
+        <input id="searchInput" type="text" placeholder="Buscar en Mis Apuntes..." class="w-full bg-transparent focus:outline-none text-sm sm:text-base placeholder-gray-500 dark:placeholder-gray-300">
+        <button id="clearSearchBtn" class="hidden p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
+          <span class="material-symbols-outlined text-sm">close</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Acciones Derecha -->
+    <div class="flex items-center gap-1 sm:gap-2">
+      <button id="viewToggleBtn" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Cambiar vista">
+        <span id="viewToggleIcon" class="material-symbols-outlined">view_agenda</span>
+      </button>
+      <button id="themeToggleBtn" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Modo oscuro / claro">
+        <span id="themeToggleIcon" class="material-symbols-outlined">dark_mode</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Menú Lateral Desplegable (Oculto por defecto, visible solo al tocar el botón menú) -->
+  <div id="drawerBackdrop" class="fixed inset-0 bg-black/40 z-40 hidden opacity-0 transition-opacity duration-200"></div>
+  <aside id="sidebarDrawer" class="fixed top-0 left-0 bottom-0 w-72 bg-white dark:bg-[#202124] z-50 transform -translate-x-full transition-transform duration-200 shadow-2xl flex flex-col py-3 overflow-y-auto">
+    <div class="px-6 py-3 flex items-center justify-between border-b border-gray-100 dark:border-gray-800 mb-2">
+      <div class="flex items-center gap-2.5">
+        <span class="font-display text-lg font-medium">Mis Apuntes</span>
+      </div>
+      <button id="closeDrawerBtn" class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134]">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <nav class="space-y-0.5 pr-3">
+      <button data-nav="notes" class="nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition">
+        <span class="material-symbols-outlined">edit_note</span>
+        <span>Apuntes</span>
+      </button>
+      <button data-nav="assemblies" class="nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition">
+        <span class="material-symbols-outlined">description</span>
+        <span>Asambleas</span>
+      </button>
+      
+      <div class="pt-2 pb-1 px-6 flex items-center justify-between text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        <span>Etiquetas</span>
+        <button id="editLabelsBtn" class="hover:text-gray-800 dark:hover:text-white">Editar</button>
+      </div>
+      <div id="sidebarLabelsList" class="space-y-0.5"></div>
+
+      <div class="border-t border-gray-100 dark:border-gray-800 my-2"></div>
+      <button data-nav="archive" class="nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition">
+        <span class="material-symbols-outlined">archive</span>
+        <span>Archivo</span>
+      </button>
+      <button data-nav="trash" class="nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition">
+        <span class="material-symbols-outlined">delete</span>
+        <span>Papelera</span>
+      </button>
+    </nav>
+  </aside>
+
+  <!-- Contenido Principal -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6">
+
+    <!-- Compositor de Nuevo Apunte -->
+    <div id="composerSection" class="max-w-xl mx-auto mb-8">
+      <div id="composerContainer" class="rounded-xl border border-gray-300 dark:border-[#5f6368] shadow-md transition-colors duration-200 overflow-hidden bg-white dark:bg-[#202124]">
+        
+        <!-- Estado Colapsado -->
+        <div id="composerCollapsed" class="px-4 py-3 flex items-center justify-between cursor-text">
+          <span class="text-gray-500 dark:text-gray-400 font-medium">Crear un apunte...</span>
+          <div class="flex items-center gap-1">
+            <button id="quickImageBtn" class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10" title="Nueva nota con imagen">
+              <span class="material-symbols-outlined text-gray-600 dark:text-gray-300">image</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Estado Expandido -->
+        <div id="composerExpanded" class="hidden flex-col">
+          <!-- Barra Superior Transparente de Formato e Iconos -->
+          <div class="flex items-center gap-1 px-3 py-1.5 border-b border-black/10 dark:border-white/10 bg-transparent text-gray-700 dark:text-gray-200 flex-wrap">
+            <button type="button" onclick="applyFormat('bold', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Negrita">
+              <span class="material-symbols-outlined text-[20px]">format_bold</span>
+            </button>
+            <button type="button" onclick="applyFormat('underline', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Subrayado">
+              <span class="material-symbols-outlined text-[20px]">format_underlined</span>
+            </button>
+            <button type="button" onclick="applyFormat('insertUnorderedList', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Viñetas">
+              <span class="material-symbols-outlined text-[20px]">format_list_bulleted</span>
+            </button>
+            <div class="h-4 w-px bg-black/15 dark:bg-white/15 mx-1"></div>
+            <button type="button" onclick="insertMinimalIcon('diamond', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Diamante">
+              <span class="material-symbols-outlined text-[19px]">diamond</span>
+            </button>
+            <button type="button" onclick="insertMinimalIcon('favorite', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Corazón">
+              <span class="material-symbols-outlined text-[19px]">favorite</span>
+            </button>
+            <button type="button" onclick="insertMinimalIcon('check', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Check">
+              <span class="material-symbols-outlined text-[19px]">check</span>
+            </button>
+            <button type="button" onclick="insertMinimalIcon('person', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Persona">
+              <span class="material-symbols-outlined text-[19px]">person</span>
+            </button>
+            <button type="button" onclick="insertMinimalIcon('location_on', 'composerBody')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Ubicación">
+              <span class="material-symbols-outlined text-[19px]">location_on</span>
+            </button>
+          </div>
+
+          <!-- Vista Previa Imagen -->
+          <div id="composerImagePreviewWrap" class="hidden relative">
+            <img id="composerImagePreview" src="" class="w-full max-h-64 object-cover">
+            <button id="removeComposerImgBtn" class="absolute bottom-2 right-2 p-1.5 bg-black/60 text-white rounded-full hover:bg-black/80">
+              <span class="material-symbols-outlined text-sm">delete</span>
+            </button>
+          </div>
+
+          <!-- Título y Cuerpo -->
+          <div class="p-4 space-y-2">
+            <div class="flex items-start justify-between gap-2">
+              <input id="composerTitle" type="text" placeholder="Título" class="w-full bg-transparent font-display font-medium text-base focus:outline-none placeholder-gray-500 dark:placeholder-gray-400">
+              <button id="composerPinBtn" type="button" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Fijar apunte">
+                <span id="composerPinIcon" class="material-symbols-outlined text-gray-600 dark:text-gray-300">push_pin</span>
+              </button>
+            </div>
+            <div id="composerBody" contenteditable="true" data-placeholder="Crear un apunte..." class="rich-editor min-h-[72px] max-h-80 overflow-y-auto text-sm leading-relaxed focus:outline-none"></div>
+            <div id="composerLabelsChips" class="flex flex-wrap gap-1.5 pt-1"></div>
+          </div>
+
+          <!-- Barra Inferior del Compositor -->
+          <div class="px-3 py-2 flex items-center justify-between border-t border-black/5 dark:border-white/5 relative">
+            <div class="flex items-center gap-1">
+              <button id="composerColorBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Color de fondo">
+                <span class="material-symbols-outlined text-[20px]">palette</span>
+              </button>
+              <button id="composerImgBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Añadir imagen">
+                <span class="material-symbols-outlined text-[20px]">image</span>
+              </button>
+              <button id="composerLabelBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Etiquetas">
+                <span class="material-symbols-outlined text-[20px]">label</span>
+              </button>
+            </div>
+            <button id="closeComposerBtn" type="button" class="px-4 py-1.5 rounded text-sm font-medium hover:bg-black/10 dark:hover:bg-white/10">
+              Guardar y cerrar
+            </button>
+
+            <!-- Popover Paleta Colores Compositor -->
+            <div id="composerColorMenu" class="hidden absolute bottom-12 left-2 z-20 p-2 bg-white dark:bg-[#303134] rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 flex gap-1.5 flex-wrap max-w-[260px]"></div>
+
+            <!-- Popover Etiquetas Compositor -->
+            <div id="composerLabelMenu" class="hidden absolute bottom-12 left-20 z-20 p-3 bg-white dark:bg-[#303134] rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 w-52 space-y-1.5"></div>
+          </div>
+        </div>
+      </div>
+      <input id="hiddenImageInput" type="file" accept="image/*" class="hidden">
+    </div>
+
+    <!-- Sección Fijadas -->
+    <section id="pinnedSection" class="hidden mb-8">
+      <h2 class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 px-2">Fijados</h2>
+      <div id="pinnedGrid" class="notes-grid"></div>
+    </section>
+
+    <!-- Sección Otras Notas -->
+    <section id="othersSection">
+      <h2 id="othersHeading" class="hidden text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 px-2">Otros</h2>
+      <div id="notesGrid" class="notes-grid"></div>
+    </section>
+
+    <!-- Estado Vacío -->
+    <div id="emptyState" class="hidden flex-col items-center justify-center py-20 text-center text-gray-400 dark:text-gray-500">
+      <span id="emptyStateIcon" class="material-symbols-outlined text-6xl mb-3">edit_note</span>
+      <p id="emptyStateText" class="text-base">Los apuntes que agregues aparecerán aquí</p>
+    </div>
+
+  </main>
+
+  <!-- Cartel Flotante de Instalación PWA -->
+  <div id="pwaInstallBanner" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-40 hidden bg-white dark:bg-[#303134] border border-gray-200 dark:border-[#5f6368] rounded-2xl shadow-2xl p-4 transition-all duration-300">
+    <div class="flex items-start gap-3">
+      <img src="icon-192.png" alt="Mis Apuntes" onerror="this.style.display='none'" class="w-11 h-11 rounded-xl object-cover flex-shrink-0">
+      <div class="flex-1 min-w-0">
+        <h4 class="font-display font-medium text-sm text-[#202124] dark:text-[#e8eaed]">Instalar Mis Apuntes</h4>
+        <p id="pwaBannerText" class="text-xs text-gray-600 dark:text-gray-300 mt-0.5 leading-relaxed">
+          Instala la app en tu celular para acceder rápido y sin conexión.
+        </p>
+        <div class="flex items-center gap-2 mt-3">
+          <button id="pwaInstallActionBtn" class="px-3.5 py-1.5 rounded-lg bg-[#fbbc04] text-[#202124] font-medium text-xs hover:brightness-95 transition">
+            Instalar ahora
+          </button>
+          <button id="pwaDismissBtn" class="px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition">
+            Ahora no
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Edición de Nota / Programa de Asamblea -->
+  <div id="editModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-3 sm:p-6 backdrop-blur-sm">
+    <div id="editModalCard" class="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl border border-gray-300 dark:border-[#5f6368] shadow-2xl overflow-hidden bg-white dark:bg-[#202124] transition-colors duration-200">
+      
+      <!-- Barra Superior Transparente de Formato -->
+      <div class="flex items-center justify-between px-3 py-2 border-b border-black/10 dark:border-white/10 bg-transparent text-gray-700 dark:text-gray-200 flex-wrap">
+        <div class="flex items-center gap-1">
+          <button type="button" onclick="applyFormatModal('bold')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Negrita">
+            <span class="material-symbols-outlined text-[20px]">format_bold</span>
+          </button>
+          <button type="button" onclick="applyFormatModal('underline')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Subrayado">
+            <span class="material-symbols-outlined text-[20px]">format_underlined</span>
+          </button>
+          <button type="button" onclick="applyFormatModal('insertUnorderedList')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Viñetas">
+            <span class="material-symbols-outlined text-[20px]">format_list_bulleted</span>
+          </button>
+          <div class="h-4 w-px bg-black/15 dark:bg-white/15 mx-1"></div>
+          <button type="button" onclick="insertMinimalIconModal('diamond')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Diamante">
+            <span class="material-symbols-outlined text-[19px]">diamond</span>
+          </button>
+          <button type="button" onclick="insertMinimalIconModal('favorite')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Corazón">
+            <span class="material-symbols-outlined text-[19px]">favorite</span>
+          </button>
+          <button type="button" onclick="insertMinimalIconModal('check')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Check">
+            <span class="material-symbols-outlined text-[19px]">check</span>
+          </button>
+          <button type="button" onclick="insertMinimalIconModal('person')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Persona">
+            <span class="material-symbols-outlined text-[19px]">person</span>
+          </button>
+          <button type="button" onclick="insertMinimalIconModal('location_on')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Ubicación">
+            <span class="material-symbols-outlined text-[19px]">location_on</span>
+          </button>
+        </div>
+
+        <button id="modalPinBtn" type="button" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Fijar">
+          <span id="modalPinIcon" class="material-symbols-outlined">push_pin</span>
+        </button>
+      </div>
+
+      <!-- Cuerpo Scrollable del Modal -->
+      <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3">
+        <div id="modalImageWrap" class="hidden relative rounded-lg overflow-hidden mb-2">
+          <img id="modalImage" src="" class="w-full max-h-72 object-cover">
+          <button id="modalRemoveImgBtn" class="absolute bottom-2 right-2 p-1.5 bg-black/60 text-white rounded-full hover:bg-black/80">
+            <span class="material-symbols-outlined text-sm">delete</span>
+          </button>
+        </div>
+
+        <input id="modalTitle" type="text" placeholder="Título" class="w-full bg-transparent font-display font-medium text-lg sm:text-xl focus:outline-none">
+
+        <!-- Cuerpo de Apunte Regular -->
+        <div id="modalBody" contenteditable="true" data-placeholder="Apunte..." class="rich-editor min-h-[120px] text-sm sm:text-base leading-relaxed focus:outline-none"></div>
+
+        <!-- Contenedor Programa de Asamblea -->
+        <div id="modalAssemblyContainer" class="hidden space-y-5 pt-2"></div>
+
+        <div id="modalLabelsChips" class="flex flex-wrap gap-1.5 pt-2"></div>
+      </div>
+
+      <!-- Barra Inferior del Modal -->
+      <div class="px-4 py-2.5 border-t border-black/10 dark:border-white/10 flex items-center justify-between relative">
+        <div class="flex items-center gap-1">
+          <button id="modalColorBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Color">
+            <span class="material-symbols-outlined text-[20px]">palette</span>
+          </button>
+          <button id="modalArchiveBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Archivar">
+            <span class="material-symbols-outlined text-[20px]">archive</span>
+          </button>
+          <button id="modalDeleteBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Borrar">
+            <span class="material-symbols-outlined text-[20px]">delete</span>
+          </button>
+        </div>
+        <button id="modalSaveCloseBtn" type="button" class="px-5 py-1.5 rounded-lg font-medium text-sm bg-black/10 dark:bg-white/10 hover:bg-black/15 dark:hover:bg-white/20 transition">
+          Guardar y cerrar
+        </button>
+
+        <div id="modalColorMenu" class="hidden absolute bottom-14 left-3 z-30 p-2 bg-white dark:bg-[#303134] rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 flex gap-1.5 flex-wrap max-w-[260px]"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Editar Etiquetas -->
+  <div id="labelsModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+    <div class="bg-white dark:bg-[#303134] w-full max-w-sm rounded-xl shadow-2xl p-4 space-y-3 border border-gray-200 dark:border-gray-700">
+      <h3 class="font-display font-medium text-base">Editar etiquetas</h3>
+      <div class="flex items-center gap-2 border-b border-gray-200 dark:border-gray-600 pb-2">
+        <input id="newLabelInput" type="text" placeholder="Crear nueva etiqueta" class="flex-1 bg-transparent text-sm focus:outline-none">
+        <button id="addLabelBtn" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+          <span class="material-symbols-outlined text-lg">check</span>
+        </button>
+      </div>
+      <div id="editLabelsModalList" class="max-h-52 overflow-y-auto space-y-1"></div>
+      <div class="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
+        <button id="closeLabelsModalBtn" class="px-4 py-1.5 text-sm font-medium rounded hover:bg-gray-100 dark:hover:bg-gray-700">Listo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts de la Aplicación y Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getFirestore, collection, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD7faGohDt5oknciF9l3c89Y1b3i1cokQM",
+      authDomain: "mis-apuntes-9ca97.firebaseapp.com",
+      projectId: "mis-apuntes-9ca97",
+      storageBucket: "mis-apuntes-9ca97.firebasestorage.app",
+      messagingSenderId: "674283641481",
+      appId: "1:674283641481:web:fbbcea8d704011cc3ac458"
+    };
+
+    const KEEP_COLORS = {
+      default: { light: '#ffffff', dark: '#202124', borderLight: '#e0e0e0', borderDark: '#5f6368', name: 'Predeterminado' },
+      coral:   { light: '#faafa8', dark: '#77172e', borderLight: '#f28b82', borderDark: '#77172e', name: 'Coral' },
+      peach:   { light: '#f39f76', dark: '#692b17', borderLight: '#fbbc04', borderDark: '#692b17', name: 'Durazno' },
+      sand:    { light: '#fff8b8', dark: '#7c4a03', borderLight: '#fff475', borderDark: '#7c4a03', name: 'Arena' },
+      mint:    { light: '#e2f6d3', dark: '#264d3b', borderLight: '#ccff90', borderDark: '#264d3b', name: 'Menta' },
+      sage:    { light: '#b4ddd3', dark: '#0c625d', borderLight: '#a7ffeb', borderDark: '#0c625d', name: 'Salvia' },
+      fog:     { light: '#d4e4ed', dark: '#256377', borderLight: '#cbf0f8', borderDark: '#256377', name: 'Niebla' },
+      storm:   { light: '#aeccdc', dark: '#284255', borderLight: '#aecbfa', borderDark: '#284255', name: 'Tormenta' },
+      dusk:    { light: '#d3bfdb', dark: '#472e5b', borderLight: '#d7aefb', borderDark: '#472e5b', name: 'Atardecer' },
+      blossom: { light: '#f6e2dd', dark: '#6c394f', borderLight: '#fdcfe8', borderDark: '#6c394f', name: 'Flor' }
+    };
+
+    const ASSEMBLY_ID_1 = 'asamblea-confia-jehova-2026-2027';
+    const ASSEMBLY_ID_2 = 'asamblea-haz-de-jehova-2026-2027';
+
+    function createAssembly1() {
+      return {
+        id: ASSEMBLY_ID_1,
+        type: 'assembly',
+        title: '"El que confía en Jehová es feliz" (Proverbios 16:20)',
+        subtitle: 'Asamblea de circuito con el superintendente de circuito | 2026-2027',
+        body: '',
+        color: 'sand',
+        pinned: true,
+        archived: false,
+        trashed: false,
+        labels: [],
+        updatedAt: Date.now(),
+        assemblyData: {
+          sessions: [
+            {
+              name: 'MAÑANA',
+              items: [
+                { id: 'm1', time: '9:40', title: 'Música', isNoteable: false, notes: '' },
+                { id: 'm2', time: '9:50', title: 'Canción 31 y oración', isNoteable: false, notes: '' },
+                { id: 'm3', time: '10:00', title: '¿Por qué debemos confiar en Jehová con todo el corazón?', isNoteable: true, notes: '' },
+                { id: 'm4', time: '10:15', title: 'Serie de discursos: Imitemos a los que confiaron en Jehová — Barac', isNoteable: true, notes: '' },
+                { id: 'm5', time: '10:30', title: 'Serie de discursos: Imitemos a los que confiaron en Jehová — La mujer sunamita', isNoteable: true, notes: '' },
+                { id: 'm6', time: '10:45', title: 'Serie de discursos: Imitemos a los que confiaron en Jehová — Daniel, Hananías, Misael y Azarías', isNoteable: true, notes: '' },
+                { id: 'm7', time: '11:05', title: 'Canción 57 y anuncios', isNoteable: false, notes: '' },
+                { id: 'm8', time: '11:15', title: 'Ayudemos a otros a confiar en el "Dios vivo y verdadero"', isNoteable: true, notes: '' },
+                { id: 'm9', time: '11:35', title: 'Discurso de bautismo: "Tu Padre, que mira en secreto, te lo pagará"', isNoteable: true, notes: '' },
+                { id: 'm10', time: '12:05', title: 'Canción 29', isNoteable: false, notes: '' }
+              ]
+            },
+            {
+              name: 'TARDE',
+              items: [
+                { id: 't1', time: '1:20', title: 'Música', isNoteable: false, notes: '' },
+                { id: 't2', time: '1:30', title: 'Canción 8 y oración', isNoteable: false, notes: '' },
+                { id: 't3', time: '1:35', title: 'Discurso público: ¿En quién sí se puede confiar?', isNoteable: true, notes: '' },
+                { id: 't4', time: '2:05', title: 'Resumen de La Atalaya', isNoteable: true, notes: '' },
+                { id: 't5', time: '2:35', title: 'Canción 135 y anuncios', isNoteable: false, notes: '' },
+                { id: 't6', time: '2:45', title: 'Serie de discursos: Confíe en la sabiduría de Jehová... al educar a sus hijos', isNoteable: true, notes: '' },
+                { id: 't7', time: '3:00', title: 'Serie de discursos: Confíe en la sabiduría de Jehová... al hacer planes para el futuro', isNoteable: true, notes: '' },
+                { id: 't8', time: '3:15', title: 'Serie de discursos: Confíe en la sabiduría de Jehová... al enfrentar tentaciones', isNoteable: true, notes: '' },
+                { id: 't9', time: '3:30', title: '"El que confía en Jehová es feliz"', isNoteable: true, notes: '' },
+                { id: 't10', time: '4:00', title: 'Canción 54 y oración', isNoteable: false, notes: '' }
+              ]
+            },
+            {
+              name: 'PREGUNTAS DE REPASO',
+              items: [
+                { id: 'q1', time: '1', title: '¿Cómo demostramos que confiamos en Jehová con todo nuestro corazón? (Prov. 3:5, 6)', isNoteable: true, notes: '' },
+                { id: 'q2', time: '2', title: '¿Cómo podemos imitar a Barac, a la mujer sunamita y a Daniel, Hananías, Misael y Azarías? (Luc. 16:10; Sal. 50:15; 119:112)', isNoteable: true, notes: '' },
+                { id: 'q3', time: '3', title: '¿Qué nos ayudará a iniciar conversaciones con personas que tienen formas de pensar o antecedentes muy diferentes a los nuestros? (1 Cor. 9:19-23)', isNoteable: true, notes: '' },
+                { id: 'q4', time: '4', title: '¿Por qué debemos confiar en la sabiduría de Jehová? (Prov. 3:13, 18; 16:3; 22:6; 1 Cor. 10:13)', isNoteable: true, notes: '' },
+                { id: 'q5', time: '5', title: '¿Por qué debemos confiar siempre en Jehová? (Prov. 16:20)', isNoteable: true, notes: '' }
+              ]
+            }
+          ]
+        }
+      };
+    }
+
+    function createAssembly2() {
+      return {
+        id: ASSEMBLY_ID_2,
+        type: 'assembly',
+        title: '"Haz de Jehová tu mayor alegría" (Salmo 37:4, nota)',
+        subtitle: 'Asamblea de circuito con representante de la sucursal | 2026-2027',
+        body: '',
+        color: 'mint',
+        pinned: true,
+        archived: false,
+        trashed: false,
+        labels: [],
+        updatedAt: Date.now(),
+        assemblyData: {
+          sessions: [
+            {
+              name: 'MAÑANA',
+              items: [
+                { id: 'am1', time: '9:40', title: 'Música', isNoteable: false, notes: '' },
+                { id: 'am2', time: '9:50', title: 'Canción 7 y oración', isNoteable: false, notes: '' },
+                { id: 'am3', time: '10:00', title: '¿Cómo podemos hacer de Jehová nuestra mayor alegría?', isNoteable: true, notes: '' },
+                { id: 'am4', time: '10:15', title: '"Feliz aquel [...] al que se le perdona su pecado"', isNoteable: true, notes: '' },
+                { id: 'am5', time: '10:30', title: '"¡Dichosos los que viven en tu casa!"', isNoteable: true, notes: '' },
+                { id: 'am6', time: '10:55', title: 'Canción 37 y anuncios', isNoteable: false, notes: '' },
+                { id: 'am7', time: '11:05', title: 'Feliz el que se refugia en Jehová', isNoteable: true, notes: '' },
+                { id: 'am8', time: '11:35', title: 'Discurso de bautismo: "Tu Padre, que mira en secreto, te lo pagará"', isNoteable: true, notes: '' },
+                { id: 'am9', time: '12:05', title: 'Canción 38', isNoteable: false, notes: '' }
+              ]
+            },
+            {
+              name: 'TARDE',
+              items: [
+                { id: 'at1', time: '1:20', title: 'Música', isNoteable: false, notes: '' },
+                { id: 'at2', time: '1:30', title: 'Canción 111', isNoteable: false, notes: '' },
+                { id: 'at3', time: '1:35', title: 'Experiencias', isNoteable: true, notes: '' },
+                { id: 'at4', time: '1:45', title: 'Resumen de La Atalaya', isNoteable: true, notes: '' },
+                { id: 'at5', time: '2:15', title: 'Serie de discursos: Tres claves para ser felices de verdad — Una vida sencilla', isNoteable: true, notes: '' },
+                { id: 'at6', time: '2:30', title: 'Serie de discursos: Tres claves para ser felices de verdad — Los buenos amigos', isNoteable: true, notes: '' },
+                { id: 'at7', time: '2:45', title: 'Serie de discursos: Tres claves para ser felices de verdad — Una familia unida', isNoteable: true, notes: '' },
+                { id: 'at8', time: '3:00', title: 'Canción 88 y anuncios', isNoteable: false, notes: '' },
+                { id: 'at9', time: '3:10', title: '"¡Feliz el pueblo que tiene por Dios a Jehová!"', isNoteable: true, notes: '' },
+                { id: 'at10', time: '3:55', title: 'Canción 161 y oración', isNoteable: false, notes: '' }
+              ]
+            },
+            {
+              name: 'PREGUNTAS DE REPASO',
+              items: [
+                { id: 'aq1', time: '1', title: '¿Cómo podemos hacer de Jehová nuestra mayor alegría? (Sal. 37:4)', isNoteable: true, notes: '' },
+                { id: 'aq2', time: '2', title: '¿Cómo podemos ser felices a pesar de nuestros errores? (Sal. 32:1, 2)', isNoteable: true, notes: '' },
+                { id: 'aq3', time: '3', title: '¿Por qué debería ser el servicio a Jehová lo más importante en tu vida? (Sal. 84:4, 10)', isNoteable: true, notes: '' },
+                { id: 'aq4', time: '4', title: '¿Cómo podemos ser felices a pesar de los problemas? (Sal. 34:8; 18:25)', isNoteable: true, notes: '' },
+                { id: 'aq5', time: '5', title: '¿Qué podemos hacer para no dejarnos engañar por la felicidad ficticia? (1 Tim. 6:7, 8; Prov. 18:24; Sal. 127:1, 2)', isNoteable: true, notes: '' },
+                { id: 'aq6', time: '6', title: '¿Cómo les ayuda Jehová a sus siervos a ser felices de verdad? (Miq. 2:12; Sant. 3:17; 1 Ped. 5:8)', isNoteable: true, notes: '' }
+              ]
+            }
+          ]
+        }
+      };
+    }
+
+    let notes = [];
+    let labels = ['Reuniones', 'Revisitas', 'Ideas'];
+    let currentView = 'notes';
+    let isListView = false;
+    let searchQuery = '';
+    let activeEditorElement = null;
+
+    let composerState = {
+      pinned: false,
+      color: 'default',
+      labels: [],
+      image: null
+    };
+
+    let activeModalNoteId = null;
+
+    // Clave única y permanente de almacenamiento local (nunca cambiar aunque se agreguen asambleas)
+    const NOTES_STORAGE_KEY = 'mis_apuntes_notes_permanent';
+    const LABELS_STORAGE_KEY = 'mis_apuntes_labels_permanent';
+
+    function mergeAssemblyStructurePreservingUserNotes(existingAssembly, officialTemplate) {
+      if (!existingAssembly || !existingAssembly.assemblyData) return officialTemplate;
+      const merged = JSON.parse(JSON.stringify(officialTemplate));
+      merged.color = existingAssembly.color || officialTemplate.color;
+      merged.pinned = existingAssembly.pinned !== undefined ? existingAssembly.pinned : officialTemplate.pinned;
+      merged.archived = !!existingAssembly.archived;
+      merged.trashed = !!existingAssembly.trashed;
+      merged.updatedAt = existingAssembly.updatedAt || officialTemplate.updatedAt;
+
+      const userNotesMap = {};
+      existingAssembly.assemblyData.sessions?.forEach(sec => {
+        sec.items?.forEach(it => {
+          if (it.id && it.notes) userNotesMap[it.id] = it.notes;
+        });
+      });
+
+      merged.assemblyData.sessions.forEach(sec => {
+        sec.items.forEach(it => {
+          if (userNotesMap[it.id]) {
+            it.notes = userNotesMap[it.id];
+          }
+        });
+      });
+      return merged;
+    }
+
+    function ensureBuiltInAssemblies() {
+      const builtInTemplates = [createAssembly1(), createAssembly2()];
+      let changed = false;
+
+      builtInTemplates.forEach(template => {
+        const idx = notes.findIndex(n => n.id === template.id);
+        if (idx === -1) {
+          notes.push(template);
+          changed = true;
+        } else {
+          // Conserva todos los apuntes que el usuario haya escrito en cada discurso
+          notes[idx] = mergeAssemblyStructurePreservingUserNotes(notes[idx], template);
+        }
+      });
+
+      if (changed) saveToLocalStorage();
+    }
+
+    function loadFromLocalStorage() {
+      // Migrar etiquetas de versiones previas si existen
+      const savedLabels = localStorage.getItem(LABELS_STORAGE_KEY) || localStorage.getItem('mis_apuntes_labels_v2');
+      if (savedLabels) {
+        try { labels = JSON.parse(savedLabels); } catch (e) {}
+      }
+      localStorage.setItem(LABELS_STORAGE_KEY, JSON.stringify(labels));
+
+      // Migrar notas de cualquier versión anterior para que nunca se pierdan al actualizar código
+      const permanentNotes = localStorage.getItem(NOTES_STORAGE_KEY);
+      const legacyV4 = localStorage.getItem('mis_apuntes_notes_v4');
+      const legacyV3 = localStorage.getItem('mis_apuntes_notes_v3');
+
+      const rawNotes = permanentNotes || legacyV4 || legacyV3;
+
+      if (rawNotes) {
+        try {
+          notes = JSON.parse(rawNotes);
+        } catch (e) {
+          notes = [];
+        }
+      } else {
+        notes = [
+          {
+            id: 'welcome-note-1',
+            type: 'note',
+            title: '¡Bienvenido a Mis Apuntes! ✨',
+            body: 'Esta es tu app para tomar los mejores apuntes y notas.<br><br><ul><li>Usa la barra superior transparente para poner <b>negrita</b>, <u>subrayado</u> o viñetas.</li><li>Inserta iconos minimalistas directamente en tus textos: <span class="inline-icon">diamond</span> <span class="inline-icon">favorite</span> <span class="inline-icon">check</span> <span class="inline-icon">person</span> <span class="inline-icon">location_on</span></li></ul>',
+            color: 'sand',
+            pinned: true,
+            archived: false,
+            trashed: false,
+            labels: ['Ideas'],
+            image: null,
+            updatedAt: Date.now()
+          }
+        ];
+      }
+
+      ensureBuiltInAssemblies();
+      saveToLocalStorage();
+    }
+
+    function saveToLocalStorage() {
+      localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
+      localStorage.setItem(LABELS_STORAGE_KEY, JSON.stringify(labels));
+    }
+
+    let db = null;
+    let currentUser = null;
+    try {
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      db = getFirestore(app);
+      signInAnonymously(auth).catch(console.error);
+      onAuthStateChanged(auth, async (user) => {
+        currentUser = user;
+        if (user) {
+          const notesRef = collection(db, 'users', user.uid, 'notes');
+          onSnapshot(notesRef, async (snapshot) => {
+            const cloudIds = new Set();
+            snapshot.docs.forEach(d => {
+              const cn = d.data();
+              if (!cn || !cn.id) return;
+              cloudIds.add(cn.id);
+              const localIdx = notes.findIndex(n => n.id === cn.id);
+              if (localIdx >= 0) {
+                const localNote = notes[localIdx];
+                // Conservar siempre la versión más reciente entre nube y dispositivo
+                if ((cn.updatedAt || 0) >= (localNote.updatedAt || 0)) {
+                  notes[localIdx] = cn;
+                }
+              } else {
+                notes.push(cn);
+              }
+            });
+
+            ensureBuiltInAssemblies();
+            saveToLocalStorage();
+            renderApp();
+
+            // Subir a la nube cualquier nota local o asamblea nueva que aún no esté respaldada
+            for (const localNote of notes) {
+              if (!cloudIds.has(localNote.id)) {
+                try {
+                  await setDoc(doc(db, 'users', user.uid, 'notes', localNote.id), localNote);
+                } catch (err) {
+                  console.error('Error respaldando nota en la nube:', err);
+                }
+              }
+            }
+          }, (error) => {
+            console.warn('Error en suscripción de Firebase:', error);
+          });
+        }
+      });
+    } catch (e) {
+      console.warn('Modo local:', e);
+    }
+
+    async function persistNote(note) {
+      note.updatedAt = Date.now();
+      const idx = notes.findIndex(n => n.id === note.id);
+      if (idx >= 0) notes[idx] = note;
+      else notes.unshift(note);
+      saveToLocalStorage();
+      renderApp();
+      if (db && currentUser) {
+        try {
+          await setDoc(doc(db, 'users', currentUser.uid, 'notes', note.id), note);
+        } catch (e) { console.error(e); }
+      }
+    }
+
+    function isDarkMode() {
+      return document.documentElement.classList.contains('dark');
+    }
+
+    function getColorStyles(colorKey) {
+      const entry = KEEP_COLORS[colorKey] || KEEP_COLORS.default;
+      const dark = isDarkMode();
+      return {
+        bg: dark ? entry.dark : entry.light,
+        border: dark ? entry.borderDark : entry.borderLight
+      };
+    }
+
+    window.applyFormat = function(command, targetId) {
+      const el = document.getElementById(targetId);
+      if (!el) return;
+      el.focus();
+      document.execCommand(command, false, null);
+    };
+
+    window.insertMinimalIcon = function(iconName, targetId) {
+      const el = document.getElementById(targetId);
+      if (!el) return;
+      el.focus();
+      const html = `<span class="inline-icon" contenteditable="false">${iconName}</span>&nbsp;`;
+      document.execCommand('insertHTML', false, html);
+    };
+
+    window.applyFormatModal = function(command) {
+      const target = activeEditorElement || document.getElementById('modalBody');
+      if (!target) return;
+      target.focus();
+      document.execCommand(command, false, null);
+    };
+
+    window.insertMinimalIconModal = function(iconName) {
+      const target = activeEditorElement || document.getElementById('modalBody');
+      if (!target) return;
+      target.focus();
+      const html = `<span class="inline-icon" contenteditable="false">${iconName}</span>&nbsp;`;
+      document.execCommand('insertHTML', false, html);
+    };
+
+    window.switchView = function(view) {
+      currentView = view;
+      closeDrawer();
+      const titleMap = {
+        notes: 'Mis Apuntes',
+        assemblies: 'Asambleas',
+        archive: 'Archivo',
+        trash: 'Papelera'
+      };
+      if (view.startsWith('label:')) {
+        document.getElementById('headerTitle').textContent = view.replace('label:', '');
+      } else {
+        document.getElementById('headerTitle').textContent = titleMap[view] || 'Mis Apuntes';
+      }
+
+      const composerSec = document.getElementById('composerSection');
+      if (view === 'notes' || view.startsWith('label:')) {
+        composerSec.classList.remove('hidden');
+      } else {
+        composerSec.classList.add('hidden');
+      }
+      renderApp();
+    };
+
+    const drawerBackdrop = document.getElementById('drawerBackdrop');
+    const sidebarDrawer = document.getElementById('sidebarDrawer');
+
+    function openDrawer() {
+      drawerBackdrop.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        drawerBackdrop.classList.remove('opacity-0');
+        sidebarDrawer.classList.remove('-translate-x-full');
+      });
+    }
+
+    function closeDrawer() {
+      drawerBackdrop.classList.add('opacity-0');
+      sidebarDrawer.classList.add('-translate-x-full');
+      setTimeout(() => drawerBackdrop.classList.add('hidden'), 200);
+    }
+
+    document.getElementById('menuBtn').addEventListener('click', openDrawer);
+    document.getElementById('closeDrawerBtn').addEventListener('click', closeDrawer);
+    drawerBackdrop.addEventListener('click', closeDrawer);
+
+    function renderApp() {
+      renderSidebarNav();
+      renderNotesGrids();
+    }
+
+    function renderSidebarNav() {
+      const labelsContainer = document.getElementById('sidebarLabelsList');
+      labelsContainer.innerHTML = '';
+      labels.forEach(label => {
+        const btn = document.createElement('button');
+        btn.dataset.nav = `label:${label}`;
+        btn.className = 'nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition';
+        btn.innerHTML = `<span class="material-symbols-outlined">label</span><span>${label}</span>`;
+        btn.onclick = () => switchView(`label:${label}`);
+        labelsContainer.appendChild(btn);
+      });
+
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        const nav = btn.dataset.nav;
+        if (nav === currentView) {
+          btn.classList.add('bg-[#feefc3]', 'dark:bg-[#41331c]', 'text-[#202124]', 'dark:text-[#e8eaed]');
+        } else {
+          btn.classList.remove('bg-[#feefc3]', 'dark:bg-[#41331c]');
+        }
+      });
+    }
+
+    function createNoteCardElement(note) {
+      const card = document.createElement('div');
+      const styles = getColorStyles(note.color);
+      card.className = 'note-card rounded-xl border p-4 cursor-pointer hover:shadow-md relative group';
+      card.style.backgroundColor = styles.bg;
+      card.style.borderColor = styles.border;
+
+      const isAssembly = note.type === 'assembly';
+
+      let html = '';
+      if (note.image) {
+        html += `<img src="${note.image}" class="w-full max-h-48 object-cover rounded-lg mb-3">`;
+      }
+
+      if (isAssembly) {
+        html += `
+          <div class="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider opacity-75 mb-1">
+            <span class="material-symbols-outlined text-sm">description</span>
+            <span>Programa de Asamblea</span>
+          </div>
+        `;
+      }
+
+      if (note.title) {
+        html += `<h3 class="font-display font-medium text-base mb-1.5 pr-6">${note.title}</h3>`;
+      }
+
+      if (isAssembly && note.subtitle) {
+        html += `<p class="text-xs opacity-80 mb-2">${note.subtitle}</p>`;
+        let totalNotes = 0;
+        note.assemblyData?.sessions?.forEach(s => s.items.forEach(it => {
+          if (it.notes && it.notes.trim() !== '') totalNotes++;
+        }));
+        html += `<div class="text-xs font-medium px-2.5 py-1 rounded-md bg-black/5 dark:bg-white/10 inline-block">
+          ${totalNotes} ${totalNotes === 1 ? 'tema con apuntes' : 'temas con apuntes'}
+        </div>`;
+      } else if (note.body) {
+        html += `<div class="rich-editor text-sm leading-relaxed line-clamp-6 break-words">${note.body}</div>`;
+      }
+
+      if (note.labels && note.labels.length > 0) {
+        html += `<div class="flex flex-wrap gap-1 mt-3">
+          ${note.labels.map(l => `<span class="text-xs px-2 py-0.5 rounded-full bg-black/10 dark:bg-white/10">${l}</span>`).join('')}
+        </div>`;
+      }
+
+      card.innerHTML = html;
+      card.addEventListener('click', () => openEditModal(note.id));
+      return card;
+    }
+
+    function renderNotesGrids() {
+      const pinnedGrid = document.getElementById('pinnedGrid');
+      const notesGrid = document.getElementById('notesGrid');
+      const pinnedSection = document.getElementById('pinnedSection');
+      const othersHeading = document.getElementById('othersHeading');
+      const emptyState = document.getElementById('emptyState');
+
+      pinnedGrid.innerHTML = '';
+      notesGrid.innerHTML = '';
+
+      const filtered = notes.filter(note => {
+        if (searchQuery) {
+          const q = searchQuery.toLowerCase();
+          const inTitle = (note.title || '').toLowerCase().includes(q);
+          const inBody = (note.body || '').toLowerCase().includes(q);
+          return !note.trashed && (inTitle || inBody);
+        }
+        if (currentView === 'trash') return note.trashed;
+        if (currentView === 'archive') return !note.trashed && note.archived;
+        if (currentView === 'assemblies') return !note.trashed && !note.archived && note.type === 'assembly';
+        if (currentView.startsWith('label:')) {
+          const lbl = currentView.replace('label:', '');
+          return !note.trashed && !note.archived && (note.labels || []).includes(lbl);
+        }
+        return !note.trashed && !note.archived && note.type !== 'assembly';
+      });
+
+      if (filtered.length === 0) {
+        pinnedSection.classList.add('hidden');
+        othersHeading.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+        emptyState.classList.add('flex');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      emptyState.classList.remove('flex');
+
+      const pinned = filtered.filter(n => n.pinned);
+      const others = filtered.filter(n => !n.pinned);
+
+      if (pinned.length > 0) {
+        pinnedSection.classList.remove('hidden');
+        othersHeading.classList.toggle('hidden', others.length === 0);
+        pinned.forEach(n => pinnedGrid.appendChild(createNoteCardElement(n)));
+      } else {
+        pinnedSection.classList.add('hidden');
+        othersHeading.classList.add('hidden');
+      }
+
+      others.forEach(n => notesGrid.appendChild(createNoteCardElement(n)));
+    }
+
+    const composerCollapsed = document.getElementById('composerCollapsed');
+    const composerExpanded = document.getElementById('composerExpanded');
+    const composerContainer = document.getElementById('composerContainer');
+    const composerTitle = document.getElementById('composerTitle');
+    const composerBody = document.getElementById('composerBody');
+
+    function expandComposer() {
+      composerCollapsed.classList.add('hidden');
+      composerExpanded.classList.remove('hidden');
+      composerExpanded.classList.add('flex');
+      composerBody.focus();
+    }
+
+    function saveAndCollapseComposer() {
+      const title = composerTitle.value.trim();
+      const body = composerBody.innerHTML.trim();
+      if (title || (body && body !== '<br>') || composerState.image) {
+        const newNote = {
+          id: 'note-' + Date.now(),
+          type: 'note',
+          title,
+          body,
+          color: composerState.color,
+          pinned: composerState.pinned,
+          archived: false,
+          trashed: false,
+          labels: [...composerState.labels],
+          image: composerState.image,
+          updatedAt: Date.now()
+        };
+        persistNote(newNote);
+      }
+      composerTitle.value = '';
+      composerBody.innerHTML = '';
+      composerState = { pinned: false, color: 'default', labels: [], image: null };
+      updateComposerAppearance();
+      composerExpanded.classList.add('hidden');
+      composerExpanded.classList.remove('flex');
+      composerCollapsed.classList.remove('hidden');
+      document.getElementById('composerColorMenu').classList.add('hidden');
+      document.getElementById('composerLabelMenu').classList.add('hidden');
+    }
+
+    function updateComposerAppearance() {
+      const styles = getColorStyles(composerState.color);
+      composerContainer.style.backgroundColor = styles.bg;
+      composerContainer.style.borderColor = styles.border;
+      document.getElementById('composerPinIcon').classList.toggle('filled', composerState.pinned);
+
+      const imgWrap = document.getElementById('composerImagePreviewWrap');
+      if (composerState.image) {
+        imgWrap.classList.remove('hidden');
+        document.getElementById('composerImagePreview').src = composerState.image;
+      } else {
+        imgWrap.classList.add('hidden');
+      }
+
+      const chips = document.getElementById('composerLabelsChips');
+      chips.innerHTML = composerState.labels.map(l => `<span class="text-xs px-2 py-0.5 rounded-full bg-black/10 dark:bg-white/10">${l}</span>`).join('');
+    }
+
+    composerCollapsed.addEventListener('click', expandComposer);
+    document.getElementById('closeComposerBtn').addEventListener('click', saveAndCollapseComposer);
+    document.getElementById('composerPinBtn').addEventListener('click', () => {
+      composerState.pinned = !composerState.pinned;
+      updateComposerAppearance();
+    });
+
+    function buildColorPalette(containerId, onSelect) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      Object.keys(KEEP_COLORS).forEach(key => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        const styles = getColorStyles(key);
+        btn.className = 'w-7 h-7 rounded-full border transition transform hover:scale-110';
+        btn.style.backgroundColor = styles.bg;
+        btn.style.borderColor = styles.border;
+        btn.title = KEEP_COLORS[key].name;
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          onSelect(key);
+          container.classList.add('hidden');
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    document.getElementById('composerColorBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      buildColorPalette('composerColorMenu', (colorKey) => {
+        composerState.color = colorKey;
+        updateComposerAppearance();
+      });
+      document.getElementById('composerColorMenu').classList.toggle('hidden');
+    });
+
+    function renderComposerLabelCheckboxes() {
+      const menu = document.getElementById('composerLabelMenu');
+      menu.innerHTML = '<div class="text-xs font-medium opacity-75 mb-1">Etiquetar apunte</div>';
+      labels.forEach(lbl => {
+        const row = document.createElement('label');
+        row.className = 'flex items-center gap-2 text-sm cursor-pointer py-1';
+        const checked = composerState.labels.includes(lbl);
+        row.innerHTML = `<input type="checkbox" ${checked ? 'checked' : ''} class="rounded"> <span>${lbl}</span>`;
+        row.querySelector('input').onchange = (e) => {
+          if (e.target.checked) composerState.labels.push(lbl);
+          else composerState.labels = composerState.labels.filter(x => x !== lbl);
+          updateComposerAppearance();
+        };
+        menu.appendChild(row);
+      });
+    }
+
+    document.getElementById('composerLabelBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      renderComposerLabelCheckboxes();
+      document.getElementById('composerLabelMenu').classList.toggle('hidden');
+    });
+
+    const editModal = document.getElementById('editModal');
+    const editModalCard = document.getElementById('editModalCard');
+
+    function openEditModal(noteId) {
+      const note = notes.find(n => n.id === noteId);
+      if (!note) return;
+      activeModalNoteId = noteId;
+      activeEditorElement = null;
+
+      const styles = getColorStyles(note.color);
+      editModalCard.style.backgroundColor = styles.bg;
+      editModalCard.style.borderColor = styles.border;
+
+      document.getElementById('modalTitle').value = note.title || '';
+      document.getElementById('modalPinIcon').classList.toggle('filled', !!note.pinned);
+
+      const modalBody = document.getElementById('modalBody');
+      const assemblyContainer = document.getElementById('modalAssemblyContainer');
+
+      if (note.type === 'assembly') {
+        modalBody.classList.add('hidden');
+        assemblyContainer.classList.remove('hidden');
+        renderAssemblyProgramInsideModal(note);
+      } else {
+        assemblyContainer.classList.add('hidden');
+        modalBody.classList.remove('hidden');
+        modalBody.innerHTML = note.body || '';
+        activeEditorElement = modalBody;
+      }
+
+      editModal.classList.remove('hidden');
+      editModal.classList.add('flex');
+    }
+
+    function renderAssemblyProgramInsideModal(note) {
+      const container = document.getElementById('modalAssemblyContainer');
+      container.innerHTML = '';
+
+      if (note.subtitle) {
+        const sub = document.createElement('p');
+        sub.className = 'text-xs font-medium opacity-75 pb-2 border-b border-black/10 dark:border-white/10';
+        sub.textContent = note.subtitle;
+        container.appendChild(sub);
+      }
+
+      note.assemblyData.sessions.forEach((session, sIdx) => {
+        const sec = document.createElement('div');
+        sec.className = 'space-y-2';
+        sec.innerHTML = `<h4 class="font-display font-bold text-xs tracking-wider uppercase px-2 py-1 rounded bg-black/10 dark:bg-white/10 inline-block">${session.name}</h4>`;
+
+        const list = document.createElement('div');
+        list.className = 'space-y-1.5';
+
+        session.items.forEach((item, iIdx) => {
+          const itemBox = document.createElement('div');
+          itemBox.className = 'rounded-lg border border-black/10 dark:border-white/10 overflow-hidden bg-white/40 dark:bg-black/20';
+
+          if (!item.isNoteable) {
+            itemBox.innerHTML = `
+              <div class="px-3 py-2 flex items-center gap-3 text-xs sm:text-sm opacity-75">
+                <span class="font-mono font-medium min-w-[42px]">${item.time}</span>
+                <span>${item.title}</span>
+              </div>
+            `;
+          } else {
+            const hasNotes = item.notes && item.notes.trim() !== '';
+            itemBox.innerHTML = `
+              <button type="button" class="w-full px-3 py-2.5 flex items-start justify-between gap-2 text-left hover:bg-black/5 dark:hover:bg-white/5 transition">
+                <div class="flex items-start gap-3 text-sm font-medium">
+                  <span class="font-mono text-xs opacity-75 mt-0.5 min-w-[42px]">${item.time}</span>
+                  <span>${item.title}</span>
+                </div>
+                <span class="material-symbols-outlined text-base opacity-60 expand-icon">${hasNotes ? 'expand_less' : 'expand_more'}</span>
+              </button>
+              <div class="assembly-editor-wrap ${hasNotes ? '' : 'hidden'} px-3 pb-3 pt-1 border-t border-black/5 dark:border-white/5">
+                <div contenteditable="true" data-sidx="${sIdx}" data-iidx="${iIdx}" data-placeholder="Escribe tus apuntes de este tema aquí..." class="rich-editor assembly-topic-editor min-h-[70px] text-sm leading-relaxed focus:outline-none p-2 rounded bg-white/60 dark:bg-black/30">${item.notes || ''}</div>
+              </div>
+            `;
+
+            const headerBtn = itemBox.querySelector('button');
+            const editorWrap = itemBox.querySelector('.assembly-editor-wrap');
+            const editorDiv = itemBox.querySelector('.assembly-topic-editor');
+            const icon = itemBox.querySelector('.expand-icon');
+
+            headerBtn.addEventListener('click', () => {
+              const hidden = editorWrap.classList.toggle('hidden');
+              icon.textContent = hidden ? 'expand_more' : 'expand_less';
+              if (!hidden) {
+                activeEditorElement = editorDiv;
+                editorDiv.focus();
+              }
+            });
+
+            editorDiv.addEventListener('focus', () => {
+              activeEditorElement = editorDiv;
+            });
+
+            editorDiv.addEventListener('input', () => {
+              note.assemblyData.sessions[sIdx].items[iIdx].notes = editorDiv.innerHTML;
+              note.updatedAt = Date.now();
+              saveToLocalStorage();
+            });
+          }
+
+          list.appendChild(itemBox);
+        });
+
+        sec.appendChild(list);
+        container.appendChild(sec);
+      });
+    }
+
+    function saveAndCloseModal() {
+      if (activeModalNoteId) {
+        const note = notes.find(n => n.id === activeModalNoteId);
+        if (note) {
+          note.title = document.getElementById('modalTitle').value.trim();
+          if (note.type !== 'assembly') {
+            note.body = document.getElementById('modalBody').innerHTML.trim();
+          }
+          note.updatedAt = Date.now();
+          persistNote(note);
+        }
+      }
+      activeModalNoteId = null;
+      activeEditorElement = null;
+      editModal.classList.add('hidden');
+      editModal.classList.remove('flex');
+      document.getElementById('modalColorMenu').classList.add('hidden');
+    }
+
+    document.getElementById('modalSaveCloseBtn').addEventListener('click', saveAndCloseModal);
+    editModal.addEventListener('click', (e) => {
+      if (e.target === editModal) saveAndCloseModal();
+    });
+
+    document.getElementById('modalPinBtn').addEventListener('click', () => {
+      const note = notes.find(n => n.id === activeModalNoteId);
+      if (!note) return;
+      note.pinned = !note.pinned;
+      document.getElementById('modalPinIcon').classList.toggle('filled', note.pinned);
+    });
+
+    document.getElementById('modalColorBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      buildColorPalette('modalColorMenu', (colorKey) => {
+        const note = notes.find(n => n.id === activeModalNoteId);
+        if (!note) return;
+        note.color = colorKey;
+        const styles = getColorStyles(colorKey);
+        editModalCard.style.backgroundColor = styles.bg;
+        editModalCard.style.borderColor = styles.border;
+      });
+      document.getElementById('modalColorMenu').classList.toggle('hidden');
+    });
+
+    document.getElementById('modalArchiveBtn').addEventListener('click', () => {
+      const note = notes.find(n => n.id === activeModalNoteId);
+      if (!note) return;
+      note.archived = !note.archived;
+      saveAndCloseModal();
+    });
+
+    document.getElementById('modalDeleteBtn').addEventListener('click', () => {
+      const note = notes.find(n => n.id === activeModalNoteId);
+      if (!note) return;
+      note.trashed = !note.trashed;
+      saveAndCloseModal();
+    });
+
+    document.querySelectorAll('[data-nav]').forEach(btn => {
+      btn.addEventListener('click', () => switchView(btn.dataset.nav));
+    });
+
+    const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value.trim();
+      clearSearchBtn.classList.toggle('hidden', !searchQuery);
+      renderNotesGrids();
+    });
+    clearSearchBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      searchQuery = '';
+      clearSearchBtn.classList.add('hidden');
+      renderNotesGrids();
+    });
+
+    document.getElementById('viewToggleBtn').addEventListener('click', () => {
+      isListView = !isListView;
+      document.getElementById('viewToggleIcon').textContent = isListView ? 'grid_view' : 'view_agenda';
+      document.getElementById('pinnedGrid').className = isListView ? 'notes-list' : 'notes-grid';
+      document.getElementById('notesGrid').className = isListView ? 'notes-list' : 'notes-grid';
+    });
+
+    document.getElementById('themeToggleBtn').addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      const dark = isDarkMode();
+      document.getElementById('themeToggleIcon').textContent = dark ? 'light_mode' : 'dark_mode';
+      updateComposerAppearance();
+      renderApp();
+    });
+
+    const hiddenImageInput = document.getElementById('hiddenImageInput');
+    document.getElementById('composerImgBtn').addEventListener('click', () => hiddenImageInput.click());
+    document.getElementById('quickImageBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      expandComposer();
+      hiddenImageInput.click();
+    });
+    hiddenImageInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        composerState.image = ev.target.result;
+        updateComposerAppearance();
+      };
+      reader.readAsDataURL(file);
+    });
+    document.getElementById('removeComposerImgBtn').addEventListener('click', () => {
+      composerState.image = null;
+      updateComposerAppearance();
+    });
+
+    const labelsModal = document.getElementById('labelsModal');
+    function renderLabelsModalList() {
+      const list = document.getElementById('editLabelsModalList');
+      list.innerHTML = '';
+      labels.forEach((lbl, idx) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between py-1 px-2 rounded hover:bg-black/5 dark:hover:bg-white/5';
+        row.innerHTML = `
+          <span class="text-sm">${lbl}</span>
+          <button class="p-1 text-gray-400 hover:text-red-500"><span class="material-symbols-outlined text-base">delete</span></button>
+        `;
+        row.querySelector('button').onclick = () => {
+          labels.splice(idx, 1);
+          saveToLocalStorage();
+          renderLabelsModalList();
+          renderApp();
+        };
+        list.appendChild(row);
+      });
+    }
+    document.getElementById('editLabelsBtn').addEventListener('click', () => {
+      closeDrawer();
+      renderLabelsModalList();
+      labelsModal.classList.remove('hidden');
+      labelsModal.classList.add('flex');
+    });
+    document.getElementById('closeLabelsModalBtn').addEventListener('click', () => {
+      labelsModal.classList.add('hidden');
+      labelsModal.classList.remove('flex');
+    });
+    document.getElementById('addLabelBtn').addEventListener('click', () => {
+      const val = document.getElementById('newLabelInput').value.trim();
+      if (val && !labels.includes(val)) {
+        labels.push(val);
+        document.getElementById('newLabelInput').value = '';
+        saveToLocalStorage();
+        renderLabelsModalList();
+        renderApp();
+      }
+    });
+
+    let deferredInstallPrompt = null;
+    const pwaInstallBanner = document.getElementById('pwaInstallBanner');
+    const pwaInstallActionBtn = document.getElementById('pwaInstallActionBtn');
+    const pwaDismissBtn = document.getElementById('pwaDismissBtn');
+    const pwaBannerText = document.getElementById('pwaBannerText');
+
+    function isAppInstalled() {
+      return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    }
+
+    function checkAndShowInstallBanner() {
+      if (isAppInstalled()) {
+        pwaInstallBanner.classList.add('hidden');
+        return;
+      }
+      if (sessionStorage.getItem('pwa_banner_dismissed') === '1') return;
+
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      if (isIOS) {
+        pwaBannerText.innerHTML = 'Esta app no está instalada. Toca el botón <b>Compartir</b> de tu navegador y elige <b>"Agregar a inicio"</b>.';
+        pwaInstallActionBtn.classList.add('hidden');
+        pwaInstallBanner.classList.remove('hidden');
+      } else if (deferredInstallPrompt) {
+        pwaBannerText.textContent = 'Detectamos que aún no tienes instalada la app en tu celular. Instálala para usarla sin conexión.';
+        pwaInstallActionBtn.classList.remove('hidden');
+        pwaInstallBanner.classList.remove('hidden');
+      }
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      checkAndShowInstallBanner();
+    });
+
+    pwaInstallActionBtn.addEventListener('click', async () => {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      const { outcome } = await deferredInstallPrompt.userChoice;
+      if (outcome === 'accepted') {
+        pwaInstallBanner.classList.add('hidden');
+      }
+      deferredInstallPrompt = null;
+    });
+
+    pwaDismissBtn.addEventListener('click', () => {
+      sessionStorage.setItem('pwa_banner_dismissed', '1');
+      pwaInstallBanner.classList.add('hidden');
+    });
+
+    window.addEventListener('appinstalled', () => {
+      pwaInstallBanner.classList.add('hidden');
+    });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').then((reg) => {
+          reg.update();
+        }).catch(() => {});
+        setTimeout(checkAndShowInstallBanner, 1500);
+      });
+    }
+
+    loadFromLocalStorage();
+    renderApp();
+  </script>
+</body>
+</html>
   <link rel="manifest" href="manifest.json">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
