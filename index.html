@@ -263,29 +263,29 @@
 
         <!-- Herramientas de Formato y Emojis Minimalistas -->
         <div class="flex items-center gap-0.5 sm:gap-1 overflow-x-auto py-0.5">
-          <button type="button" onclick="applyFormatModal('bold')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Negrita">
+          <button id="btnFormatBold" type="button" onmousedown="event.preventDefault()" onclick="applyFormatModal('bold')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Negrita">
             <span class="material-symbols-outlined text-[20px]">format_bold</span>
           </button>
-          <button type="button" onclick="applyFormatModal('underline')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Subrayado">
+          <button id="btnFormatUnderline" type="button" onmousedown="event.preventDefault()" onclick="applyFormatModal('underline')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Subrayado">
             <span class="material-symbols-outlined text-[20px]">format_underlined</span>
           </button>
-          <button type="button" onclick="applyFormatModal('insertUnorderedList')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Viñetas">
+          <button id="btnFormatList" type="button" onmousedown="event.preventDefault()" onclick="applyFormatModal('insertUnorderedList')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Viñetas">
             <span class="material-symbols-outlined text-[20px]">format_list_bulleted</span>
           </button>
           <div class="h-4 w-px bg-black/15 dark:bg-white/15 mx-0.5"></div>
-          <button type="button" onclick="insertMinimalIconModal('diamond')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Diamante">
+          <button type="button" onmousedown="event.preventDefault()" onclick="insertMinimalIconModal('diamond')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Diamante">
             <span class="material-symbols-outlined text-[19px]">diamond</span>
           </button>
-          <button type="button" onclick="insertMinimalIconModal('favorite')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Corazón">
+          <button type="button" onmousedown="event.preventDefault()" onclick="insertMinimalIconModal('favorite')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Corazón">
             <span class="material-symbols-outlined text-[19px]">favorite</span>
           </button>
-          <button type="button" onclick="insertMinimalIconModal('check')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Check">
+          <button type="button" onmousedown="event.preventDefault()" onclick="insertMinimalIconModal('check')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Check">
             <span class="material-symbols-outlined text-[19px]">check</span>
           </button>
-          <button type="button" onclick="insertMinimalIconModal('person')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Persona">
+          <button type="button" onmousedown="event.preventDefault()" onclick="insertMinimalIconModal('person')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Persona">
             <span class="material-symbols-outlined text-[19px]">person</span>
           </button>
-          <button type="button" onclick="insertMinimalIconModal('location_on')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Ubicación">
+          <button type="button" onmousedown="event.preventDefault()" onclick="insertMinimalIconModal('location_on')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Ubicación">
             <span class="material-symbols-outlined text-[19px]">location_on</span>
           </button>
         </div>
@@ -710,19 +710,76 @@
       };
     }
 
+    function updateFormatButtonsState() {
+      const boldBtn = document.getElementById('btnFormatBold');
+      const underlineBtn = document.getElementById('btnFormatUnderline');
+      const listBtn = document.getElementById('btnFormatList');
+      if (!boldBtn || !underlineBtn || !listBtn) return;
+
+      const activeClasses = ['bg-black/20', 'dark:bg-white/25', 'text-[#202124]', 'dark:text-white', 'ring-1', 'ring-black/20', 'dark:ring-white/30'];
+
+      const setBtnActive = (btn, isActive) => {
+        activeClasses.forEach(cls => btn.classList.toggle(cls, !!isActive));
+      };
+
+      try {
+        setBtnActive(boldBtn, document.queryCommandState('bold'));
+        setBtnActive(underlineBtn, document.queryCommandState('underline'));
+        setBtnActive(listBtn, document.queryCommandState('insertUnorderedList'));
+      } catch (e) {}
+    }
+
+    document.addEventListener('selectionchange', () => {
+      if (!editModal.classList.contains('hidden')) {
+        updateFormatButtonsState();
+      }
+    });
+
     window.applyFormatModal = function(command) {
       const target = activeEditorElement || document.getElementById('modalBody');
       if (!target) return;
       target.focus();
       document.execCommand(command, false, null);
+      updateFormatButtonsState();
     };
 
     window.insertMinimalIconModal = function(iconName) {
       const target = activeEditorElement || document.getElementById('modalBody');
       if (!target) return;
       target.focus();
-      const html = `<span class="inline-icon" contenteditable="false">${iconName}</span>&nbsp;`;
-      document.execCommand('insertHTML', false, html);
+
+      const sel = window.getSelection();
+      if (!sel) return;
+
+      let range;
+      if (sel.rangeCount > 0 && target.contains(sel.anchorNode)) {
+        range = sel.getRangeAt(0);
+        range.deleteContents();
+      } else {
+        range = document.createRange();
+        range.selectNodeContents(target);
+        range.collapse(false);
+      }
+
+      const iconSpan = document.createElement('span');
+      iconSpan.className = 'inline-icon';
+      iconSpan.setAttribute('contenteditable', 'false');
+      iconSpan.textContent = iconName;
+
+      const spaceNode = document.createTextNode('\u00A0');
+
+      range.insertNode(spaceNode);
+      range.insertNode(iconSpan);
+
+      // Colocar el cursor inmediatamente después del espacio que sigue al icono para escribir a continuación
+      const newRange = document.createRange();
+      newRange.setStartAfter(spaceNode);
+      newRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+
+      target.dispatchEvent(new Event('input', { bubbles: true }));
+      updateFormatButtonsState();
     };
 
     window.switchView = function(view) {
@@ -1061,7 +1118,12 @@
       editModal.classList.add('flex');
 
       if (focusBody && note.type !== 'assembly') {
-        setTimeout(() => modalBody.focus(), 60);
+        setTimeout(() => {
+          modalBody.focus();
+          updateFormatButtonsState();
+        }, 60);
+      } else {
+        updateFormatButtonsState();
       }
     }
 
