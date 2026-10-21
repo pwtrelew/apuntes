@@ -1,10 +1,8 @@
-const CACHE_NAME = 'mis-apuntes-pwa-v6';
+const CACHE_NAME = 'mis-apuntes-pwa-v7';
 const ASSETS = [
   './',
   './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  './manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
@@ -23,7 +21,6 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Estrategia Network-First para index.html y manifest.json para que siempre reciban tus nuevos programas de asamblea
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
@@ -32,8 +29,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .then((networkResponse) => {
-          const clone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
           return networkResponse;
         })
         .catch(() => caches.match(event.request))
