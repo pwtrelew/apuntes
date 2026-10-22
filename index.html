@@ -47,7 +47,7 @@
     .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; user-select: none; }
     .material-symbols-outlined.filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
     
-    /* Vista Cuadrícula estilo Google Keep (Masonry adaptable sin recortar el botón de fijar) */
+    /* Vista Cuadrícula estilo Google Keep */
     .notes-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -117,6 +117,28 @@
     .icon-favorite { color: #ef4444; }
     .icon-check { color: #22c55e; }
     .icon-location_on { color: #eab308; }
+
+    /* Botones de la barra de formato: sin círculos residuales al deseleccionar en pantallas táctiles */
+    .format-toolbar-btn {
+      outline: none !important;
+      box-shadow: none !important;
+      -webkit-tap-highlight-color: transparent;
+      border-radius: 9999px;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .format-toolbar-btn:not(.is-active):hover {
+        background-color: rgba(128, 128, 128, 0.15);
+      }
+    }
+    .format-toolbar-btn.is-active {
+      background-color: rgba(0, 0, 0, 0.18) !important;
+      color: #202124 !important;
+    }
+    html.dark .format-toolbar-btn.is-active {
+      background-color: rgba(255, 255, 255, 0.24) !important;
+      color: #ffffff !important;
+    }
   </style>
 </head>
 <body class="bg-white dark:bg-[#202124] text-[#202124] dark:text-[#e8eaed] min-h-screen flex flex-col transition-colors duration-200">
@@ -144,12 +166,18 @@
     </div>
 
     <!-- Acciones Derecha -->
-    <div class="flex items-center gap-1 sm:gap-2">
+    <div class="flex items-center gap-1 sm:gap-1.5">
       <button id="viewToggleBtn" type="button" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Cambiar entre vista de cuadrícula y lista">
         <span id="viewToggleIcon" class="material-symbols-outlined">view_agenda</span>
       </button>
       <button id="themeToggleBtn" type="button" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Modo oscuro / claro">
         <span id="themeToggleIcon" class="material-symbols-outlined">light_mode</span>
+      </button>
+      <!-- Botón / Avatar de Cuenta Google -->
+      <button id="headerAuthBtn" type="button" class="ml-0.5 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition flex items-center justify-center relative" title="Respaldo en la nube con Google">
+        <span id="headerAuthIcon" class="material-symbols-outlined text-[24px]">account_circle</span>
+        <img id="headerAuthAvatar" src="" alt="Foto de perfil" class="hidden w-7 h-7 rounded-full object-cover ring-2 ring-[#8ab4f8]">
+        <span id="headerSyncDot" class="hidden absolute bottom-1 right-1 w-2.5 h-2.5 rounded-full bg-green-500 ring-2 ring-white dark:ring-[#202124]"></span>
       </button>
     </div>
   </header>
@@ -166,7 +194,41 @@
       </button>
     </div>
 
-    <nav class="space-y-0.5 pr-3">
+    <!-- Tarjeta de Cuenta y Sincronización en la Nube -->
+    <div class="px-4 mb-3">
+      <div id="sidebarAccountCard" class="p-3 rounded-2xl bg-[#f1f3f4] dark:bg-[#303134] border border-gray-200 dark:border-[#5f6368]/40">
+        <!-- Estado No Vinculado a Google -->
+        <div id="sidebarLoggedOutView" class="space-y-2">
+          <div class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+            <span class="material-symbols-outlined text-[18px] text-[#8ab4f8]">cloud_upload</span>
+            <span>Guarda tus apuntes en tu cuenta de Google para no perderlos nunca.</span>
+          </div>
+          <button id="sidebarGoogleSignInBtn" type="button" class="w-full py-2 px-3 rounded-xl bg-white dark:bg-[#202124] hover:bg-gray-50 dark:hover:bg-[#3c4043] text-xs font-medium flex items-center justify-center gap-2 shadow-sm border border-gray-200 dark:border-[#5f6368]/60 transition">
+            <svg class="w-4 h-4" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24z"/>
+              <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14z"/>
+              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/>
+            </svg>
+            <span>Vincular con Google</span>
+          </button>
+        </div>
+
+        <!-- Estado Vinculado con Google -->
+        <div id="sidebarLoggedInView" class="hidden items-center gap-2.5">
+          <img id="sidebarUserAvatar" src="" alt="Avatar" class="w-9 h-9 rounded-full object-cover flex-shrink-0">
+          <div class="flex-1 min-w-0">
+            <p id="sidebarUserName" class="text-xs font-medium truncate"></p>
+            <p id="sidebarUserEmail" class="text-[11px] text-gray-500 dark:text-gray-400 truncate"></p>
+            <span class="inline-flex items-center gap-1 text-[10px] text-green-600 dark:text-green-400 font-medium">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Sincronizado en la nube
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="space-y-0.5 pr-3 flex-1">
       <button data-nav="notes" type="button" class="nav-item w-full flex items-center gap-5 px-6 py-3 rounded-r-full text-sm font-medium transition">
         <span class="material-symbols-outlined">edit_note</span>
         <span>Apuntes</span>
@@ -197,7 +259,7 @@
   <!-- Contenido Principal -->
   <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-5 pb-24">
 
-    <!-- Barra rápida para crear nuevo apunte (Al tocarla abre el editor a pantalla completa como Google Keep) -->
+    <!-- Barra rápida para crear nuevo apunte -->
     <div id="composerSection" class="max-w-xl mx-auto mb-6">
       <div id="composerCollapsed" class="rounded-2xl border border-gray-300 dark:border-[#5f6368] shadow-sm px-4 py-3 flex items-center justify-between cursor-pointer bg-white dark:bg-[#303134] hover:shadow-md transition">
         <span class="text-gray-500 dark:text-gray-300 font-medium text-sm sm:text-base">Crear un apunte...</span>
@@ -235,6 +297,35 @@
     <span class="material-symbols-outlined text-3xl">add</span>
   </button>
 
+  <!-- Cartel de Bienvenida Único para Vincular con Google (solo aparece si aún no inició sesión y no lo descartó) -->
+  <div id="googleWelcomePrompt" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-[#303134] border border-gray-200 dark:border-[#5f6368] w-full max-w-sm rounded-3xl shadow-2xl p-6 text-center space-y-4">
+      <div class="w-14 h-14 rounded-2xl bg-[#8ab4f8]/20 text-[#8ab4f8] mx-auto flex items-center justify-center">
+        <span class="material-symbols-outlined text-3xl">cloud_done</span>
+      </div>
+      <div class="space-y-1.5">
+        <h3 class="font-display font-medium text-lg text-[#202124] dark:text-[#e8eaed]">Protege tus apuntes para siempre</h3>
+        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+          Conecta tu cuenta de Google una sola vez. Así tus notas y asambleas quedarán guardadas en la nube y nunca se borrarán aunque cambies de teléfono.
+        </p>
+      </div>
+      <div class="space-y-2 pt-1">
+        <button id="welcomeGoogleSignInBtn" type="button" class="w-full py-2.5 px-4 rounded-xl bg-[#8ab4f8] text-[#202124] font-medium text-sm flex items-center justify-center gap-2.5 shadow hover:brightness-95 active:scale-95 transition">
+          <svg class="w-4 h-4 bg-white rounded-full p-0.5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24z"/>
+            <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14z"/>
+            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/>
+          </svg>
+          <span>Continuar con Google</span>
+        </button>
+        <button id="welcomeDismissGoogleBtn" type="button" class="w-full py-2 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition">
+          Ahora no, usar solo en este dispositivo
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Cartel Flotante de Instalación Directa PWA -->
   <div id="pwaInstallBanner" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-40 hidden bg-white dark:bg-[#303134] border border-gray-200 dark:border-[#5f6368] rounded-2xl shadow-2xl p-4 transition-all duration-300">
     <div class="flex items-start gap-3">
@@ -256,7 +347,7 @@
     </div>
   </div>
 
-  <!-- Editor de Apuntes y Asambleas a PANTALLA COMPLETA (Dinámica idéntica a Google Keep) -->
+  <!-- Editor de Apuntes y Asambleas a PANTALLA COMPLETA -->
   <div id="editModal" class="fixed inset-0 z-50 hidden flex-col bg-white dark:bg-[#202124] transition-colors duration-200">
     <div id="editModalCard" class="w-full h-full flex flex-col overflow-hidden bg-white dark:bg-[#202124] transition-colors duration-200">
       
@@ -269,30 +360,30 @@
 
         <!-- Herramientas de Formato y Emojis Minimalistas con contorno en color -->
         <div class="flex items-center gap-0.5 sm:gap-1 overflow-x-auto py-0.5">
-          <button id="btnFormatBold" type="button" onmousedown="event.preventDefault()" onclick="applyFormatModal('bold')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Negrita">
-            <span class="material-symbols-outlined text-[20px]">format_bold</span>
+          <button id="btnFormatBold" type="button" onpointerdown="event.preventDefault()" onclick="applyFormatModal('bold')" class="format-toolbar-btn p-1.5" title="Negrita">
+            <span class="material-symbols-outlined text-[20px] block">format_bold</span>
           </button>
-          <button id="btnFormatUnderline" type="button" onmousedown="event.preventDefault()" onclick="applyFormatModal('underline')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Subrayado">
-            <span class="material-symbols-outlined text-[20px]">format_underlined</span>
+          <button id="btnFormatUnderline" type="button" onpointerdown="event.preventDefault()" onclick="applyFormatModal('underline')" class="format-toolbar-btn p-1.5" title="Subrayado">
+            <span class="material-symbols-outlined text-[20px] block">format_underlined</span>
           </button>
-          <button id="btnFormatList" type="button" onmousedown="event.preventDefault()" onclick="applyFormatModal('insertUnorderedList')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Viñetas">
-            <span class="material-symbols-outlined text-[20px]">format_list_bulleted</span>
+          <button id="btnFormatList" type="button" onpointerdown="event.preventDefault()" onclick="applyFormatModal('insertUnorderedList')" class="format-toolbar-btn p-1.5" title="Viñetas">
+            <span class="material-symbols-outlined text-[20px] block">format_list_bulleted</span>
           </button>
           <div class="h-4 w-px bg-black/15 dark:bg-white/15 mx-0.5"></div>
-          <button type="button" onmousedown="event.preventDefault()" onclick="insertMinimalIconModal('diamond')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Diamante">
-            <span class="material-symbols-outlined text-[19px] icon-diamond">diamond</span>
+          <button type="button" onpointerdown="event.preventDefault()" onclick="insertMinimalIconModal('diamond')" class="format-toolbar-btn p-1.5" title="Insertar Diamante">
+            <span class="material-symbols-outlined text-[19px] icon-diamond block">diamond</span>
           </button>
-          <button type="button" onmousedown="event.preventDefault()" onclick="insertMinimalIconModal('favorite')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Corazón">
-            <span class="material-symbols-outlined text-[19px] icon-favorite">favorite</span>
+          <button type="button" onpointerdown="event.preventDefault()" onclick="insertMinimalIconModal('favorite')" class="format-toolbar-btn p-1.5" title="Insertar Corazón">
+            <span class="material-symbols-outlined text-[19px] icon-favorite block">favorite</span>
           </button>
-          <button type="button" onmousedown="event.preventDefault()" onclick="insertMinimalIconModal('check')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Check">
-            <span class="material-symbols-outlined text-[19px] icon-check">check</span>
+          <button type="button" onpointerdown="event.preventDefault()" onclick="insertMinimalIconModal('check')" class="format-toolbar-btn p-1.5" title="Insertar Check">
+            <span class="material-symbols-outlined text-[19px] icon-check block">check</span>
           </button>
-          <button type="button" onmousedown="event.preventDefault()" onclick="insertMinimalIconModal('person')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Persona">
-            <span class="material-symbols-outlined text-[19px]">person</span>
+          <button type="button" onpointerdown="event.preventDefault()" onclick="insertMinimalIconModal('person')" class="format-toolbar-btn p-1.5" title="Insertar Persona">
+            <span class="material-symbols-outlined text-[19px] block">person</span>
           </button>
-          <button type="button" onmousedown="event.preventDefault()" onclick="insertMinimalIconModal('location_on')" class="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Insertar Ubicación">
-            <span class="material-symbols-outlined text-[19px] icon-location_on">location_on</span>
+          <button type="button" onpointerdown="event.preventDefault()" onclick="insertMinimalIconModal('location_on')" class="format-toolbar-btn p-1.5" title="Insertar Ubicación">
+            <span class="material-symbols-outlined text-[19px] icon-location_on block">location_on</span>
           </button>
         </div>
 
@@ -377,7 +468,18 @@
   <!-- Scripts de la Aplicación y Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signInWithRedirect,
+      getRedirectResult,
+      linkWithPopup,
+      signInAnonymously,
+      onAuthStateChanged,
+      setPersistence,
+      browserLocalPersistence
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import { getFirestore, collection, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -526,7 +628,7 @@
     }
 
     let notes = [];
-    let labels = ['Reuniones', 'Revisitas', 'Ideas'];
+    let labels = ['Ideas', 'Reuniones', 'Revisitas'];
     let currentView = 'notes';
     let isListView = localStorage.getItem('mis_apuntes_view_mode') === 'list';
     let searchQuery = '';
@@ -537,8 +639,13 @@
     const NOTES_STORAGE_KEY = 'mis_apuntes_notes_permanent';
     const LABELS_STORAGE_KEY = 'mis_apuntes_labels_permanent';
     const THEME_STORAGE_KEY = 'mis_apuntes_theme';
+    const GOOGLE_PROMPT_DISMISSED_KEY = 'mis_apuntes_google_prompt_dismissed';
 
-    // Colorea automáticamente cualquier icono minimalista existente o nuevo
+    // Ordenar etiquetas alfabéticamente (respetando acentos y ñ en español)
+    function sortLabelsAlphabetically() {
+      labels.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+    }
+
     function upgradeInlineIconsInHTML(htmlStr) {
       if (!htmlStr || typeof htmlStr !== 'string') return htmlStr;
       return htmlStr.replace(/<span([^>]*class="[^"]*inline-icon[^"]*"[^>]*)>\s*(diamond|favorite|check|person|location_on)\s*<\/span>/gi, (match, attrs, iconName) => {
@@ -551,7 +658,7 @@
       if (!existingAssembly || !existingAssembly.assemblyData) return officialTemplate;
       const merged = JSON.parse(JSON.stringify(officialTemplate));
       merged.type = 'assembly';
-      merged.labels = []; // Las asambleas nunca llevan etiquetas de notas comunes
+      merged.labels = [];
       merged.color = existingAssembly.color || officialTemplate.color;
       merged.pinned = existingAssembly.pinned !== undefined ? existingAssembly.pinned : officialTemplate.pinned;
       merged.archived = !!existingAssembly.archived;
@@ -578,7 +685,6 @@
     function sanitizeNotesAndAssemblies() {
       let changed = false;
       notes.forEach(n => {
-        // Garantizar que cualquier asamblea tenga su tipo correcto y no tenga etiquetas de apuntes
         if (n.id === ASSEMBLY_ID_1 || n.id === ASSEMBLY_ID_2 || n.assemblyData || n.type === 'assembly') {
           if (n.type !== 'assembly') { n.type = 'assembly'; changed = true; }
           if (Array.isArray(n.labels) && n.labels.length > 0) {
@@ -628,6 +734,7 @@
       if (savedLabels) {
         try { labels = JSON.parse(savedLabels); } catch (e) {}
       }
+      sortLabelsAlphabetically();
       localStorage.setItem(LABELS_STORAGE_KEY, JSON.stringify(labels));
 
       const permanentNotes = localStorage.getItem(NOTES_STORAGE_KEY);
@@ -665,59 +772,175 @@
     }
 
     function saveToLocalStorage() {
+      sortLabelsAlphabetically();
       localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
       localStorage.setItem(LABELS_STORAGE_KEY, JSON.stringify(labels));
     }
 
+    // Autenticación Persistente con Google y Sincronización en Firestore
     let db = null;
+    let auth = null;
     let currentUser = null;
+    let unsubscribeNotesSnapshot = null;
+
+    function updateAccountUI(user) {
+      const isGoogleLinked = user && !user.isAnonymous;
+      const headerAuthIcon = document.getElementById('headerAuthIcon');
+      const headerAuthAvatar = document.getElementById('headerAuthAvatar');
+      const headerSyncDot = document.getElementById('headerSyncDot');
+      const sidebarLoggedOutView = document.getElementById('sidebarLoggedOutView');
+      const sidebarLoggedInView = document.getElementById('sidebarLoggedInView');
+      const googleWelcomePrompt = document.getElementById('googleWelcomePrompt');
+
+      if (isGoogleLinked) {
+        if (user.photoURL) {
+          headerAuthAvatar.src = user.photoURL;
+          headerAuthAvatar.classList.remove('hidden');
+          headerAuthIcon.classList.add('hidden');
+        } else {
+          headerAuthAvatar.classList.add('hidden');
+          headerAuthIcon.classList.remove('hidden');
+        }
+        headerSyncDot.classList.remove('hidden');
+
+        sidebarLoggedOutView.classList.add('hidden');
+        sidebarLoggedInView.classList.remove('hidden');
+        sidebarLoggedInView.classList.add('flex');
+        document.getElementById('sidebarUserAvatar').src = user.photoURL || './icon-192.png';
+        document.getElementById('sidebarUserName').textContent = user.displayName || 'Cuenta de Google';
+        document.getElementById('sidebarUserEmail').textContent = user.email || '';
+
+        googleWelcomePrompt.classList.add('hidden');
+        googleWelcomePrompt.classList.remove('flex');
+      } else {
+        headerAuthAvatar.classList.add('hidden');
+        headerAuthIcon.classList.remove('hidden');
+        headerSyncDot.classList.add('hidden');
+
+        sidebarLoggedOutView.classList.remove('hidden');
+        sidebarLoggedInView.classList.add('hidden');
+        sidebarLoggedInView.classList.remove('flex');
+
+        // Mostrar invitación de vinculación 1 sola vez si aún no inició sesión con Google
+        if (localStorage.getItem(GOOGLE_PROMPT_DISMISSED_KEY) !== '1') {
+          googleWelcomePrompt.classList.remove('hidden');
+          googleWelcomePrompt.classList.add('flex');
+        }
+      }
+    }
+
+    async function signInWithGooglePermanent() {
+      if (!auth) return;
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+        // Si tenía sesión anónima, intentamos vincularla o iniciar sesión directo conservando todas las notas locales
+        if (auth.currentUser && auth.currentUser.isAnonymous) {
+          try {
+            await linkWithPopup(auth.currentUser, provider);
+            return;
+          } catch (linkErr) {
+            // Si la cuenta de Google ya existía de otro dispositivo, iniciamos sesión en ella y fusionamos apuntes
+          }
+        }
+        await signInWithPopup(auth, provider);
+      } catch (popupErr) {
+        if (popupErr.code === 'auth/popup-blocked' || popupErr.code === 'auth/operation-not-supported-in-this-environment') {
+          await signInWithRedirect(auth, provider);
+        } else {
+          console.warn('Inicio con Google cancelado o no completado:', popupErr);
+        }
+      }
+    }
+
     try {
       const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
+      auth = getAuth(app);
       db = getFirestore(app);
-      signInAnonymously(auth).catch(console.error);
+
+      // Fijar persistencia local permanente para no volver a pedir login nunca
+      setPersistence(auth, browserLocalPersistence).catch(console.warn);
+      getRedirectResult(auth).catch(console.warn);
+
       onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          signInAnonymously(auth).catch(console.error);
+          return;
+        }
         currentUser = user;
-        if (user) {
-          const notesRef = collection(db, 'users', user.uid, 'notes');
-          onSnapshot(notesRef, async (snapshot) => {
-            const cloudIds = new Set();
-            snapshot.docs.forEach(d => {
-              const cn = d.data();
-              if (!cn || !cn.id) return;
-              cloudIds.add(cn.id);
-              const localIdx = notes.findIndex(n => n.id === cn.id);
-              if (localIdx >= 0) {
-                const localNote = notes[localIdx];
-                if ((cn.updatedAt || 0) >= (localNote.updatedAt || 0)) {
-                  notes[localIdx] = cn;
-                }
-              } else {
-                notes.push(cn);
+        updateAccountUI(user);
+
+        if (unsubscribeNotesSnapshot) {
+          unsubscribeNotesSnapshot();
+        }
+
+        const notesRef = collection(db, 'users', user.uid, 'notes');
+        unsubscribeNotesSnapshot = onSnapshot(notesRef, async (snapshot) => {
+          const cloudIds = new Set();
+          snapshot.docs.forEach(d => {
+            const cn = d.data();
+            if (!cn || !cn.id) return;
+            cloudIds.add(cn.id);
+            const localIdx = notes.findIndex(n => n.id === cn.id);
+            if (localIdx >= 0) {
+              const localNote = notes[localIdx];
+              if ((cn.updatedAt || 0) >= (localNote.updatedAt || 0)) {
+                notes[localIdx] = cn;
               }
-            });
+            } else {
+              notes.push(cn);
+            }
+          });
 
-            ensureBuiltInAssemblies();
-            saveToLocalStorage();
-            renderApp();
+          // Sincronizar también etiquetas nuevas que vengan en las notas de la nube
+          notes.forEach(n => {
+            if (!isAssemblyNote(n) && Array.isArray(n.labels)) {
+              n.labels.forEach(lbl => {
+                if (lbl && !labels.includes(lbl)) labels.push(lbl);
+              });
+            }
+          });
+          sortLabelsAlphabetically();
 
-            for (const localNote of notes) {
-              if (!cloudIds.has(localNote.id)) {
-                try {
-                  await setDoc(doc(db, 'users', user.uid, 'notes', localNote.id), localNote);
-                } catch (err) {
-                  console.error('Error respaldando nota en la nube:', err);
-                }
+          ensureBuiltInAssemblies();
+          saveToLocalStorage();
+          renderApp();
+
+          // Subir cualquier nota local que aún no esté en la nube de este usuario
+          for (const localNote of notes) {
+            if (!cloudIds.has(localNote.id)) {
+              try {
+                await setDoc(doc(db, 'users', user.uid, 'notes', localNote.id), localNote);
+              } catch (err) {
+                console.error('Error respaldando nota en la nube:', err);
               }
             }
-          }, (error) => {
-            console.warn('Error en suscripción de Firebase:', error);
-          });
-        }
+          }
+        }, (error) => {
+          console.warn('Error en suscripción de Firebase:', error);
+        });
       });
     } catch (e) {
       console.warn('Modo local:', e);
     }
+
+    document.getElementById('sidebarGoogleSignInBtn').addEventListener('click', signInWithGooglePermanent);
+    document.getElementById('welcomeGoogleSignInBtn').addEventListener('click', signInWithGooglePermanent);
+    document.getElementById('headerAuthBtn').addEventListener('click', () => {
+      if (currentUser && !currentUser.isAnonymous) {
+        openDrawer();
+      } else {
+        signInWithGooglePermanent();
+      }
+    });
+    document.getElementById('welcomeDismissGoogleBtn').addEventListener('click', () => {
+      localStorage.setItem(GOOGLE_PROMPT_DISMISSED_KEY, '1');
+      const promptEl = document.getElementById('googleWelcomePrompt');
+      promptEl.classList.add('hidden');
+      promptEl.classList.remove('flex');
+    });
 
     async function persistNote(note) {
       if (note.type === 'assembly') {
@@ -736,7 +959,6 @@
       }
     }
 
-    // Gestión de Tema Oscuro / Claro persistente + color de la barra de estado del celular
     function isDarkMode() {
       return document.documentElement.classList.contains('dark');
     }
@@ -761,16 +983,20 @@
       };
     }
 
+    // Estado limpio de los botones de Negrita, Subrayado y Viñetas (sin anillos ni círculos tenues al deseleccionar)
     function updateFormatButtonsState() {
       const boldBtn = document.getElementById('btnFormatBold');
       const underlineBtn = document.getElementById('btnFormatUnderline');
       const listBtn = document.getElementById('btnFormatList');
       if (!boldBtn || !underlineBtn || !listBtn) return;
 
-      const activeClasses = ['bg-black/20', 'dark:bg-white/25', 'text-[#202124]', 'dark:text-white', 'ring-1', 'ring-black/20', 'dark:ring-white/30'];
-
       const setBtnActive = (btn, isActive) => {
-        activeClasses.forEach(cls => btn.classList.toggle(cls, !!isActive));
+        if (isActive) {
+          btn.classList.add('is-active');
+        } else {
+          btn.classList.remove('is-active');
+          btn.blur();
+        }
       };
 
       try {
@@ -822,7 +1048,6 @@
       range.insertNode(spaceNode);
       range.insertNode(iconSpan);
 
-      // Colocar el cursor inmediatamente después del espacio que sigue al icono para escribir a continuación
       const newRange = document.createRange();
       newRange.setStartAfter(spaceNode);
       newRange.collapse(true);
@@ -907,6 +1132,7 @@
     }
 
     function renderSidebarNav() {
+      sortLabelsAlphabetically();
       const labelsContainer = document.getElementById('sidebarLabelsList');
       labelsContainer.innerHTML = '';
       labels.forEach(label => {
@@ -933,7 +1159,6 @@
       return note.type === 'assembly' || note.id === ASSEMBLY_ID_1 || note.id === ASSEMBLY_ID_2 || !!note.assemblyData;
     }
 
-    // Creación de Tarjetas con Botón de Fijar (Pin) en TODAS las notas
     function createNoteCardElement(note) {
       const card = document.createElement('div');
       const styles = getColorStyles(note.color);
@@ -943,7 +1168,6 @@
 
       const isAssembly = isAssemblyNote(note);
 
-      // Botón de Fijar directo en cada tarjeta
       const pinBtn = document.createElement('button');
       pinBtn.type = 'button';
       pinBtn.className = `absolute top-2.5 right-2.5 z-10 p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition ${note.pinned ? 'opacity-100' : 'opacity-70 sm:opacity-0 sm:group-hover:opacity-100'}`;
@@ -991,8 +1215,9 @@
 
       let bottomContent = '';
       if (!isAssembly && Array.isArray(note.labels) && note.labels.length > 0) {
+        const sortedNoteLabels = [...note.labels].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
         bottomContent = `<div class="flex flex-wrap gap-1 mt-2.5 pt-1">
-          ${note.labels.map(l => `<span class="text-[11px] px-2 py-0.5 rounded-full bg-black/10 dark:bg-white/10 truncate max-w-full">${l}</span>`).join('')}
+          ${sortedNoteLabels.map(l => `<span class="text-[11px] px-2 py-0.5 rounded-full bg-black/10 dark:bg-white/10 truncate max-w-full">${l}</span>`).join('')}
         </div>`;
       }
 
@@ -1030,10 +1255,8 @@
         if (currentView === 'assemblies') return !note.trashed && !note.archived && isAssembly;
         if (currentView.startsWith('label:')) {
           const lbl = currentView.replace('label:', '').trim();
-          // Las asambleas nunca se muestran dentro de etiquetas comunes; y las notas solo si tienen exactamente esa etiqueta
           return !note.trashed && !note.archived && !isAssembly && Array.isArray(note.labels) && note.labels.includes(lbl);
         }
-        // Vista principal "Apuntes": solo notas normales (no asambleas)
         return !note.trashed && !note.archived && !isAssembly;
       });
 
@@ -1083,7 +1306,6 @@
       });
     }
 
-    // Editor a Pantalla Completa
     const editModal = document.getElementById('editModal');
     const editModalCard = document.getElementById('editModalCard');
 
@@ -1124,7 +1346,8 @@
         chips.innerHTML = '';
         return;
       }
-      chips.innerHTML = note.labels.map(l => `<span class="text-xs px-2.5 py-1 rounded-full bg-black/10 dark:bg-white/10">${l}</span>`).join('');
+      const sorted = [...note.labels].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+      chips.innerHTML = sorted.map(l => `<span class="text-xs px-2.5 py-1 rounded-full bg-black/10 dark:bg-white/10">${l}</span>`).join('');
     }
 
     function renderModalImage(note) {
@@ -1150,14 +1373,12 @@
       const styles = getColorStyles(note.color);
       editModalCard.style.backgroundColor = styles.bg;
 
-      // Actualizar también el color de la barra superior del teléfono mientras la nota está a pantalla completa
       const metaTheme = document.getElementById('themeColorMeta');
       if (metaTheme) metaTheme.setAttribute('content', styles.bg);
 
       document.getElementById('modalTitle').value = note.title || '';
       document.getElementById('modalPinIcon').classList.toggle('filled', !!note.pinned);
 
-      // Ocultar botón de etiquetas cuando se abre un programa de asamblea para que solo pertenezca a Asambleas
       const modalLabelBtn = document.getElementById('modalLabelBtn');
       if (modalLabelBtn) {
         modalLabelBtn.classList.toggle('hidden', isAssembly);
@@ -1335,6 +1556,7 @@
       const note = notes.find(n => n.id === activeModalNoteId);
       if (!note || isAssemblyNote(note)) return;
       if (!Array.isArray(note.labels)) note.labels = [];
+      sortLabelsAlphabetically();
       const menu = document.getElementById('modalLabelMenu');
       menu.innerHTML = '<div class="text-xs font-medium opacity-75 mb-1">Etiquetas</div>';
       labels.forEach(lbl => {
@@ -1410,7 +1632,6 @@
       renderApp();
     });
 
-    // Alternar Tema Oscuro / Claro y guardarlo permanentemente en localStorage
     document.getElementById('themeToggleBtn').addEventListener('click', () => {
       const htmlEl = document.documentElement;
       const willBeDark = !htmlEl.classList.contains('dark');
@@ -1446,6 +1667,7 @@
 
     const labelsModal = document.getElementById('labelsModal');
     function renderLabelsModalList() {
+      sortLabelsAlphabetically();
       const list = document.getElementById('editLabelsModalList');
       list.innerHTML = '';
       labels.forEach((lbl, idx) => {
@@ -1484,6 +1706,7 @@
       const val = document.getElementById('newLabelInput').value.trim();
       if (val && !labels.includes(val)) {
         labels.push(val);
+        sortLabelsAlphabetically();
         document.getElementById('newLabelInput').value = '';
         saveToLocalStorage();
         renderLabelsModalList();
@@ -1537,7 +1760,6 @@
       });
     }
 
-    // Garantizar que al iniciar nunca haya ninguna nota abierta
     editModal.classList.add('hidden');
     editModal.classList.remove('flex');
     loadFromLocalStorage();
