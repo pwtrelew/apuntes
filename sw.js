@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mis-apuntes-pwa-v13';
+const CACHE_NAME = 'mis-apuntes-pwa-v14';
 const ASSETS = [
   './',
   './index.html',
