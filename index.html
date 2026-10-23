@@ -25,6 +25,8 @@
     })();
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Librería SortableJS para arrastrar notas manteniendo presionado en celulares y PC -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
   <script>
@@ -64,6 +66,8 @@
       flex-direction: column;
       justify-content: space-between;
       overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     /* Vista Rectangular (Lista de 1 columna) */
@@ -78,7 +82,17 @@
       width: 100%;
     }
 
-    .note-card { transition: box-shadow 0.2s, border-color 0.2s, background-color 0.2s; }
+    .note-card { transition: box-shadow 0.2s, border-color 0.2s, background-color 0.2s, transform 0.15s; }
+
+    /* Efecto visual cuando se mantiene apretada la nota para moverla */
+    .sortable-chosen {
+      transform: scale(1.03);
+      box-shadow: 0 14px 28px rgba(0,0,0,0.35) !important;
+      z-index: 30;
+    }
+    .sortable-ghost {
+      opacity: 0.35;
+    }
 
     [contenteditable]:empty:before {
       content: attr(data-placeholder);
@@ -140,7 +154,7 @@
 
   <!-- Barra Superior -->
   <header class="sticky top-0 z-30 h-16 px-3 sm:px-6 flex items-center justify-between border-b border-gray-200 dark:border-[#5f6368]/40 bg-white dark:bg-[#202124]">
-    <div class="flex items-center gap-2 sm:gap-3">
+    <div class="flex items-center gap-2 sm:gap-3 shrink-0">
       <button id="menuBtn" type="button" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Menú principal">
         <span class="material-symbols-outlined">menu</span>
       </button>
@@ -149,29 +163,24 @@
       </div>
     </div>
 
-    <!-- Buscador -->
+    <!-- Buscador (Solo dice "Buscar") -->
     <div class="flex-1 max-w-xl mx-2 sm:mx-6">
       <div class="relative flex items-center bg-[#f1f3f4] dark:bg-[#303134] rounded-lg px-3 py-2 focus-within:shadow-md transition">
         <span class="material-symbols-outlined text-gray-500 dark:text-gray-300 mr-2">search</span>
-        <input id="searchInput" type="text" placeholder="Buscar..." class="w-full bg-transparent focus:outline-none text-sm sm:text-base placeholder-gray-500 dark:placeholder-gray-400">
+        <input id="searchInput" type="text" placeholder="Buscar" class="w-full bg-transparent focus:outline-none text-sm sm:text-base placeholder-gray-500 dark:placeholder-gray-400">
         <button id="clearSearchBtn" type="button" class="hidden p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
           <span class="material-symbols-outlined text-sm">close</span>
         </button>
       </div>
     </div>
 
-    <!-- Acciones Derecha -->
-    <div class="flex items-center gap-1">
+    <!-- Acciones Derecha (Sin icono de usuario aquí) -->
+    <div class="flex items-center gap-1 shrink-0">
       <button id="viewToggleBtn" type="button" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Cambiar vista cuadrada / rectangular">
         <span id="viewToggleIcon" class="material-symbols-outlined">view_agenda</span>
       </button>
       <button id="themeToggleBtn" type="button" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Modo oscuro / claro">
         <span id="themeToggleIcon" class="material-symbols-outlined">light_mode</span>
-      </button>
-      <!-- Botón Cuenta de Google -->
-      <button id="headerAuthBtn" type="button" class="ml-1 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition flex items-center justify-center" title="Respaldo en cuenta de Google">
-        <img id="userAvatarImg" src="" alt="Avatar" class="hidden w-7 h-7 rounded-full object-cover border border-green-500">
-        <span id="userDefaultIcon" class="material-symbols-outlined text-[24px]">account_circle</span>
       </button>
     </div>
   </header>
@@ -226,12 +235,19 @@
       </button>
     </nav>
 
-    <!-- Estado de Sincronización con Google en el Menú Lateral -->
-    <div class="mt-4 mx-3 p-3 rounded-xl bg-gray-100 dark:bg-[#303134] border border-gray-200 dark:border-[#5f6368]/40">
-      <div id="sidebarAuthStatus" class="text-xs space-y-2">
-        <div class="flex items-center gap-2">
-          <span id="sidebarAuthIcon" class="material-symbols-outlined text-base text-gray-500">cloud_Queue</span>
-          <span id="sidebarAuthText" class="font-medium truncate">Guardado en este dispositivo</span>
+    <!-- Icono de Usuario y Estado de Sincronización dentro del Menú Desplegable -->
+    <div class="mt-4 mx-3 p-3.5 rounded-xl bg-gray-100 dark:bg-[#303134] border border-gray-200 dark:border-[#5f6368]/40">
+      <div id="sidebarAuthStatus" class="text-xs space-y-2.5">
+        <div class="flex items-center gap-3">
+          <img id="userAvatarImg" src="" alt="Avatar" class="hidden w-9 h-9 rounded-full object-cover border border-green-500 shrink-0">
+          <span id="userDefaultIcon" class="material-symbols-outlined text-[32px] text-gray-500 dark:text-gray-300 shrink-0">account_circle</span>
+          <div class="overflow-hidden flex-1">
+            <div class="flex items-center gap-1">
+              <span id="sidebarAuthIcon" class="material-symbols-outlined text-[15px] text-gray-500">cloud_queue</span>
+              <span class="text-[11px] opacity-75">Cuenta y respaldo</span>
+            </div>
+            <p id="sidebarAuthText" class="font-medium truncate text-xs mt-0.5">Guardado en este dispositivo</p>
+          </div>
         </div>
         <button id="sidebarGoogleBtn" type="button" class="w-full py-2 px-3 rounded-lg font-medium text-xs bg-[#202124] text-white dark:bg-[#e8eaed] dark:text-[#202124] flex items-center justify-center gap-2 hover:opacity-90 transition">
           <span class="material-symbols-outlined text-sm">login</span>
@@ -474,6 +490,7 @@
           archived: false,
           trashed: false,
           labels: [],
+          order: 0,
           updatedAt: 1729500000000,
           assemblyData: {
             sessions: [
@@ -531,6 +548,7 @@
           archived: false,
           trashed: false,
           labels: [],
+          order: 1,
           updatedAt: 1729500001000,
           assemblyData: {
             sessions: [
@@ -606,9 +624,21 @@
     let activeEditorElement = null;
     let activeModalNoteId = null;
     let isCreatingNewNote = false;
+    let pinnedSortable = null;
+    let othersSortable = null;
+    let isDraggingCard = false;
 
     function sortLabelsAlphabetically() {
       labels.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+    }
+
+    function sortNotesByManualOrder() {
+      notes.sort((a, b) => {
+        const orderA = typeof a.order === 'number' ? a.order : 999999;
+        const orderB = typeof b.order === 'number' ? b.order : 999999;
+        if (orderA !== orderB) return orderA - orderB;
+        return (b.updatedAt || 0) - (a.updatedAt || 0);
+      });
     }
 
     function loadFromLocalStorage() {
@@ -637,12 +667,14 @@
             trashed: false,
             labels: ['Ideas'],
             image: null,
+            order: 0,
             updatedAt: Date.now()
           }
         ];
       }
 
-      notes.forEach(n => {
+      notes.forEach((n, idx) => {
+        if (typeof n.order !== 'number') n.order = idx;
         if (isAssemblyNote(n)) {
           n.type = 'assembly';
           n.labels = [];
@@ -654,6 +686,7 @@
       });
 
       ensureBuiltInAssemblies();
+      sortNotesByManualOrder();
       saveToLocalStorage();
     }
 
@@ -712,6 +745,7 @@
 
       const notesRef = collection(db, 'users', uid, 'notes');
       unsubscribeSnapshot = onSnapshot(notesRef, (snapshot) => {
+        if (isDraggingCard) return;
         const cloudNotesMap = new Map();
         snapshot.docs.forEach(d => cloudNotesMap.set(d.id, d.data()));
 
@@ -740,12 +774,13 @@
         });
 
         ensureBuiltInAssemblies();
+        sortNotesByManualOrder();
         saveToLocalStorage();
         renderApp();
       });
     }
 
-    // Inicio de sesión con Google en UN SOLO TOQUE (sin doble ventana)
+    // Inicio de sesión con Google en UN SOLO TOQUE
     let isSigningIn = false;
     async function connectGoogleAccount() {
       if (!auth || isSigningIn) return;
@@ -754,7 +789,6 @@
       provider.setCustomParameters({ prompt: 'select_account' });
 
       try {
-        // Guardamos copia de las notas actuales antes de entrar con Google
         const previousLocalNotes = JSON.parse(JSON.stringify(notes));
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
@@ -796,7 +830,7 @@
           defaultIcon.classList.add('text-green-500');
         }
         sidebarAuthIcon.textContent = 'cloud_done';
-        sidebarAuthIcon.className = 'material-symbols-outlined text-base text-green-500';
+        sidebarAuthIcon.className = 'material-symbols-outlined text-[15px] text-green-500';
         sidebarAuthText.textContent = user.email || user.displayName || 'Cuenta de Google conectada';
         sidebarGoogleBtn.classList.add('hidden');
       } else {
@@ -804,22 +838,14 @@
         avatarImg.classList.add('hidden');
         defaultIcon.classList.remove('hidden');
         sidebarAuthIcon.textContent = 'cloud_queue';
-        sidebarAuthIcon.className = 'material-symbols-outlined text-base text-gray-500';
-        sidebarAuthText.textContent = 'Guardado solo en este dispositivo';
+        sidebarAuthIcon.className = 'material-symbols-outlined text-[15px] text-gray-500';
+        sidebarAuthText.textContent = 'Guardado en este dispositivo';
         sidebarGoogleBtn.classList.remove('hidden');
       }
     }
 
     document.getElementById('bannerGoogleSignInBtn').addEventListener('click', connectGoogleAccount);
     document.getElementById('sidebarGoogleBtn').addEventListener('click', connectGoogleAccount);
-    document.getElementById('headerAuthBtn').addEventListener('click', () => {
-      const isGoogleLinked = currentUser && !currentUser.isAnonymous;
-      if (!isGoogleLinked) {
-        connectGoogleAccount();
-      } else {
-        openDrawer();
-      }
-    });
 
     async function persistNote(note) {
       if (isAssemblyNote(note)) {
@@ -861,7 +887,6 @@
       };
     }
 
-    // Actualización limpia de botones de formato
     function updateFormatButtonsState() {
       const boldBtn = document.getElementById('btnFormatBold');
       const underlineBtn = document.getElementById('btnFormatUnderline');
@@ -1019,6 +1044,7 @@
     function createNoteCardElement(note) {
       const card = document.createElement('div');
       const styles = getColorStyles(note.color);
+      card.dataset.id = note.id;
       card.className = 'note-card rounded-xl border p-3.5 sm:p-4 cursor-pointer hover:shadow-md relative group';
       card.style.backgroundColor = styles.bg;
       card.style.borderColor = styles.border;
@@ -1084,8 +1110,66 @@
       card.appendChild(pinBtn);
       card.appendChild(topContent);
       card.appendChild(bottomContent);
-      card.addEventListener('click', () => openEditModal(note.id));
+      card.addEventListener('click', () => {
+        if (!isDraggingCard) openEditModal(note.id);
+      });
       return card;
+    }
+
+    // Configurar movimiento manual al mantener apretada la nota en modo cuadrado
+    function setupSortableGrids() {
+      if (pinnedSortable) { pinnedSortable.destroy(); pinnedSortable = null; }
+      if (othersSortable) { othersSortable.destroy(); othersSortable = null; }
+
+      // Solo habilitar arrastrar cuando está en modo cuadrado (cuadrícula) y sin búsqueda activa
+      if (isListView || searchQuery || typeof Sortable === 'undefined') return;
+
+      const sortableOptions = {
+        animation: 200,
+        delay: 220, // Mantener apretado 0.22s para mover
+        delayOnTouchOnly: true,
+        touchStartThreshold: 5,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        onStart: () => {
+          isDraggingCard = true;
+        },
+        onEnd: async (evt) => {
+          setTimeout(() => { isDraggingCard = false; }, 60);
+          const container = evt.to;
+          const orderedIds = Array.from(container.children).map(el => el.dataset.id).filter(Boolean);
+          const now = Date.now();
+          const changedNotes = [];
+
+          orderedIds.forEach((id, index) => {
+            const note = notes.find(n => n.id === id);
+            if (note && note.order !== index) {
+              note.order = index;
+              note.updatedAt = now;
+              changedNotes.push(note);
+            }
+          });
+
+          sortNotesByManualOrder();
+          saveToLocalStorage();
+
+          if (db && currentUser && changedNotes.length > 0) {
+            for (const item of changedNotes) {
+              setDoc(doc(db, 'users', currentUser.uid, 'notes', item.id), item).catch(() => {});
+            }
+          }
+        }
+      };
+
+      const pinnedEl = document.getElementById('pinnedGrid');
+      const notesEl = document.getElementById('notesGrid');
+
+      if (pinnedEl && pinnedEl.children.length > 1) {
+        pinnedSortable = new Sortable(pinnedEl, sortableOptions);
+      }
+      if (notesEl && notesEl.children.length > 1) {
+        othersSortable = new Sortable(notesEl, sortableOptions);
+      }
     }
 
     function renderNotesGrids() {
@@ -1097,6 +1181,8 @@
 
       pinnedGrid.innerHTML = '';
       notesGrid.innerHTML = '';
+
+      sortNotesByManualOrder();
 
       const filtered = notes.filter(note => {
         const assembly = isAssemblyNote(note);
@@ -1141,6 +1227,8 @@
       }
 
       others.forEach(n => notesGrid.appendChild(createNoteCardElement(n)));
+
+      setupSortableGrids();
     }
 
     function buildColorPalette(containerId, onSelect) {
@@ -1167,6 +1255,7 @@
 
     function createAndOpenNewNote(withImagePicker = false) {
       const initialLabels = currentView.startsWith('label:') ? [currentView.replace('label:', '')] : [];
+      const minOrder = notes.reduce((min, n) => (typeof n.order === 'number' && n.order < min ? n.order : min), 0);
       const newNote = {
         id: 'note-' + Date.now(),
         type: 'note',
@@ -1178,6 +1267,7 @@
         trashed: false,
         labels: initialLabels,
         image: null,
+        order: minOrder - 1,
         updatedAt: Date.now()
       };
       notes.unshift(newNote);
