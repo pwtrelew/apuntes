@@ -1,15 +1,32 @@
 <!DOCTYPE html>
-<html lang="es" class="dark">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Mis Apuntes</title>
-  <!-- El color de la barra superior del sistema se sincroniza con el tema elegido -->
   <meta id="themeColorMeta" name="theme-color" content="#202124">
-  <link rel="manifest" href="./manifest.json">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mis Apuntes">
   <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
+  <link rel="manifest" href="./manifest.json">
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('mis_apuntes_theme') || 'dark';
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.getElementById('themeColorMeta')?.setAttribute('content', '#202124');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.getElementById('themeColorMeta')?.setAttribute('content', '#ffffff');
+      }
+    })();
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -21,60 +38,35 @@
           }
         }
       }
-    };
-
-    // Aplicar el tema guardado inmediatamente antes de renderizar para evitar destellos y actualizar la barra superior del celular
-    (function() {
-      const savedTheme = localStorage.getItem('mis_apuntes_theme') || 'dark';
-      const htmlEl = document.documentElement;
-      const metaEl = document.getElementById('themeColorMeta');
-      if (savedTheme === 'dark') {
-        htmlEl.classList.add('dark');
-        htmlEl.classList.remove('light');
-        if (metaEl) metaEl.setAttribute('content', '#202124');
-      } else {
-        htmlEl.classList.remove('dark');
-        htmlEl.classList.add('light');
-        if (metaEl) metaEl.setAttribute('content', '#ffffff');
-      }
-    })();
+    }
   </script>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
   <style>
     body { font-family: 'Roboto', sans-serif; -webkit-tap-highlight-color: transparent; }
     h1, h2, h3, .font-display { font-family: 'Google Sans', 'Roboto', sans-serif; }
     .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; user-select: none; }
     .material-symbols-outlined.filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-    
-    /* Vista Cuadrícula estilo Google Keep */
+
+    /* Cuadrícula (Tarjetas cuadradas en 2 columnas en móvil, 3-4 en escritorio) */
     .notes-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      align-items: start;
+      gap: 12px;
     }
     @media (min-width: 768px) {
-      .notes-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
-      }
+      .notes-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
     }
-    @media (min-width: 1024px) {
-      .notes-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 16px;
-      }
+    @media (min-width: 1200px) {
+      .notes-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
     }
     .notes-grid .note-card {
-      min-height: 120px;
+      aspect-ratio: 1 / 1;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       overflow: hidden;
     }
 
-    /* Vista Rectangular (Lista vertical de 1 columna a lo ancho) */
+    /* Vista Rectangular (Lista de 1 columna) */
     .notes-list {
       max-width: 640px;
       margin: 0 auto;
@@ -86,11 +78,8 @@
       width: 100%;
     }
 
-    .note-card {
-      transition: box-shadow 0.2s, border-color 0.2s, background-color 0.2s, transform 0.15s;
-    }
-    
-    /* Rich text editor placeholder & lists */
+    .note-card { transition: box-shadow 0.2s, border-color 0.2s, background-color 0.2s; }
+
     [contenteditable]:empty:before {
       content: attr(data-placeholder);
       color: #9aa0a6;
@@ -100,65 +89,71 @@
     .rich-editor ul { list-style-type: disc; padding-left: 1.5rem; margin: 0.25rem 0; }
     .rich-editor b, .rich-editor strong { font-weight: 700; }
     .rich-editor u { text-decoration: underline; }
+    
+    /* Iconos minimalistas con contorno a color */
     .inline-icon {
       font-family: 'Material Symbols Outlined';
       font-weight: normal;
       font-style: normal;
-      font-size: 1.15em;
+      font-size: 1.2em;
       line-height: 1;
       vertical-align: middle;
       display: inline-block;
       margin: 0 2px;
       user-select: none;
-      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
     }
-    /* Colores de contorno para los iconos minimalistas */
-    .icon-diamond { color: #38bdf8; }
-    .icon-favorite { color: #ef4444; }
-    .icon-check { color: #22c55e; }
-    .icon-location_on { color: #eab308; }
+    .icon-diamond { color: #38bdf8 !important; }
+    .icon-favorite { color: #ef4444 !important; }
+    .icon-check { color: #22c55e !important; }
+    .icon-location { color: #eab308 !important; }
 
-    /* Botones de la barra de formato: sin círculos residuales al deseleccionar en pantallas táctiles */
+    /* Botones de barra de formato sin círculo fantasma al deseleccionar */
     .format-toolbar-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.15s ease, color 0.15s ease;
       outline: none !important;
       box-shadow: none !important;
       -webkit-tap-highlight-color: transparent;
-      border-radius: 9999px;
-      transition: background-color 0.12s ease, color 0.12s ease;
     }
-    @media (hover: hover) and (pointer: fine) {
-      .format-toolbar-btn:not(.is-active):hover {
+    @media (hover: hover) {
+      .format-toolbar-btn:hover {
         background-color: rgba(128, 128, 128, 0.15);
       }
     }
-    .format-toolbar-btn.is-active {
-      background-color: rgba(0, 0, 0, 0.18) !important;
-      color: #202124 !important;
+    .format-toolbar-btn.format-btn-active {
+      background-color: rgba(0, 0, 0, 0.16);
+      color: #111827;
     }
-    html.dark .format-toolbar-btn.is-active {
-      background-color: rgba(255, 255, 255, 0.24) !important;
-      color: #ffffff !important;
+    .dark .format-toolbar-btn.format-btn-active {
+      background-color: rgba(255, 255, 255, 0.22);
+      color: #ffffff;
     }
   </style>
 </head>
 <body class="bg-white dark:bg-[#202124] text-[#202124] dark:text-[#e8eaed] min-h-screen flex flex-col transition-colors duration-200">
 
   <!-- Barra Superior -->
-  <header class="sticky top-0 z-30 h-16 px-3 sm:px-6 flex items-center justify-between border-b border-gray-200 dark:border-[#5f6368]/40 bg-white/95 dark:bg-[#202124]/95 backdrop-blur">
+  <header class="sticky top-0 z-30 h-16 px-3 sm:px-6 flex items-center justify-between border-b border-gray-200 dark:border-[#5f6368]/40 bg-white dark:bg-[#202124]">
     <div class="flex items-center gap-2 sm:gap-3">
       <button id="menuBtn" type="button" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Menú principal">
         <span class="material-symbols-outlined">menu</span>
       </button>
-      <div class="flex items-center gap-2.5 cursor-pointer" onclick="switchView('notes')">
+      <div class="flex items-center cursor-pointer" onclick="switchView('notes')">
         <span id="headerTitle" class="font-display text-xl font-medium tracking-tight">Mis Apuntes</span>
       </div>
     </div>
 
     <!-- Buscador -->
-    <div class="flex-1 max-w-xl mx-2 sm:mx-8">
-      <div class="relative flex items-center bg-[#f1f3f4] dark:bg-[#303134] rounded-full px-4 py-2 focus-within:bg-white dark:focus-within:bg-[#3c4043] focus-within:shadow-md transition">
-        <span class="material-symbols-outlined text-gray-500 dark:text-gray-300 mr-2 text-[20px]">search</span>
-        <input id="searchInput" type="text" placeholder="Buscar tus notas" class="w-full bg-transparent focus:outline-none text-sm sm:text-base placeholder-gray-500 dark:placeholder-gray-400">
+    <div class="flex-1 max-w-xl mx-2 sm:mx-6">
+      <div class="relative flex items-center bg-[#f1f3f4] dark:bg-[#303134] rounded-lg px-3 py-2 focus-within:shadow-md transition">
+        <span class="material-symbols-outlined text-gray-500 dark:text-gray-300 mr-2">search</span>
+        <input id="searchInput" type="text" placeholder="Buscar..." class="w-full bg-transparent focus:outline-none text-sm sm:text-base placeholder-gray-500 dark:placeholder-gray-400">
         <button id="clearSearchBtn" type="button" class="hidden p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
           <span class="material-symbols-outlined text-sm">close</span>
         </button>
@@ -166,66 +161,42 @@
     </div>
 
     <!-- Acciones Derecha -->
-    <div class="flex items-center gap-1 sm:gap-1.5">
-      <button id="viewToggleBtn" type="button" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Cambiar entre vista de cuadrícula y lista">
+    <div class="flex items-center gap-1">
+      <button id="viewToggleBtn" type="button" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Cambiar vista cuadrada / rectangular">
         <span id="viewToggleIcon" class="material-symbols-outlined">view_agenda</span>
       </button>
       <button id="themeToggleBtn" type="button" class="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition" title="Modo oscuro / claro">
         <span id="themeToggleIcon" class="material-symbols-outlined">light_mode</span>
       </button>
-      <!-- Botón / Avatar de Cuenta Google -->
-      <button id="headerAuthBtn" type="button" class="ml-0.5 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition flex items-center justify-center relative" title="Respaldo en la nube con Google">
-        <span id="headerAuthIcon" class="material-symbols-outlined text-[24px]">account_circle</span>
-        <img id="headerAuthAvatar" src="" alt="Foto de perfil" class="hidden w-7 h-7 rounded-full object-cover ring-2 ring-[#8ab4f8]">
-        <span id="headerSyncDot" class="hidden absolute bottom-1 right-1 w-2.5 h-2.5 rounded-full bg-green-500 ring-2 ring-white dark:ring-[#202124]"></span>
+      <!-- Botón Cuenta de Google -->
+      <button id="headerAuthBtn" type="button" class="ml-1 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134] transition flex items-center justify-center" title="Respaldo en cuenta de Google">
+        <img id="userAvatarImg" src="" alt="Avatar" class="hidden w-7 h-7 rounded-full object-cover border border-green-500">
+        <span id="userDefaultIcon" class="material-symbols-outlined text-[24px]">account_circle</span>
       </button>
     </div>
   </header>
+
+  <!-- Banner para Vincular Cuenta de Google (Aparece solo si no ha iniciado sesión con Google) -->
+  <div id="googleBackupBanner" class="hidden max-w-xl w-full mx-auto mt-3 px-4">
+    <div class="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-[#f1f3f4] dark:bg-[#303134] border border-gray-200 dark:border-[#5f6368]/50 text-xs sm:text-sm">
+      <div class="flex items-center gap-2.5">
+        <span class="material-symbols-outlined text-[#38bdf8] text-[20px]">cloud_sync</span>
+        <span>Conecta tu cuenta de Google una única vez para no perder nunca tus apuntes.</span>
+      </div>
+      <button id="bannerGoogleSignInBtn" type="button" class="shrink-0 px-3 py-1.5 rounded-lg font-medium bg-[#202124] text-white dark:bg-[#e8eaed] dark:text-[#202124] hover:opacity-90 transition">
+        Conectar
+      </button>
+    </div>
+  </div>
 
   <!-- Menú Lateral Desplegable -->
   <div id="drawerBackdrop" class="fixed inset-0 bg-black/50 z-40 hidden opacity-0 transition-opacity duration-200"></div>
   <aside id="sidebarDrawer" class="fixed top-0 left-0 bottom-0 w-72 bg-white dark:bg-[#202124] z-50 transform -translate-x-full transition-transform duration-200 shadow-2xl flex flex-col py-3 overflow-y-auto">
     <div class="px-6 py-3 flex items-center justify-between border-b border-gray-100 dark:border-gray-800 mb-2">
-      <div class="flex items-center gap-2.5">
-        <span class="font-display text-lg font-medium">Mis Apuntes</span>
-      </div>
+      <span class="font-display text-lg font-medium">Mis Apuntes</span>
       <button id="closeDrawerBtn" type="button" class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#303134]">
         <span class="material-symbols-outlined">close</span>
       </button>
-    </div>
-
-    <!-- Tarjeta de Cuenta y Sincronización en la Nube -->
-    <div class="px-4 mb-3">
-      <div id="sidebarAccountCard" class="p-3 rounded-2xl bg-[#f1f3f4] dark:bg-[#303134] border border-gray-200 dark:border-[#5f6368]/40">
-        <!-- Estado No Vinculado a Google -->
-        <div id="sidebarLoggedOutView" class="space-y-2">
-          <div class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
-            <span class="material-symbols-outlined text-[18px] text-[#8ab4f8]">cloud_upload</span>
-            <span>Guarda tus apuntes en tu cuenta de Google para no perderlos nunca.</span>
-          </div>
-          <button id="sidebarGoogleSignInBtn" type="button" class="w-full py-2 px-3 rounded-xl bg-white dark:bg-[#202124] hover:bg-gray-50 dark:hover:bg-[#3c4043] text-xs font-medium flex items-center justify-center gap-2 shadow-sm border border-gray-200 dark:border-[#5f6368]/60 transition">
-            <svg class="w-4 h-4" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24z"/>
-              <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14z"/>
-              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/>
-            </svg>
-            <span>Vincular con Google</span>
-          </button>
-        </div>
-
-        <!-- Estado Vinculado con Google -->
-        <div id="sidebarLoggedInView" class="hidden items-center gap-2.5">
-          <img id="sidebarUserAvatar" src="" alt="Avatar" class="w-9 h-9 rounded-full object-cover flex-shrink-0">
-          <div class="flex-1 min-w-0">
-            <p id="sidebarUserName" class="text-xs font-medium truncate"></p>
-            <p id="sidebarUserEmail" class="text-[11px] text-gray-500 dark:text-gray-400 truncate"></p>
-            <span class="inline-flex items-center gap-1 text-[10px] text-green-600 dark:text-green-400 font-medium">
-              <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Sincronizado en la nube
-            </span>
-          </div>
-        </div>
-      </div>
     </div>
 
     <nav class="space-y-0.5 pr-3 flex-1">
@@ -254,17 +225,31 @@
         <span>Papelera</span>
       </button>
     </nav>
+
+    <!-- Estado de Sincronización con Google en el Menú Lateral -->
+    <div class="mt-4 mx-3 p-3 rounded-xl bg-gray-100 dark:bg-[#303134] border border-gray-200 dark:border-[#5f6368]/40">
+      <div id="sidebarAuthStatus" class="text-xs space-y-2">
+        <div class="flex items-center gap-2">
+          <span id="sidebarAuthIcon" class="material-symbols-outlined text-base text-gray-500">cloud_Queue</span>
+          <span id="sidebarAuthText" class="font-medium truncate">Guardado en este dispositivo</span>
+        </div>
+        <button id="sidebarGoogleBtn" type="button" class="w-full py-2 px-3 rounded-lg font-medium text-xs bg-[#202124] text-white dark:bg-[#e8eaed] dark:text-[#202124] flex items-center justify-center gap-2 hover:opacity-90 transition">
+          <span class="material-symbols-outlined text-sm">login</span>
+          <span>Vincular con Google</span>
+        </button>
+      </div>
+    </div>
   </aside>
 
   <!-- Contenido Principal -->
   <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-5 pb-24">
 
-    <!-- Barra rápida para crear nuevo apunte -->
+    <!-- Barra Rápida para Crear un Apunte (abre a pantalla completa como Google Keep) -->
     <div id="composerSection" class="max-w-xl mx-auto mb-6">
-      <div id="composerCollapsed" class="rounded-2xl border border-gray-300 dark:border-[#5f6368] shadow-sm px-4 py-3 flex items-center justify-between cursor-pointer bg-white dark:bg-[#303134] hover:shadow-md transition">
+      <div id="openCreateNoteBar" class="rounded-xl border border-gray-300 dark:border-[#5f6368] shadow-sm px-4 py-3 flex items-center justify-between cursor-pointer bg-white dark:bg-[#303134] hover:shadow-md transition">
         <span class="text-gray-500 dark:text-gray-300 font-medium text-sm sm:text-base">Crear un apunte...</span>
         <div class="flex items-center gap-1">
-          <button id="quickImageBtn" type="button" class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10" title="Nueva nota con imagen">
+          <button id="quickImageBtn" type="button" class="p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/10" title="Nuevo apunte con imagen">
             <span class="material-symbols-outlined text-gray-600 dark:text-gray-300">image</span>
           </button>
         </div>
@@ -273,14 +258,14 @@
     </div>
 
     <!-- Sección Fijadas -->
-    <section id="pinnedSection" class="hidden mb-7">
-      <h2 class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2.5 px-2">Fijados</h2>
+    <section id="pinnedSection" class="hidden mb-8">
+      <h2 class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 px-1">Fijados</h2>
       <div id="pinnedGrid" class="notes-grid"></div>
     </section>
 
     <!-- Sección Otras Notas -->
     <section id="othersSection">
-      <h2 id="othersHeading" class="hidden text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2.5 px-2">Otros</h2>
+      <h2 id="othersHeading" class="hidden text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 px-1">Otros</h2>
       <div id="notesGrid" class="notes-grid"></div>
     </section>
 
@@ -292,165 +277,113 @@
 
   </main>
 
-  <!-- Botón flotante (+) estilo Google Keep para crear apunte rápido -->
-  <button id="fabNewNoteBtn" type="button" class="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-2xl bg-[#303134] dark:bg-[#8ab4f8] text-white dark:text-[#202124] shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition" title="Nuevo apunte">
+  <!-- Botón Flotante (+) estilo Google Keep -->
+  <button id="fabNewNoteBtn" type="button" class="fixed bottom-6 right-6 z-20 w-14 h-14 rounded-2xl bg-[#303134] dark:bg-[#e8eaed] text-white dark:text-[#202124] shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition" title="Nuevo apunte">
     <span class="material-symbols-outlined text-3xl">add</span>
   </button>
 
-  <!-- Cartel de Bienvenida Único para Vincular con Google (solo aparece si aún no inició sesión y no lo descartó) -->
-  <div id="googleWelcomePrompt" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-    <div class="bg-white dark:bg-[#303134] border border-gray-200 dark:border-[#5f6368] w-full max-w-sm rounded-3xl shadow-2xl p-6 text-center space-y-4">
-      <div class="w-14 h-14 rounded-2xl bg-[#8ab4f8]/20 text-[#8ab4f8] mx-auto flex items-center justify-center">
-        <span class="material-symbols-outlined text-3xl">cloud_done</span>
-      </div>
-      <div class="space-y-1.5">
-        <h3 class="font-display font-medium text-lg text-[#202124] dark:text-[#e8eaed]">Protege tus apuntes para siempre</h3>
-        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-          Conecta tu cuenta de Google una sola vez. Así tus notas y asambleas quedarán guardadas en la nube y nunca se borrarán aunque cambies de teléfono.
-        </p>
-      </div>
-      <div class="space-y-2 pt-1">
-        <button id="welcomeGoogleSignInBtn" type="button" class="w-full py-2.5 px-4 rounded-xl bg-[#8ab4f8] text-[#202124] font-medium text-sm flex items-center justify-center gap-2.5 shadow hover:brightness-95 active:scale-95 transition">
-          <svg class="w-4 h-4 bg-white rounded-full p-0.5" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24z"/>
-            <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14z"/>
-            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/>
-          </svg>
-          <span>Continuar con Google</span>
-        </button>
-        <button id="welcomeDismissGoogleBtn" type="button" class="w-full py-2 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition">
-          Ahora no, usar solo en este dispositivo
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Cartel Flotante de Instalación Directa PWA -->
-  <div id="pwaInstallBanner" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-40 hidden bg-white dark:bg-[#303134] border border-gray-200 dark:border-[#5f6368] rounded-2xl shadow-2xl p-4 transition-all duration-300">
-    <div class="flex items-start gap-3">
-      <img src="./icon-192.png" alt="Mis Apuntes" onerror="this.style.display='none'" class="w-11 h-11 rounded-xl object-cover flex-shrink-0">
-      <div class="flex-1 min-w-0">
-        <h4 class="font-display font-medium text-sm text-[#202124] dark:text-[#e8eaed]">Instalar Mis Apuntes</h4>
-        <p id="pwaBannerText" class="text-xs text-gray-600 dark:text-gray-300 mt-0.5 leading-relaxed">
-          Instala la aplicación para abrirla directo desde tu pantalla de inicio y usarla sin conexión.
-        </p>
-        <div class="flex items-center gap-2 mt-3">
-          <button id="pwaInstallActionBtn" type="button" class="px-4 py-1.5 rounded-lg bg-[#8ab4f8] text-[#202124] font-medium text-xs hover:brightness-95 active:scale-95 transition shadow-sm">
-            Instalar aplicación
-          </button>
-          <button id="pwaDismissBtn" type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition">
-            Más tarde
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Editor de Apuntes y Asambleas a PANTALLA COMPLETA -->
+  <!-- Editor de Nota / Programa de Asamblea a PANTALLA COMPLETA (Estilo Google Keep) -->
   <div id="editModal" class="fixed inset-0 z-50 hidden flex-col bg-white dark:bg-[#202124] transition-colors duration-200">
-    <div id="editModalCard" class="w-full h-full flex flex-col overflow-hidden bg-white dark:bg-[#202124] transition-colors duration-200">
-      
-      <!-- Barra Superior de Navegación y Formato Transparente -->
-      <div class="flex items-center justify-between px-2 sm:px-4 py-2 border-b border-black/10 dark:border-white/10 bg-transparent text-gray-800 dark:text-gray-100 gap-1">
-        <!-- Botón Atrás (Guarda y cierra como en Google Keep) -->
-        <button id="modalBackBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition flex-shrink-0" title="Guardar y volver">
+    
+    <!-- Barra Superior Transparente de Navegación y Formato -->
+    <div class="flex items-center justify-between px-2 sm:px-4 py-2 border-b border-black/10 dark:border-white/10 bg-transparent">
+      <div class="flex items-center gap-0.5 sm:gap-1">
+        <button id="modalBackBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 mr-1" title="Guardar y volver">
           <span class="material-symbols-outlined">arrow_back</span>
         </button>
 
-        <!-- Herramientas de Formato y Emojis Minimalistas con contorno en color -->
-        <div class="flex items-center gap-0.5 sm:gap-1 overflow-x-auto py-0.5">
-          <button id="btnFormatBold" type="button" onpointerdown="event.preventDefault()" onclick="applyFormatModal('bold')" class="format-toolbar-btn p-1.5" title="Negrita">
-            <span class="material-symbols-outlined text-[20px] block">format_bold</span>
-          </button>
-          <button id="btnFormatUnderline" type="button" onpointerdown="event.preventDefault()" onclick="applyFormatModal('underline')" class="format-toolbar-btn p-1.5" title="Subrayado">
-            <span class="material-symbols-outlined text-[20px] block">format_underlined</span>
-          </button>
-          <button id="btnFormatList" type="button" onpointerdown="event.preventDefault()" onclick="applyFormatModal('insertUnorderedList')" class="format-toolbar-btn p-1.5" title="Viñetas">
-            <span class="material-symbols-outlined text-[20px] block">format_list_bulleted</span>
-          </button>
-          <div class="h-4 w-px bg-black/15 dark:bg-white/15 mx-0.5"></div>
-          <button type="button" onpointerdown="event.preventDefault()" onclick="insertMinimalIconModal('diamond')" class="format-toolbar-btn p-1.5" title="Insertar Diamante">
-            <span class="material-symbols-outlined text-[19px] icon-diamond block">diamond</span>
-          </button>
-          <button type="button" onpointerdown="event.preventDefault()" onclick="insertMinimalIconModal('favorite')" class="format-toolbar-btn p-1.5" title="Insertar Corazón">
-            <span class="material-symbols-outlined text-[19px] icon-favorite block">favorite</span>
-          </button>
-          <button type="button" onpointerdown="event.preventDefault()" onclick="insertMinimalIconModal('check')" class="format-toolbar-btn p-1.5" title="Insertar Check">
-            <span class="material-symbols-outlined text-[19px] icon-check block">check</span>
-          </button>
-          <button type="button" onpointerdown="event.preventDefault()" onclick="insertMinimalIconModal('person')" class="format-toolbar-btn p-1.5" title="Insertar Persona">
-            <span class="material-symbols-outlined text-[19px] block">person</span>
-          </button>
-          <button type="button" onpointerdown="event.preventDefault()" onclick="insertMinimalIconModal('location_on')" class="format-toolbar-btn p-1.5" title="Insertar Ubicación">
-            <span class="material-symbols-outlined text-[19px] icon-location_on block">location_on</span>
-          </button>
-        </div>
+        <!-- Botones de Formato Seleccionables / Deseleccionables -->
+        <button id="btnFormatBold" type="button" onmousedown="event.preventDefault()" onclick="applyFormatModal('bold')" class="format-toolbar-btn" title="Negrita">
+          <span class="material-symbols-outlined text-[20px]">format_bold</span>
+        </button>
+        <button id="btnFormatUnderline" type="button" onmousedown="event.preventDefault()" onclick="applyFormatModal('underline')" class="format-toolbar-btn" title="Subrayado">
+          <span class="material-symbols-outlined text-[20px]">format_underlined</span>
+        </button>
+        <button id="btnFormatList" type="button" onmousedown="event.preventDefault()" onclick="applyFormatModal('insertUnorderedList')" class="format-toolbar-btn" title="Viñetas">
+          <span class="material-symbols-outlined text-[20px]">format_list_bulleted</span>
+        </button>
 
-        <!-- Acciones derechas: Fijar y Archivar -->
-        <div class="flex items-center gap-0.5 flex-shrink-0">
-          <button id="modalPinBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Fijar apunte">
-            <span id="modalPinIcon" class="material-symbols-outlined">push_pin</span>
-          </button>
-          <button id="modalArchiveBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition" title="Archivar">
-            <span class="material-symbols-outlined">archive</span>
-          </button>
-        </div>
+        <div class="h-4 w-px bg-black/15 dark:bg-white/15 mx-1"></div>
+
+        <!-- Iconos Minimalistas con Contorno a Color -->
+        <button type="button" onmousedown="event.preventDefault()" onclick="insertMinimalIconModal('diamond')" class="format-toolbar-btn" title="Insertar Diamante">
+          <span class="material-symbols-outlined text-[19px] icon-diamond">diamond</span>
+        </button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="insertMinimalIconModal('favorite')" class="format-toolbar-btn" title="Insertar Corazón">
+          <span class="material-symbols-outlined text-[19px] icon-favorite">favorite</span>
+        </button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="insertMinimalIconModal('check')" class="format-toolbar-btn" title="Insertar Check">
+          <span class="material-symbols-outlined text-[19px] icon-check">check</span>
+        </button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="insertMinimalIconModal('person')" class="format-toolbar-btn" title="Insertar Persona">
+          <span class="material-symbols-outlined text-[19px]">person</span>
+        </button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="insertMinimalIconModal('location_on')" class="format-toolbar-btn" title="Insertar Ubicación">
+          <span class="material-symbols-outlined text-[19px] icon-location">location_on</span>
+        </button>
       </div>
 
-      <!-- Cuerpo Scrollable a Pantalla Completa -->
-      <div class="flex-1 overflow-y-auto px-4 sm:px-8 py-4 max-w-4xl w-full mx-auto space-y-3">
+      <button id="modalPinBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Fijar apunte">
+        <span id="modalPinIcon" class="material-symbols-outlined">push_pin</span>
+      </button>
+    </div>
+
+    <!-- Cuerpo Scrollable a Pantalla Completa -->
+    <div class="flex-1 overflow-y-auto">
+      <div class="max-w-3xl mx-auto p-4 sm:p-6 space-y-4">
         <div id="modalImageWrap" class="hidden relative rounded-xl overflow-hidden mb-3">
-          <img id="modalImage" src="" class="w-full max-h-96 object-contain bg-black/5 dark:bg-white/5">
+          <img id="modalImage" src="" class="w-full max-h-96 object-contain bg-black/5">
           <button id="modalRemoveImgBtn" type="button" class="absolute bottom-3 right-3 p-2 bg-black/60 text-white rounded-full hover:bg-black/80">
             <span class="material-symbols-outlined text-sm">delete</span>
           </button>
         </div>
 
-        <input id="modalTitle" type="text" placeholder="Título" class="w-full bg-transparent font-display font-medium text-xl sm:text-2xl focus:outline-none placeholder-gray-500 dark:placeholder-gray-400">
+        <input id="modalTitle" type="text" placeholder="Título" class="w-full bg-transparent font-display font-medium text-xl sm:text-2xl focus:outline-none placeholder-gray-400 dark:placeholder-gray-500">
 
         <!-- Cuerpo de Apunte Regular -->
-        <div id="modalBody" contenteditable="true" data-placeholder="Apunte" class="rich-editor min-h-[60vh] text-base leading-relaxed focus:outline-none"></div>
+        <div id="modalBody" contenteditable="true" data-placeholder="Apunte..." class="rich-editor min-h-[60vh] text-base leading-relaxed focus:outline-none"></div>
 
         <!-- Contenedor Programa de Asamblea -->
-        <div id="modalAssemblyContainer" class="hidden space-y-5 pt-2 pb-10"></div>
+        <div id="modalAssemblyContainer" class="hidden space-y-5 pt-2 pb-12"></div>
 
         <div id="modalLabelsChips" class="flex flex-wrap gap-1.5 pt-2"></div>
       </div>
+    </div>
 
-      <!-- Barra Inferior del Editor a Pantalla Completa -->
-      <div class="px-4 py-2.5 border-t border-black/10 dark:border-white/10 flex items-center justify-between relative bg-transparent">
-        <div class="flex items-center gap-1">
-          <button id="modalColorBtn" type="button" class="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Color de fondo">
-            <span class="material-symbols-outlined text-[21px]">palette</span>
-          </button>
-          <button id="modalImgBtn" type="button" class="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Agregar imagen">
-            <span class="material-symbols-outlined text-[21px]">image</span>
-          </button>
-          <button id="modalLabelBtn" type="button" class="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Etiquetas">
-            <span class="material-symbols-outlined text-[21px]">label</span>
-          </button>
-          <button id="modalDeleteBtn" type="button" class="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Enviar a la papelera">
-            <span class="material-symbols-outlined text-[21px]">delete</span>
-          </button>
-        </div>
-
-        <button id="modalSaveCloseBtn" type="button" class="px-5 py-2 rounded-full font-medium text-sm bg-black/10 dark:bg-white/10 hover:bg-black/15 dark:hover:bg-white/20 transition">
-          Listo
+    <!-- Barra Inferior de Herramientas a Pantalla Completa -->
+    <div class="px-4 py-2.5 border-t border-black/10 dark:border-white/10 flex items-center justify-between relative bg-transparent">
+      <div class="flex items-center gap-1">
+        <button id="modalColorBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Color de fondo">
+          <span class="material-symbols-outlined text-[22px]">palette</span>
         </button>
-
-        <!-- Menú emergente de Colores -->
-        <div id="modalColorMenu" class="hidden absolute bottom-14 left-3 z-30 p-2.5 bg-white dark:bg-[#303134] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex gap-2 flex-wrap max-w-[280px]"></div>
-
-        <!-- Menú emergente de Etiquetas -->
-        <div id="modalLabelMenu" class="hidden absolute bottom-14 left-24 z-30 p-3 bg-white dark:bg-[#303134] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-56 space-y-1.5"></div>
+        <button id="modalImgBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Añadir imagen">
+          <span class="material-symbols-outlined text-[22px]">image</span>
+        </button>
+        <button id="modalLabelBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Etiquetas">
+          <span class="material-symbols-outlined text-[22px]">label</span>
+        </button>
+        <button id="modalArchiveBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Archivar">
+          <span class="material-symbols-outlined text-[22px]">archive</span>
+        </button>
+        <button id="modalDeleteBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Mover a la papelera">
+          <span class="material-symbols-outlined text-[22px]">delete</span>
+        </button>
       </div>
+      <button id="modalSaveCloseBtn" type="button" class="px-5 py-1.5 rounded-lg font-medium text-sm bg-black/10 dark:bg-white/10 hover:bg-black/15 dark:hover:bg-white/20 transition">
+        Listo
+      </button>
+
+      <!-- Menú de Colores en el Editor -->
+      <div id="modalColorMenu" class="hidden absolute bottom-14 left-3 z-30 p-2.5 bg-white dark:bg-[#303134] rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 flex gap-2 flex-wrap max-w-[280px]"></div>
+
+      <!-- Menú de Etiquetas en el Editor -->
+      <div id="modalLabelMenu" class="hidden absolute bottom-14 left-24 z-30 p-3 bg-white dark:bg-[#303134] rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 w-56 space-y-1.5"></div>
     </div>
   </div>
 
   <!-- Modal Editar Etiquetas -->
   <div id="labelsModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
-    <div class="bg-white dark:bg-[#303134] w-full max-w-sm rounded-2xl shadow-2xl p-4 space-y-3 border border-gray-200 dark:border-gray-700">
+    <div class="bg-white dark:bg-[#303134] w-full max-w-sm rounded-xl shadow-2xl p-4 space-y-3 border border-gray-200 dark:border-gray-700">
       <h3 class="font-display font-medium text-base">Editar etiquetas</h3>
       <div class="flex items-center gap-2 border-b border-gray-200 dark:border-gray-600 pb-2">
         <input id="newLabelInput" type="text" placeholder="Crear nueva etiqueta" class="flex-1 bg-transparent text-sm focus:outline-none">
@@ -460,8 +393,27 @@
       </div>
       <div id="editLabelsModalList" class="max-h-52 overflow-y-auto space-y-1"></div>
       <div class="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
-        <button id="closeLabelsModalBtn" type="button" class="px-4 py-1.5 text-sm font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">Listo</button>
+        <button id="closeLabelsModalBtn" type="button" class="px-4 py-1.5 text-sm font-medium rounded hover:bg-gray-100 dark:hover:bg-gray-700">Listo</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Banner de Instalación Directa -->
+  <div id="installAppBanner" class="fixed bottom-4 inset-x-4 max-w-md mx-auto z-40 hidden bg-[#303134] text-white rounded-2xl shadow-2xl p-4 border border-gray-700 items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <img src="./icon-192.png" alt="Icono" class="w-11 h-11 rounded-xl object-cover shrink-0 bg-gray-800" onerror="this.style.display='none'">
+      <div>
+        <h4 class="font-display font-medium text-sm">Instalar Mis Apuntes</h4>
+        <p class="text-xs text-gray-300">Instala la app en tu celular para usarla sin conexión</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-1.5 shrink-0">
+      <button id="installAppBtn" type="button" class="px-3.5 py-2 bg-[#e8eaed] text-[#202124] font-medium text-xs rounded-lg hover:bg-white transition">
+        Instalar
+      </button>
+      <button id="dismissInstallBtn" type="button" class="p-1.5 text-gray-400 hover:text-white rounded-full">
+        <span class="material-symbols-outlined text-base">close</span>
+      </button>
     </div>
   </div>
 
@@ -470,13 +422,10 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import {
       getAuth,
-      GoogleAuthProvider,
-      signInWithPopup,
-      signInWithRedirect,
-      getRedirectResult,
-      linkWithPopup,
       signInAnonymously,
       onAuthStateChanged,
+      GoogleAuthProvider,
+      signInWithPopup,
       setPersistence,
       browserLocalPersistence
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
@@ -504,258 +453,184 @@
       blossom: { light: '#f6e2dd', dark: '#6c394f', borderLight: '#fdcfe8', borderDark: '#6c394f', name: 'Flor' }
     };
 
-    const ASSEMBLY_ID_1 = 'asamblea-confia-jehova-2026-2027';
-    const ASSEMBLY_ID_2 = 'asamblea-haz-de-jehova-2026-2027';
+    const ICON_COLOR_CLASSES = {
+      diamond: 'icon-diamond',
+      favorite: 'icon-favorite',
+      check: 'icon-check',
+      person: '',
+      location_on: 'icon-location'
+    };
 
-    function createAssembly1() {
-      return {
-        id: ASSEMBLY_ID_1,
-        type: 'assembly',
-        title: '"El que confía en Jehová es feliz" (Proverbios 16:20)',
-        subtitle: 'Asamblea de circuito con el superintendente de circuito | 2026-2027',
-        body: '',
-        color: 'sand',
-        pinned: true,
-        archived: false,
-        trashed: false,
-        labels: [],
-        updatedAt: Date.now(),
-        assemblyData: {
-          sessions: [
-            {
-              name: 'MAÑANA',
-              items: [
-                { id: 'm1', time: '9:40', title: 'Música', isNoteable: false, notes: '' },
-                { id: 'm2', time: '9:50', title: 'Canción 31 y oración', isNoteable: false, notes: '' },
-                { id: 'm3', time: '10:00', title: '¿Por qué debemos confiar en Jehová con todo el corazón?', isNoteable: true, notes: '' },
-                { id: 'm4', time: '10:15', title: 'Serie de discursos: Imitemos a los que confiaron en Jehová — Barac', isNoteable: true, notes: '' },
-                { id: 'm5', time: '10:30', title: 'Serie de discursos: Imitemos a los que confiaron en Jehová — La mujer sunamita', isNoteable: true, notes: '' },
-                { id: 'm6', time: '10:45', title: 'Serie de discursos: Imitemos a los que confiaron en Jehová — Daniel, Hananías, Misael y Azarías', isNoteable: true, notes: '' },
-                { id: 'm7', time: '11:05', title: 'Canción 57 y anuncios', isNoteable: false, notes: '' },
-                { id: 'm8', time: '11:15', title: 'Ayudemos a otros a confiar en el "Dios vivo y verdadero"', isNoteable: true, notes: '' },
-                { id: 'm9', time: '11:35', title: 'Discurso de bautismo: "Tu Padre, que mira en secreto, te lo pagará"', isNoteable: true, notes: '' },
-                { id: 'm10', time: '12:05', title: 'Canción 29', isNoteable: false, notes: '' }
-              ]
-            },
-            {
-              name: 'TARDE',
-              items: [
-                { id: 't1', time: '1:20', title: 'Música', isNoteable: false, notes: '' },
-                { id: 't2', time: '1:30', title: 'Canción 8 y oración', isNoteable: false, notes: '' },
-                { id: 't3', time: '1:35', title: 'Discurso público: ¿En quién sí se puede confiar?', isNoteable: true, notes: '' },
-                { id: 't4', time: '2:05', title: 'Resumen de La Atalaya', isNoteable: true, notes: '' },
-                { id: 't5', time: '2:35', title: 'Canción 135 y anuncios', isNoteable: false, notes: '' },
-                { id: 't6', time: '2:45', title: 'Serie de discursos: Confíe en la sabiduría de Jehová... al educar a sus hijos', isNoteable: true, notes: '' },
-                { id: 't7', time: '3:00', title: 'Serie de discursos: Confíe en la sabiduría de Jehová... al hacer planes para el futuro', isNoteable: true, notes: '' },
-                { id: 't8', time: '3:15', title: 'Serie de discursos: Confíe en la sabiduría de Jehová... al enfrentar tentaciones', isNoteable: true, notes: '' },
-                { id: 't9', time: '3:30', title: '"El que confía en Jehová es feliz"', isNoteable: true, notes: '' },
-                { id: 't10', time: '4:00', title: 'Canción 54 y oración', isNoteable: false, notes: '' }
-              ]
-            },
-            {
-              name: 'PREGUNTAS DE REPASO',
-              items: [
-                { id: 'q1', time: '1', title: '¿Cómo demostramos que confiamos en Jehová con todo nuestro corazón? (Prov. 3:5, 6)', isNoteable: true, notes: '' },
-                { id: 'q2', time: '2', title: '¿Cómo podemos imitar a Barac, a la mujer sunamita y a Daniel, Hananías, Misael y Azarías? (Luc. 16:10; Sal. 50:15; 119:112)', isNoteable: true, notes: '' },
-                { id: 'q3', time: '3', title: '¿Qué nos ayudará a iniciar conversaciones con personas que tienen formas de pensar o antecedentes muy diferentes a los nuestros? (1 Cor. 9:19-23)', isNoteable: true, notes: '' },
-                { id: 'q4', time: '4', title: '¿Por qué debemos confiar en la sabiduría de Jehová? (Prov. 3:13, 18; 16:3; 22:6; 1 Cor. 10:13)', isNoteable: true, notes: '' },
-                { id: 'q5', time: '5', title: '¿Por qué debemos confiar siempre en Jehová? (Prov. 16:20)', isNoteable: true, notes: '' }
-              ]
-            }
-          ]
+    function getBuiltInAssembliesCatalog() {
+      return [
+        {
+          id: 'asamblea-confia-jehova-2026-2027',
+          type: 'assembly',
+          title: '"El que confía en Jehová es feliz" (Proverbios 16:20)',
+          subtitle: 'Asamblea de circuito con el superintendente de circuito | 2026-2027',
+          body: '',
+          color: 'sand',
+          pinned: true,
+          archived: false,
+          trashed: false,
+          labels: [],
+          updatedAt: 1729500000000,
+          assemblyData: {
+            sessions: [
+              {
+                name: 'MAÑANA',
+                items: [
+                  { id: 'm1', time: '9:40', title: 'Música', isNoteable: false, notes: '' },
+                  { id: 'm2', time: '9:50', title: 'Canción 31 y oración', isNoteable: false, notes: '' },
+                  { id: 'm3', time: '10:00', title: '¿Por qué debemos confiar en Jehová con todo el corazón?', isNoteable: true, notes: '' },
+                  { id: 'm4', time: '10:15', title: 'Serie de discursos: Imitemos a los que confiaron en Jehová — Barac', isNoteable: true, notes: '' },
+                  { id: 'm5', time: '10:30', title: 'Serie de discursos: Imitemos a los que confiaron en Jehová — La mujer sunamita', isNoteable: true, notes: '' },
+                  { id: 'm6', time: '10:45', title: 'Serie de discursos: Imitemos a los que confiaron en Jehová — Daniel, Hananías, Misael y Azarías', isNoteable: true, notes: '' },
+                  { id: 'm7', time: '11:05', title: 'Canción 57 y anuncios', isNoteable: false, notes: '' },
+                  { id: 'm8', time: '11:15', title: 'Ayudemos a otros a confiar en el "Dios vivo y verdadero"', isNoteable: true, notes: '' },
+                  { id: 'm9', time: '11:35', title: 'Discurso de bautismo: "Tu Padre, que mira en secreto, te lo pagará"', isNoteable: true, notes: '' },
+                  { id: 'm10', time: '12:05', title: 'Canción 29', isNoteable: false, notes: '' }
+                ]
+              },
+              {
+                name: 'TARDE',
+                items: [
+                  { id: 't1', time: '1:20', title: 'Música', isNoteable: false, notes: '' },
+                  { id: 't2', time: '1:30', title: 'Canción 8 y oración', isNoteable: false, notes: '' },
+                  { id: 't3', time: '1:35', title: 'Discurso público: ¿En quién sí se puede confiar?', isNoteable: true, notes: '' },
+                  { id: 't4', time: '2:05', title: 'Resumen de La Atalaya', isNoteable: true, notes: '' },
+                  { id: 't5', time: '2:35', title: 'Canción 135 y anuncios', isNoteable: false, notes: '' },
+                  { id: 't6', time: '2:45', title: 'Serie de discursos: Confíe en la sabiduría de Jehová... al educar a sus hijos', isNoteable: true, notes: '' },
+                  { id: 't7', time: '3:00', title: 'Serie de discursos: Confíe en la sabiduría de Jehová... al hacer planes para el futuro', isNoteable: true, notes: '' },
+                  { id: 't8', time: '3:15', title: 'Serie de discursos: Confíe en la sabiduría de Jehová... al enfrentar tentaciones', isNoteable: true, notes: '' },
+                  { id: 't9', time: '3:30', title: '"El que confía en Jehová es feliz"', isNoteable: true, notes: '' },
+                  { id: 't10', time: '4:00', title: 'Canción 54 y oración', isNoteable: false, notes: '' }
+                ]
+              },
+              {
+                name: 'PREGUNTAS DE REPASO',
+                items: [
+                  { id: 'q1', time: '1', title: '¿Cómo demostramos que confiamos en Jehová con todo nuestro corazón? (Prov. 3:5, 6)', isNoteable: true, notes: '' },
+                  { id: 'q2', time: '2', title: '¿Cómo podemos imitar a Barac, a la mujer sunamita y a Daniel, Hananías, Misael y Azarías? (Luc. 16:10; Sal. 50:15; 119:112)', isNoteable: true, notes: '' },
+                  { id: 'q3', time: '3', title: '¿Qué nos ayudará a iniciar conversaciones con personas que tienen formas de pensar o antecedentes muy diferentes a los nuestros? (1 Cor. 9:19-23)', isNoteable: true, notes: '' },
+                  { id: 'q4', time: '4', title: '¿Por qué debemos confiar en la sabiduría de Jehová? (Prov. 3:13, 18; 16:3; 22:6; 1 Cor. 10:13)', isNoteable: true, notes: '' },
+                  { id: 'q5', time: '5', title: '¿Por qué debemos confiar siempre en Jehová? (Prov. 16:20)', isNoteable: true, notes: '' }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          id: 'asamblea-alegria-jehova-2026-2027',
+          type: 'assembly',
+          title: '"Haz de Jehová tu mayor alegría" (Salmo 37:4, nota)',
+          subtitle: 'Asamblea de circuito con representante de la sucursal | 2026-2027',
+          body: '',
+          color: 'mint',
+          pinned: true,
+          archived: false,
+          trashed: false,
+          labels: [],
+          updatedAt: 1729500001000,
+          assemblyData: {
+            sessions: [
+              {
+                name: 'MAÑANA',
+                items: [
+                  { id: 'am1', time: '9:40', title: 'Música', isNoteable: false, notes: '' },
+                  { id: 'am2', time: '9:50', title: 'Canción 7 y oración', isNoteable: false, notes: '' },
+                  { id: 'am3', time: '10:00', title: '¿Cómo podemos hacer de Jehová nuestra mayor alegría?', isNoteable: true, notes: '' },
+                  { id: 'am4', time: '10:15', title: '"Feliz aquel [...] al que se le perdona su pecado"', isNoteable: true, notes: '' },
+                  { id: 'am5', time: '10:30', title: '"¡Dichosos los que viven en tu casa!"', isNoteable: true, notes: '' },
+                  { id: 'am6', time: '10:55', title: 'Canción 37 y anuncios', isNoteable: false, notes: '' },
+                  { id: 'am7', time: '11:05', title: 'Feliz el que se refugia en Jehová', isNoteable: true, notes: '' },
+                  { id: 'am8', time: '11:35', title: 'Discurso de bautismo: "Tu Padre, que mira en secreto, te lo pagará"', isNoteable: true, notes: '' },
+                  { id: 'am9', time: '12:05', title: 'Canción 38', isNoteable: false, notes: '' }
+                ]
+              },
+              {
+                name: 'TARDE',
+                items: [
+                  { id: 'at1', time: '1:20', title: 'Música', isNoteable: false, notes: '' },
+                  { id: 'at2', time: '1:30', title: 'Canción 111', isNoteable: false, notes: '' },
+                  { id: 'at3', time: '1:35', title: 'Experiencias', isNoteable: true, notes: '' },
+                  { id: 'at4', time: '1:45', title: 'Resumen de La Atalaya', isNoteable: true, notes: '' },
+                  { id: 'at5', time: '2:15', title: 'Serie de discursos: Tres claves para ser felices de verdad — Una vida sencilla', isNoteable: true, notes: '' },
+                  { id: 'at6', time: '2:30', title: 'Serie de discursos: Tres claves para ser felices de verdad — Los buenos amigos', isNoteable: true, notes: '' },
+                  { id: 'at7', time: '2:45', title: 'Serie de discursos: Tres claves para ser felices de verdad — Una familia unida', isNoteable: true, notes: '' },
+                  { id: 'at8', time: '3:00', title: 'Canción 88 y anuncios', isNoteable: false, notes: '' },
+                  { id: 'at9', time: '3:10', title: '"¡Feliz el pueblo que tiene por Dios a Jehová!"', isNoteable: true, notes: '' },
+                  { id: 'at10', time: '3:55', title: 'Canción 161 y oración', isNoteable: false, notes: '' }
+                ]
+              },
+              {
+                name: 'PREGUNTAS DE REPASO',
+                items: [
+                  { id: 'aq1', time: '1', title: '¿Cómo podemos hacer de Jehová nuestra mayor alegría? (Sal. 37:4).', isNoteable: true, notes: '' },
+                  { id: 'aq2', time: '2', title: '¿Cómo podemos ser felices a pesar de nuestros errores? (Sal. 32:1, 2).', isNoteable: true, notes: '' },
+                  { id: 'aq3', time: '3', title: '¿Por qué debería ser el servicio a Jehová lo más importante en tu vida? (Sal. 84:4, 10).', isNoteable: true, notes: '' },
+                  { id: 'aq4', time: '4', title: '¿Cómo podemos ser felices a pesar de los problemas? (Sal. 34:8; 18:25).', isNoteable: true, notes: '' },
+                  { id: 'aq5', time: '5', title: '¿Qué podemos hacer para no dejarnos engañar por la felicidad ficticia? (1 Tim. 6:7, 8; Prov. 18:24; Sal. 127:1, 2).', isNoteable: true, notes: '' },
+                  { id: 'aq6', time: '6', title: '¿Cómo les ayuda Jehová a sus siervos a ser felices de verdad? (Miq. 2:12; Sant. 3:17; 1 Ped. 5:8).', isNoteable: true, notes: '' }
+                ]
+              }
+            ]
+          }
         }
-      };
+      ];
     }
 
-    function createAssembly2() {
-      return {
-        id: ASSEMBLY_ID_2,
-        type: 'assembly',
-        title: '"Haz de Jehová tu mayor alegría" (Salmo 37:4, nota)',
-        subtitle: 'Asamblea de circuito con representante de la sucursal | 2026-2027',
-        body: '',
-        color: 'mint',
-        pinned: true,
-        archived: false,
-        trashed: false,
-        labels: [],
-        updatedAt: Date.now(),
-        assemblyData: {
-          sessions: [
-            {
-              name: 'MAÑANA',
-              items: [
-                { id: 'am1', time: '9:40', title: 'Música', isNoteable: false, notes: '' },
-                { id: 'am2', time: '9:50', title: 'Canción 7 y oración', isNoteable: false, notes: '' },
-                { id: 'am3', time: '10:00', title: '¿Cómo podemos hacer de Jehová nuestra mayor alegría?', isNoteable: true, notes: '' },
-                { id: 'am4', time: '10:15', title: '"Feliz aquel [...] al que se le perdona su pecado"', isNoteable: true, notes: '' },
-                { id: 'am5', time: '10:30', title: '"¡Dichosos los que viven en tu casa!"', isNoteable: true, notes: '' },
-                { id: 'am6', time: '10:55', title: 'Canción 37 y anuncios', isNoteable: false, notes: '' },
-                { id: 'am7', time: '11:05', title: 'Feliz el que se refugia en Jehová', isNoteable: true, notes: '' },
-                { id: 'am8', time: '11:35', title: 'Discurso de bautismo: "Tu Padre, que mira en secreto, te lo pagará"', isNoteable: true, notes: '' },
-                { id: 'am9', time: '12:05', title: 'Canción 38', isNoteable: false, notes: '' }
-              ]
-            },
-            {
-              name: 'TARDE',
-              items: [
-                { id: 'at1', time: '1:20', title: 'Música', isNoteable: false, notes: '' },
-                { id: 'at2', time: '1:30', title: 'Canción 111', isNoteable: false, notes: '' },
-                { id: 'at3', time: '1:35', title: 'Experiencias', isNoteable: true, notes: '' },
-                { id: 'at4', time: '1:45', title: 'Resumen de La Atalaya', isNoteable: true, notes: '' },
-                { id: 'at5', time: '2:15', title: 'Serie de discursos: Tres claves para ser felices de verdad — Una vida sencilla', isNoteable: true, notes: '' },
-                { id: 'at6', time: '2:30', title: 'Serie de discursos: Tres claves para ser felices de verdad — Los buenos amigos', isNoteable: true, notes: '' },
-                { id: 'at7', time: '2:45', title: 'Serie de discursos: Tres claves para ser felices de verdad — Una familia unida', isNoteable: true, notes: '' },
-                { id: 'at8', time: '3:00', title: 'Canción 88 y anuncios', isNoteable: false, notes: '' },
-                { id: 'at9', time: '3:10', title: '"¡Feliz el pueblo que tiene por Dios a Jehová!"', isNoteable: true, notes: '' },
-                { id: 'at10', time: '3:55', title: 'Canción 161 y oración', isNoteable: false, notes: '' }
-              ]
-            },
-            {
-              name: 'PREGUNTAS DE REPASO',
-              items: [
-                { id: 'aq1', time: '1', title: '¿Cómo podemos hacer de Jehová nuestra mayor alegría? (Sal. 37:4)', isNoteable: true, notes: '' },
-                { id: 'aq2', time: '2', title: '¿Cómo podemos ser felices a pesar de nuestros errores? (Sal. 32:1, 2)', isNoteable: true, notes: '' },
-                { id: 'aq3', time: '3', title: '¿Por qué debería ser el servicio a Jehová lo más importante en tu vida? (Sal. 84:4, 10)', isNoteable: true, notes: '' },
-                { id: 'aq4', time: '4', title: '¿Cómo podemos ser felices a pesar de los problemas? (Sal. 34:8; 18:25)', isNoteable: true, notes: '' },
-                { id: 'aq5', time: '5', title: '¿Qué podemos hacer para no dejarnos engañar por la felicidad ficticia? (1 Tim. 6:7, 8; Prov. 18:24; Sal. 127:1, 2)', isNoteable: true, notes: '' },
-                { id: 'aq6', time: '6', title: '¿Cómo les ayuda Jehová a sus siervos a ser felices de verdad? (Miq. 2:12; Sant. 3:17; 1 Ped. 5:8)', isNoteable: true, notes: '' }
-              ]
-            }
-          ]
-        }
-      };
+    function isAssemblyNote(note) {
+      if (!note) return false;
+      return note.type === 'assembly' || Boolean(note.assemblyData) || String(note.id).startsWith('asamblea-');
     }
+
+    function upgradeColoredIconsInHtml(html) {
+      if (!html) return html;
+      return html
+        .replace(/<span class="inline-icon"([^>]*)>diamond<\/span>/g, '<span class="inline-icon icon-diamond"$1>diamond</span>')
+        .replace(/<span class="inline-icon"([^>]*)>favorite<\/span>/g, '<span class="inline-icon icon-favorite"$1>favorite</span>')
+        .replace(/<span class="inline-icon"([^>]*)>check<\/span>/g, '<span class="inline-icon icon-check"$1>check</span>')
+        .replace(/<span class="inline-icon"([^>]*)>location_on<\/span>/g, '<span class="inline-icon icon-location"$1>location_on</span>');
+    }
+
+    const STORAGE_NOTES_KEY = 'mis_apuntes_notes_permanent';
+    const STORAGE_LABELS_KEY = 'mis_apuntes_labels_permanent';
+    const STORAGE_VIEW_KEY = 'mis_apuntes_view_mode';
 
     let notes = [];
     let labels = ['Ideas', 'Reuniones', 'Revisitas'];
     let currentView = 'notes';
-    let isListView = localStorage.getItem('mis_apuntes_view_mode') === 'list';
+    let isListView = localStorage.getItem(STORAGE_VIEW_KEY) === 'list';
     let searchQuery = '';
     let activeEditorElement = null;
     let activeModalNoteId = null;
     let isCreatingNewNote = false;
 
-    const NOTES_STORAGE_KEY = 'mis_apuntes_notes_permanent';
-    const LABELS_STORAGE_KEY = 'mis_apuntes_labels_permanent';
-    const THEME_STORAGE_KEY = 'mis_apuntes_theme';
-    const GOOGLE_PROMPT_DISMISSED_KEY = 'mis_apuntes_google_prompt_dismissed';
-
-    // Ordenar etiquetas alfabéticamente (respetando acentos y ñ en español)
     function sortLabelsAlphabetically() {
       labels.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
     }
 
-    function upgradeInlineIconsInHTML(htmlStr) {
-      if (!htmlStr || typeof htmlStr !== 'string') return htmlStr;
-      return htmlStr.replace(/<span([^>]*class="[^"]*inline-icon[^"]*"[^>]*)>\s*(diamond|favorite|check|person|location_on)\s*<\/span>/gi, (match, attrs, iconName) => {
-        const key = iconName.trim().toLowerCase();
-        return `<span class="inline-icon icon-${key}" contenteditable="false">${key}</span>`;
-      });
-    }
-
-    function mergeAssemblyStructurePreservingUserNotes(existingAssembly, officialTemplate) {
-      if (!existingAssembly || !existingAssembly.assemblyData) return officialTemplate;
-      const merged = JSON.parse(JSON.stringify(officialTemplate));
-      merged.type = 'assembly';
-      merged.labels = [];
-      merged.color = existingAssembly.color || officialTemplate.color;
-      merged.pinned = existingAssembly.pinned !== undefined ? existingAssembly.pinned : officialTemplate.pinned;
-      merged.archived = !!existingAssembly.archived;
-      merged.trashed = !!existingAssembly.trashed;
-      merged.updatedAt = existingAssembly.updatedAt || officialTemplate.updatedAt;
-
-      const userNotesMap = {};
-      existingAssembly.assemblyData.sessions?.forEach(sec => {
-        sec.items?.forEach(it => {
-          if (it.id && it.notes) userNotesMap[it.id] = upgradeInlineIconsInHTML(it.notes);
-        });
-      });
-
-      merged.assemblyData.sessions.forEach(sec => {
-        sec.items.forEach(it => {
-          if (userNotesMap[it.id]) {
-            it.notes = userNotesMap[it.id];
-          }
-        });
-      });
-      return merged;
-    }
-
-    function sanitizeNotesAndAssemblies() {
-      let changed = false;
-      notes.forEach(n => {
-        if (n.id === ASSEMBLY_ID_1 || n.id === ASSEMBLY_ID_2 || n.assemblyData || n.type === 'assembly') {
-          if (n.type !== 'assembly') { n.type = 'assembly'; changed = true; }
-          if (Array.isArray(n.labels) && n.labels.length > 0) {
-            n.labels = [];
-            changed = true;
-          }
-        } else {
-          if (!Array.isArray(n.labels)) {
-            n.labels = [];
-            changed = true;
-          }
-          if (n.body) {
-            const upgraded = upgradeInlineIconsInHTML(n.body);
-            if (upgraded !== n.body) {
-              n.body = upgraded;
-              changed = true;
-            }
-          }
-        }
-      });
-      return changed;
-    }
-
-    function ensureBuiltInAssemblies() {
-      const builtInTemplates = [createAssembly1(), createAssembly2()];
-      let changed = false;
-
-      builtInTemplates.forEach(template => {
-        const idx = notes.findIndex(n => n.id === template.id);
-        if (idx === -1) {
-          notes.push(template);
-          changed = true;
-        } else {
-          notes[idx] = mergeAssemblyStructurePreservingUserNotes(notes[idx], template);
-        }
-      });
-
-      if (sanitizeNotesAndAssemblies()) {
-        changed = true;
-      }
-
-      if (changed) saveToLocalStorage();
-    }
-
     function loadFromLocalStorage() {
-      const savedLabels = localStorage.getItem(LABELS_STORAGE_KEY) || localStorage.getItem('mis_apuntes_labels_v2');
+      const savedLabels = localStorage.getItem(STORAGE_LABELS_KEY) || localStorage.getItem('mis_apuntes_labels_v2');
       if (savedLabels) {
         try { labels = JSON.parse(savedLabels); } catch (e) {}
       }
       sortLabelsAlphabetically();
-      localStorage.setItem(LABELS_STORAGE_KEY, JSON.stringify(labels));
 
-      const permanentNotes = localStorage.getItem(NOTES_STORAGE_KEY);
-      const legacyV4 = localStorage.getItem('mis_apuntes_notes_v4');
-      const legacyV3 = localStorage.getItem('mis_apuntes_notes_v3');
+      const savedNotes = localStorage.getItem(STORAGE_NOTES_KEY)
+        || localStorage.getItem('mis_apuntes_notes_v4')
+        || localStorage.getItem('mis_apuntes_notes_v3');
 
-      const rawNotes = permanentNotes || legacyV4 || legacyV3;
-
-      if (rawNotes) {
-        try {
-          notes = JSON.parse(rawNotes);
-        } catch (e) {
-          notes = [];
-        }
+      if (savedNotes) {
+        try { notes = JSON.parse(savedNotes); } catch (e) { notes = []; }
       } else {
         notes = [
           {
             id: 'welcome-note-1',
             type: 'note',
             title: '¡Bienvenido a Mis Apuntes! ✨',
-            body: 'Esta es tu app para tomar los mejores apuntes y notas.<br><br><ul><li>Usa la barra superior transparente para poner <b>negrita</b>, <u>subrayado</u> o viñetas.</li><li>Inserta iconos minimalistas directamente en tus textos: <span class="inline-icon icon-diamond" contenteditable="false">diamond</span> <span class="inline-icon icon-favorite" contenteditable="false">favorite</span> <span class="inline-icon icon-check" contenteditable="false">check</span> <span class="inline-icon icon-person" contenteditable="false">person</span> <span class="inline-icon icon-location_on" contenteditable="false">location_on</span></li></ul>',
+            body: 'Esta es tu app para tomar los mejores apuntes y notas.<br><br><ul><li>Usa la barra superior transparente para poner <b>negrita</b>, <u>subrayado</u> o viñetas.</li><li>Inserta iconos minimalistas directamente en tus textos: <span class="inline-icon icon-diamond" contenteditable="false">diamond</span> <span class="inline-icon icon-favorite" contenteditable="false">favorite</span> <span class="inline-icon icon-check" contenteditable="false">check</span> <span class="inline-icon" contenteditable="false">person</span> <span class="inline-icon icon-location" contenteditable="false">location_on</span></li></ul>',
             color: 'sand',
             pinned: true,
             archived: false,
@@ -767,186 +642,194 @@
         ];
       }
 
+      notes.forEach(n => {
+        if (isAssemblyNote(n)) {
+          n.type = 'assembly';
+          n.labels = [];
+        } else {
+          n.type = 'note';
+          if (!Array.isArray(n.labels)) n.labels = [];
+          n.body = upgradeColoredIconsInHtml(n.body);
+        }
+      });
+
       ensureBuiltInAssemblies();
       saveToLocalStorage();
     }
 
-    function saveToLocalStorage() {
-      sortLabelsAlphabetically();
-      localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
-      localStorage.setItem(LABELS_STORAGE_KEY, JSON.stringify(labels));
+    function ensureBuiltInAssemblies() {
+      const catalog = getBuiltInAssembliesCatalog();
+      catalog.forEach(official => {
+        const existing = notes.find(n => n.id === official.id);
+        if (!existing) {
+          notes.push(official);
+        } else {
+          existing.type = 'assembly';
+          existing.labels = [];
+        }
+      });
     }
 
-    // Autenticación Persistente con Google y Sincronización en Firestore
+    function saveToLocalStorage() {
+      sortLabelsAlphabetically();
+      localStorage.setItem(STORAGE_NOTES_KEY, JSON.stringify(notes));
+      localStorage.setItem(STORAGE_LABELS_KEY, JSON.stringify(labels));
+    }
+
+    // Inicialización de Firebase con Persistencia Permanente y Acceso en 1 solo paso
     let db = null;
     let auth = null;
     let currentUser = null;
-    let unsubscribeNotesSnapshot = null;
-
-    function updateAccountUI(user) {
-      const isGoogleLinked = user && !user.isAnonymous;
-      const headerAuthIcon = document.getElementById('headerAuthIcon');
-      const headerAuthAvatar = document.getElementById('headerAuthAvatar');
-      const headerSyncDot = document.getElementById('headerSyncDot');
-      const sidebarLoggedOutView = document.getElementById('sidebarLoggedOutView');
-      const sidebarLoggedInView = document.getElementById('sidebarLoggedInView');
-      const googleWelcomePrompt = document.getElementById('googleWelcomePrompt');
-
-      if (isGoogleLinked) {
-        if (user.photoURL) {
-          headerAuthAvatar.src = user.photoURL;
-          headerAuthAvatar.classList.remove('hidden');
-          headerAuthIcon.classList.add('hidden');
-        } else {
-          headerAuthAvatar.classList.add('hidden');
-          headerAuthIcon.classList.remove('hidden');
-        }
-        headerSyncDot.classList.remove('hidden');
-
-        sidebarLoggedOutView.classList.add('hidden');
-        sidebarLoggedInView.classList.remove('hidden');
-        sidebarLoggedInView.classList.add('flex');
-        document.getElementById('sidebarUserAvatar').src = user.photoURL || './icon-192.png';
-        document.getElementById('sidebarUserName').textContent = user.displayName || 'Cuenta de Google';
-        document.getElementById('sidebarUserEmail').textContent = user.email || '';
-
-        googleWelcomePrompt.classList.add('hidden');
-        googleWelcomePrompt.classList.remove('flex');
-      } else {
-        headerAuthAvatar.classList.add('hidden');
-        headerAuthIcon.classList.remove('hidden');
-        headerSyncDot.classList.add('hidden');
-
-        sidebarLoggedOutView.classList.remove('hidden');
-        sidebarLoggedInView.classList.add('hidden');
-        sidebarLoggedInView.classList.remove('flex');
-
-        // Mostrar invitación de vinculación 1 sola vez si aún no inició sesión con Google
-        if (localStorage.getItem(GOOGLE_PROMPT_DISMISSED_KEY) !== '1') {
-          googleWelcomePrompt.classList.remove('hidden');
-          googleWelcomePrompt.classList.add('flex');
-        }
-      }
-    }
-
-    async function signInWithGooglePermanent() {
-      if (!auth) return;
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
-
-      try {
-        await setPersistence(auth, browserLocalPersistence);
-        // Si tenía sesión anónima, intentamos vincularla o iniciar sesión directo conservando todas las notas locales
-        if (auth.currentUser && auth.currentUser.isAnonymous) {
-          try {
-            await linkWithPopup(auth.currentUser, provider);
-            return;
-          } catch (linkErr) {
-            // Si la cuenta de Google ya existía de otro dispositivo, iniciamos sesión en ella y fusionamos apuntes
-          }
-        }
-        await signInWithPopup(auth, provider);
-      } catch (popupErr) {
-        if (popupErr.code === 'auth/popup-blocked' || popupErr.code === 'auth/operation-not-supported-in-this-environment') {
-          await signInWithRedirect(auth, provider);
-        } else {
-          console.warn('Inicio con Google cancelado o no completado:', popupErr);
-        }
-      }
-    }
+    let unsubscribeSnapshot = null;
 
     try {
       const app = initializeApp(firebaseConfig);
       auth = getAuth(app);
       db = getFirestore(app);
 
-      // Fijar persistencia local permanente para no volver a pedir login nunca
       setPersistence(auth, browserLocalPersistence).catch(console.warn);
-      getRedirectResult(auth).catch(console.warn);
 
       onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-          signInAnonymously(auth).catch(console.error);
-          return;
-        }
-        currentUser = user;
-        updateAccountUI(user);
-
-        if (unsubscribeNotesSnapshot) {
-          unsubscribeNotesSnapshot();
-        }
-
-        const notesRef = collection(db, 'users', user.uid, 'notes');
-        unsubscribeNotesSnapshot = onSnapshot(notesRef, async (snapshot) => {
-          const cloudIds = new Set();
-          snapshot.docs.forEach(d => {
-            const cn = d.data();
-            if (!cn || !cn.id) return;
-            cloudIds.add(cn.id);
-            const localIdx = notes.findIndex(n => n.id === cn.id);
-            if (localIdx >= 0) {
-              const localNote = notes[localIdx];
-              if ((cn.updatedAt || 0) >= (localNote.updatedAt || 0)) {
-                notes[localIdx] = cn;
-              }
-            } else {
-              notes.push(cn);
-            }
-          });
-
-          // Sincronizar también etiquetas nuevas que vengan en las notas de la nube
-          notes.forEach(n => {
-            if (!isAssemblyNote(n) && Array.isArray(n.labels)) {
-              n.labels.forEach(lbl => {
-                if (lbl && !labels.includes(lbl)) labels.push(lbl);
-              });
-            }
-          });
-          sortLabelsAlphabetically();
-
-          ensureBuiltInAssemblies();
-          saveToLocalStorage();
-          renderApp();
-
-          // Subir cualquier nota local que aún no esté en la nube de este usuario
-          for (const localNote of notes) {
-            if (!cloudIds.has(localNote.id)) {
-              try {
-                await setDoc(doc(db, 'users', user.uid, 'notes', localNote.id), localNote);
-              } catch (err) {
-                console.error('Error respaldando nota en la nube:', err);
-              }
-            }
+        if (user) {
+          currentUser = user;
+          updateAuthUI(user);
+          subscribeToUserNotes(user.uid);
+        } else {
+          try {
+            await signInAnonymously(auth);
+          } catch (err) {
+            console.warn("Modo sin sesión anónima, esperando conexión Google:", err);
           }
-        }, (error) => {
-          console.warn('Error en suscripción de Firebase:', error);
-        });
+        }
       });
     } catch (e) {
-      console.warn('Modo local:', e);
+      console.warn('Trabajando en modo local:', e);
     }
 
-    document.getElementById('sidebarGoogleSignInBtn').addEventListener('click', signInWithGooglePermanent);
-    document.getElementById('welcomeGoogleSignInBtn').addEventListener('click', signInWithGooglePermanent);
-    document.getElementById('headerAuthBtn').addEventListener('click', () => {
-      if (currentUser && !currentUser.isAnonymous) {
-        openDrawer();
-      } else {
-        signInWithGooglePermanent();
+    function subscribeToUserNotes(uid) {
+      if (!db) return;
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
+
+      const notesRef = collection(db, 'users', uid, 'notes');
+      unsubscribeSnapshot = onSnapshot(notesRef, (snapshot) => {
+        const cloudNotesMap = new Map();
+        snapshot.docs.forEach(d => cloudNotesMap.set(d.id, d.data()));
+
+        notes.forEach(localNote => {
+          const cloudNote = cloudNotesMap.get(localNote.id);
+          if (!cloudNote || (localNote.updatedAt || 0) > (cloudNote.updatedAt || 0)) {
+            setDoc(doc(db, 'users', uid, 'notes', localNote.id), localNote).catch(() => {});
+          }
+        });
+
+        cloudNotesMap.forEach((cloudNote, id) => {
+          if (isAssemblyNote(cloudNote)) {
+            cloudNote.type = 'assembly';
+            cloudNote.labels = [];
+          } else {
+            cloudNote.type = 'note';
+            if (!Array.isArray(cloudNote.labels)) cloudNote.labels = [];
+            cloudNote.body = upgradeColoredIconsInHtml(cloudNote.body);
+          }
+          const idx = notes.findIndex(n => n.id === id);
+          if (idx === -1) {
+            notes.push(cloudNote);
+          } else if ((cloudNote.updatedAt || 0) > (notes[idx].updatedAt || 0)) {
+            notes[idx] = cloudNote;
+          }
+        });
+
+        ensureBuiltInAssemblies();
+        saveToLocalStorage();
+        renderApp();
+      });
+    }
+
+    // Inicio de sesión con Google en UN SOLO TOQUE (sin doble ventana)
+    let isSigningIn = false;
+    async function connectGoogleAccount() {
+      if (!auth || isSigningIn) return;
+      isSigningIn = true;
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+
+      try {
+        // Guardamos copia de las notas actuales antes de entrar con Google
+        const previousLocalNotes = JSON.parse(JSON.stringify(notes));
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+
+        if (user && db) {
+          for (const item of previousLocalNotes) {
+            await setDoc(doc(db, 'users', user.uid, 'notes', item.id), item).catch(() => {});
+          }
+        }
+        updateAuthUI(user);
+      } catch (err) {
+        if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+          alert('No se pudo conectar con Google. Verifica tu conexión e inténtalo de nuevo.');
+          console.error(err);
+        }
+      } finally {
+        isSigningIn = false;
       }
-    });
-    document.getElementById('welcomeDismissGoogleBtn').addEventListener('click', () => {
-      localStorage.setItem(GOOGLE_PROMPT_DISMISSED_KEY, '1');
-      const promptEl = document.getElementById('googleWelcomePrompt');
-      promptEl.classList.add('hidden');
-      promptEl.classList.remove('flex');
+    }
+
+    function updateAuthUI(user) {
+      const isGoogleLinked = user && !user.isAnonymous && user.providerData.some(p => p.providerId === 'google.com');
+      const banner = document.getElementById('googleBackupBanner');
+      const avatarImg = document.getElementById('userAvatarImg');
+      const defaultIcon = document.getElementById('userDefaultIcon');
+      const sidebarAuthText = document.getElementById('sidebarAuthText');
+      const sidebarAuthIcon = document.getElementById('sidebarAuthIcon');
+      const sidebarGoogleBtn = document.getElementById('sidebarGoogleBtn');
+
+      if (isGoogleLinked) {
+        banner.classList.add('hidden');
+        if (user.photoURL) {
+          avatarImg.src = user.photoURL;
+          avatarImg.classList.remove('hidden');
+          defaultIcon.classList.add('hidden');
+        } else {
+          avatarImg.classList.add('hidden');
+          defaultIcon.classList.remove('hidden');
+          defaultIcon.classList.add('text-green-500');
+        }
+        sidebarAuthIcon.textContent = 'cloud_done';
+        sidebarAuthIcon.className = 'material-symbols-outlined text-base text-green-500';
+        sidebarAuthText.textContent = user.email || user.displayName || 'Cuenta de Google conectada';
+        sidebarGoogleBtn.classList.add('hidden');
+      } else {
+        banner.classList.remove('hidden');
+        avatarImg.classList.add('hidden');
+        defaultIcon.classList.remove('hidden');
+        sidebarAuthIcon.textContent = 'cloud_queue';
+        sidebarAuthIcon.className = 'material-symbols-outlined text-base text-gray-500';
+        sidebarAuthText.textContent = 'Guardado solo en este dispositivo';
+        sidebarGoogleBtn.classList.remove('hidden');
+      }
+    }
+
+    document.getElementById('bannerGoogleSignInBtn').addEventListener('click', connectGoogleAccount);
+    document.getElementById('sidebarGoogleBtn').addEventListener('click', connectGoogleAccount);
+    document.getElementById('headerAuthBtn').addEventListener('click', () => {
+      const isGoogleLinked = currentUser && !currentUser.isAnonymous;
+      if (!isGoogleLinked) {
+        connectGoogleAccount();
+      } else {
+        openDrawer();
+      }
     });
 
     async function persistNote(note) {
-      if (note.type === 'assembly') {
+      if (isAssemblyNote(note)) {
+        note.type = 'assembly';
         note.labels = [];
+      } else {
+        note.type = 'note';
+        if (!Array.isArray(note.labels)) note.labels = [];
       }
-      note.updatedAt = Date.now();
+
       const idx = notes.findIndex(n => n.id === note.id);
       if (idx >= 0) notes[idx] = note;
       else notes.unshift(note);
@@ -965,13 +848,8 @@
 
     function syncThemeUI() {
       const dark = isDarkMode();
-      const iconEl = document.getElementById('themeToggleIcon');
-      if (iconEl) iconEl.textContent = dark ? 'light_mode' : 'dark_mode';
-
-      const metaTheme = document.getElementById('themeColorMeta');
-      if (metaTheme) {
-        metaTheme.setAttribute('content', dark ? '#202124' : '#ffffff');
-      }
+      document.getElementById('themeToggleIcon').textContent = dark ? 'light_mode' : 'dark_mode';
+      document.getElementById('themeColorMeta')?.setAttribute('content', dark ? '#202124' : '#ffffff');
     }
 
     function getColorStyles(colorKey) {
@@ -983,31 +861,24 @@
       };
     }
 
-    // Estado limpio de los botones de Negrita, Subrayado y Viñetas (sin anillos ni círculos tenues al deseleccionar)
+    // Actualización limpia de botones de formato
     function updateFormatButtonsState() {
       const boldBtn = document.getElementById('btnFormatBold');
       const underlineBtn = document.getElementById('btnFormatUnderline');
       const listBtn = document.getElementById('btnFormatList');
       if (!boldBtn || !underlineBtn || !listBtn) return;
 
-      const setBtnActive = (btn, isActive) => {
-        if (isActive) {
-          btn.classList.add('is-active');
-        } else {
-          btn.classList.remove('is-active');
-          btn.blur();
-        }
-      };
+      const isBold = document.queryCommandState('bold');
+      const isUnderline = document.queryCommandState('underline');
+      const isList = document.queryCommandState('insertUnorderedList');
 
-      try {
-        setBtnActive(boldBtn, document.queryCommandState('bold'));
-        setBtnActive(underlineBtn, document.queryCommandState('underline'));
-        setBtnActive(listBtn, document.queryCommandState('insertUnorderedList'));
-      } catch (e) {}
+      boldBtn.classList.toggle('format-btn-active', isBold);
+      underlineBtn.classList.toggle('format-btn-active', isUnderline);
+      listBtn.classList.toggle('format-btn-active', isList);
     }
 
     document.addEventListener('selectionchange', () => {
-      if (!editModal.classList.contains('hidden')) {
+      if (!document.getElementById('editModal').classList.contains('hidden')) {
         updateFormatButtonsState();
       }
     });
@@ -1017,6 +888,9 @@
       if (!target) return;
       target.focus();
       document.execCommand(command, false, null);
+      if (document.activeElement && document.activeElement.classList?.contains('format-toolbar-btn')) {
+        document.activeElement.blur();
+      }
       updateFormatButtonsState();
     };
 
@@ -1025,22 +899,22 @@
       if (!target) return;
       target.focus();
 
+      const colorClass = ICON_COLOR_CLASSES[iconName] || '';
       const sel = window.getSelection();
-      if (!sel) return;
-
-      let range;
-      if (sel.rangeCount > 0 && target.contains(sel.anchorNode)) {
-        range = sel.getRangeAt(0);
-        range.deleteContents();
-      } else {
-        range = document.createRange();
-        range.selectNodeContents(target);
-        range.collapse(false);
+      if (!sel || sel.rangeCount === 0 || !target.contains(sel.anchorNode)) {
+        const endRange = document.createRange();
+        endRange.selectNodeContents(target);
+        endRange.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(endRange);
       }
 
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+
       const iconSpan = document.createElement('span');
-      iconSpan.className = `inline-icon icon-${iconName}`;
-      iconSpan.setAttribute('contenteditable', 'false');
+      iconSpan.className = `inline-icon ${colorClass}`.trim();
+      iconSpan.contentEditable = 'false';
       iconSpan.textContent = iconName;
 
       const spaceNode = document.createTextNode('\u00A0');
@@ -1055,7 +929,6 @@
       sel.addRange(newRange);
 
       target.dispatchEvent(new Event('input', { bubbles: true }));
-      updateFormatButtonsState();
     };
 
     window.switchView = function(view) {
@@ -1106,29 +979,17 @@
     document.getElementById('closeDrawerBtn').addEventListener('click', closeDrawer);
     drawerBackdrop.addEventListener('click', closeDrawer);
 
-    function applyLayoutModeUI() {
-      const iconEl = document.getElementById('viewToggleIcon');
-      const pinnedGrid = document.getElementById('pinnedGrid');
-      const notesGrid = document.getElementById('notesGrid');
-
-      iconEl.textContent = isListView ? 'grid_view' : 'view_agenda';
-      pinnedGrid.className = isListView ? 'notes-list' : 'notes-grid';
-      notesGrid.className = isListView ? 'notes-list' : 'notes-grid';
+    function syncGridViewClasses() {
+      document.getElementById('viewToggleIcon').textContent = isListView ? 'grid_view' : 'view_agenda';
+      document.getElementById('pinnedGrid').className = isListView ? 'notes-list' : 'notes-grid';
+      document.getElementById('notesGrid').className = isListView ? 'notes-list' : 'notes-grid';
     }
 
     function renderApp() {
       syncThemeUI();
-      applyLayoutModeUI();
+      syncGridViewClasses();
       renderSidebarNav();
       renderNotesGrids();
-
-      if (activeModalNoteId) {
-        const note = notes.find(n => n.id === activeModalNoteId);
-        if (note) {
-          const styles = getColorStyles(note.color);
-          editModalCard.style.backgroundColor = styles.bg;
-        }
-      }
     }
 
     function renderSidebarNav() {
@@ -1148,21 +1009,17 @@
       document.querySelectorAll('.nav-item').forEach(btn => {
         const nav = btn.dataset.nav;
         if (nav === currentView) {
-          btn.classList.add('bg-[#feefc3]', 'dark:bg-[#41331c]', 'text-[#202124]', 'dark:text-[#e8eaed]');
+          btn.classList.add('bg-gray-200', 'dark:bg-[#303134]', 'text-[#202124]', 'dark:text-[#e8eaed]');
         } else {
-          btn.classList.remove('bg-[#feefc3]', 'dark:bg-[#41331c]');
+          btn.classList.remove('bg-gray-200', 'dark:bg-[#303134]');
         }
       });
-    }
-
-    function isAssemblyNote(note) {
-      return note.type === 'assembly' || note.id === ASSEMBLY_ID_1 || note.id === ASSEMBLY_ID_2 || !!note.assemblyData;
     }
 
     function createNoteCardElement(note) {
       const card = document.createElement('div');
       const styles = getColorStyles(note.color);
-      card.className = 'note-card rounded-2xl border p-3.5 sm:p-4 cursor-pointer hover:shadow-md relative group';
+      card.className = 'note-card rounded-xl border p-3.5 sm:p-4 cursor-pointer hover:shadow-md relative group';
       card.style.backgroundColor = styles.bg;
       card.style.borderColor = styles.border;
 
@@ -1170,63 +1027,63 @@
 
       const pinBtn = document.createElement('button');
       pinBtn.type = 'button';
-      pinBtn.className = `absolute top-2.5 right-2.5 z-10 p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition ${note.pinned ? 'opacity-100' : 'opacity-70 sm:opacity-0 sm:group-hover:opacity-100'}`;
-      pinBtn.title = note.pinned ? 'Desfijar apunte' : 'Fijar apunte';
-      pinBtn.innerHTML = `<span class="material-symbols-outlined text-[20px] ${note.pinned ? 'filled' : ''}">push_pin</span>`;
+      pinBtn.className = 'absolute top-2.5 right-2.5 p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 z-10 transition';
+      pinBtn.title = note.pinned ? 'Desfijar' : 'Fijar';
+      pinBtn.innerHTML = `<span class="material-symbols-outlined text-[20px] ${note.pinned ? 'filled' : 'opacity-60'}">push_pin</span>`;
       pinBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         note.pinned = !note.pinned;
+        note.updatedAt = Date.now();
         persistNote(note);
       });
 
-      let topContent = '';
+      const topContent = document.createElement('div');
+      topContent.className = 'overflow-hidden pr-6';
+
+      let html = '';
       if (note.image) {
-        topContent += `<img src="${note.image}" class="w-full ${isListView ? 'max-h-52' : 'h-28'} object-cover rounded-xl mb-2.5">`;
+        html += `<img src="${note.image}" class="w-full max-h-32 object-cover rounded-lg mb-2.5">`;
       }
 
       if (isAssembly) {
-        topContent += `
-          <div class="flex items-center gap-1 text-[11px] font-medium uppercase tracking-wider opacity-75 mb-1 pr-7">
-            <span class="material-symbols-outlined text-sm">description</span>
-            <span class="truncate">Asamblea</span>
+        html += `
+          <div class="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider opacity-75 mb-1">
+            <span class="material-symbols-outlined text-xs">description</span>
+            <span>Asamblea</span>
           </div>
         `;
       }
 
       if (note.title) {
-        topContent += `<h3 class="font-display font-medium text-sm sm:text-base mb-1.5 pr-7 line-clamp-2">${note.title}</h3>`;
-      } else {
-        topContent += `<div class="h-4"></div>`;
+        html += `<h3 class="font-display font-medium text-sm sm:text-base mb-1.5 line-clamp-2">${note.title}</h3>`;
       }
 
       if (isAssembly && note.subtitle) {
-        topContent += `<p class="text-xs opacity-80 mb-2 line-clamp-2">${note.subtitle}</p>`;
+        html += `<p class="text-xs opacity-80 mb-2 line-clamp-2">${note.subtitle}</p>`;
+      } else if (note.body) {
+        html += `<div class="rich-editor text-xs sm:text-sm leading-relaxed line-clamp-5 break-words">${note.body}</div>`;
+      }
+      topContent.innerHTML = html;
+
+      const bottomContent = document.createElement('div');
+      if (isAssembly) {
         let totalNotes = 0;
         note.assemblyData?.sessions?.forEach(s => s.items.forEach(it => {
           if (it.notes && it.notes.trim() !== '') totalNotes++;
         }));
-        topContent += `<div class="text-[11px] font-medium px-2.5 py-1 rounded-md bg-black/5 dark:bg-white/10 inline-block">
-          ${totalNotes} ${totalNotes === 1 ? 'apunte' : 'apuntes'}
+        bottomContent.innerHTML = `<div class="text-[11px] font-medium px-2 py-0.5 rounded-md bg-black/10 dark:bg-white/10 inline-block mt-2">
+          ${totalNotes} ${totalNotes === 1 ? 'tema con apuntes' : 'temas con apuntes'}
         </div>`;
-      } else if (note.body) {
-        const clampClass = isListView ? 'line-clamp-8' : 'line-clamp-5';
-        topContent += `<div class="rich-editor text-xs sm:text-sm leading-relaxed ${clampClass} break-words overflow-hidden">${upgradeInlineIconsInHTML(note.body)}</div>`;
-      }
-
-      let bottomContent = '';
-      if (!isAssembly && Array.isArray(note.labels) && note.labels.length > 0) {
+      } else if (Array.isArray(note.labels) && note.labels.length > 0) {
         const sortedNoteLabels = [...note.labels].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
-        bottomContent = `<div class="flex flex-wrap gap-1 mt-2.5 pt-1">
-          ${sortedNoteLabels.map(l => `<span class="text-[11px] px-2 py-0.5 rounded-full bg-black/10 dark:bg-white/10 truncate max-w-full">${l}</span>`).join('')}
+        bottomContent.innerHTML = `<div class="flex flex-wrap gap-1 mt-2">
+          ${sortedNoteLabels.map(l => `<span class="text-[11px] px-2 py-0.5 rounded-full bg-black/10 dark:bg-white/10">${l}</span>`).join('')}
         </div>`;
       }
-
-      const contentWrap = document.createElement('div');
-      contentWrap.className = 'overflow-hidden flex-1 flex flex-col justify-between';
-      contentWrap.innerHTML = `<div class="overflow-hidden">${topContent}</div>${bottomContent}`;
 
       card.appendChild(pinBtn);
-      card.appendChild(contentWrap);
+      card.appendChild(topContent);
+      card.appendChild(bottomContent);
       card.addEventListener('click', () => openEditModal(note.id));
       return card;
     }
@@ -1242,7 +1099,7 @@
       notesGrid.innerHTML = '';
 
       const filtered = notes.filter(note => {
-        const isAssembly = isAssemblyNote(note);
+        const assembly = isAssemblyNote(note);
 
         if (searchQuery) {
           const q = searchQuery.toLowerCase();
@@ -1250,14 +1107,14 @@
           const inBody = (note.body || '').toLowerCase().includes(q);
           return !note.trashed && (inTitle || inBody);
         }
-        if (currentView === 'trash') return !!note.trashed;
-        if (currentView === 'archive') return !note.trashed && !!note.archived;
-        if (currentView === 'assemblies') return !note.trashed && !note.archived && isAssembly;
+        if (currentView === 'trash') return Boolean(note.trashed);
+        if (currentView === 'archive') return !note.trashed && Boolean(note.archived);
+        if (currentView === 'assemblies') return !note.trashed && !note.archived && assembly;
         if (currentView.startsWith('label:')) {
-          const lbl = currentView.replace('label:', '').trim();
-          return !note.trashed && !note.archived && !isAssembly && Array.isArray(note.labels) && note.labels.includes(lbl);
+          const lbl = currentView.replace('label:', '');
+          return !note.trashed && !note.archived && !assembly && Array.isArray(note.labels) && note.labels.includes(lbl);
         }
-        return !note.trashed && !note.archived && !isAssembly;
+        return !note.trashed && !note.archived && !assembly;
       });
 
       if (filtered.length === 0) {
@@ -1307,11 +1164,10 @@
     }
 
     const editModal = document.getElementById('editModal');
-    const editModalCard = document.getElementById('editModalCard');
 
-    function startNewFullScreenNote(withImagePicker = false) {
-      const defaultLabels = currentView.startsWith('label:') ? [currentView.replace('label:', '').trim()] : [];
-      const draftNote = {
+    function createAndOpenNewNote(withImagePicker = false) {
+      const initialLabels = currentView.startsWith('label:') ? [currentView.replace('label:', '')] : [];
+      const newNote = {
         id: 'note-' + Date.now(),
         type: 'note',
         title: '',
@@ -1320,99 +1176,86 @@
         pinned: false,
         archived: false,
         trashed: false,
-        labels: [...defaultLabels],
+        labels: initialLabels,
         image: null,
         updatedAt: Date.now()
       };
-      notes.unshift(draftNote);
+      notes.unshift(newNote);
       isCreatingNewNote = true;
-      openEditModal(draftNote.id, true);
-
+      openEditModal(newNote.id);
       if (withImagePicker) {
         document.getElementById('hiddenImageInput').click();
       }
     }
 
-    document.getElementById('composerCollapsed').addEventListener('click', () => startNewFullScreenNote(false));
-    document.getElementById('fabNewNoteBtn').addEventListener('click', () => startNewFullScreenNote(false));
+    document.getElementById('openCreateNoteBar').addEventListener('click', () => createAndOpenNewNote(false));
+    document.getElementById('fabNewNoteBtn').addEventListener('click', () => createAndOpenNewNote(false));
     document.getElementById('quickImageBtn').addEventListener('click', (e) => {
       e.stopPropagation();
-      startNewFullScreenNote(true);
+      createAndOpenNewNote(true);
     });
 
-    function renderModalLabelsChips(note) {
-      const chips = document.getElementById('modalLabelsChips');
-      if (!note || isAssemblyNote(note) || !Array.isArray(note.labels)) {
-        chips.innerHTML = '';
-        return;
-      }
-      const sorted = [...note.labels].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
-      chips.innerHTML = sorted.map(l => `<span class="text-xs px-2.5 py-1 rounded-full bg-black/10 dark:bg-white/10">${l}</span>`).join('');
-    }
+    function updateModalAppearance(note) {
+      const styles = getColorStyles(note.color);
+      editModal.style.backgroundColor = styles.bg;
+      document.getElementById('themeColorMeta')?.setAttribute('content', styles.bg);
+      document.getElementById('modalPinIcon').classList.toggle('filled', !!note.pinned);
 
-    function renderModalImage(note) {
-      const wrap = document.getElementById('modalImageWrap');
-      const img = document.getElementById('modalImage');
-      if (note && note.image) {
-        img.src = note.image;
-        wrap.classList.remove('hidden');
+      const imgWrap = document.getElementById('modalImageWrap');
+      if (note.image) {
+        imgWrap.classList.remove('hidden');
+        document.getElementById('modalImage').src = note.image;
       } else {
-        img.src = '';
-        wrap.classList.add('hidden');
+        imgWrap.classList.add('hidden');
+      }
+
+      const chips = document.getElementById('modalLabelsChips');
+      if (isAssemblyNote(note)) {
+        chips.innerHTML = '';
+      } else {
+        const sortedNoteLabels = [...(note.labels || [])].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+        chips.innerHTML = sortedNoteLabels.map(l => `<span class="text-xs px-2.5 py-1 rounded-full bg-black/10 dark:bg-white/10">${l}</span>`).join('');
       }
     }
 
-    function openEditModal(noteId, focusBody = false) {
+    function openEditModal(noteId) {
       const note = notes.find(n => n.id === noteId);
       if (!note) return;
       activeModalNoteId = noteId;
       activeEditorElement = null;
 
-      const isAssembly = isAssemblyNote(note);
-
-      const styles = getColorStyles(note.color);
-      editModalCard.style.backgroundColor = styles.bg;
-
-      const metaTheme = document.getElementById('themeColorMeta');
-      if (metaTheme) metaTheme.setAttribute('content', styles.bg);
-
+      updateModalAppearance(note);
       document.getElementById('modalTitle').value = note.title || '';
-      document.getElementById('modalPinIcon').classList.toggle('filled', !!note.pinned);
-
-      const modalLabelBtn = document.getElementById('modalLabelBtn');
-      if (modalLabelBtn) {
-        modalLabelBtn.classList.toggle('hidden', isAssembly);
-      }
-      document.getElementById('modalColorMenu').classList.add('hidden');
-      document.getElementById('modalLabelMenu').classList.add('hidden');
-
-      renderModalImage(note);
-      renderModalLabelsChips(note);
 
       const modalBody = document.getElementById('modalBody');
       const assemblyContainer = document.getElementById('modalAssemblyContainer');
+      const modalLabelBtn = document.getElementById('modalLabelBtn');
+      const modalImgBtn = document.getElementById('modalImgBtn');
 
-      if (isAssembly) {
+      if (isAssemblyNote(note)) {
         modalBody.classList.add('hidden');
         assemblyContainer.classList.remove('hidden');
+        modalLabelBtn.classList.add('hidden');
+        modalImgBtn.classList.add('hidden');
         renderAssemblyProgramInsideModal(note);
       } else {
         assemblyContainer.classList.add('hidden');
         modalBody.classList.remove('hidden');
-        modalBody.innerHTML = upgradeInlineIconsInHTML(note.body || '');
+        modalLabelBtn.classList.remove('hidden');
+        modalImgBtn.classList.remove('hidden');
+        modalBody.innerHTML = note.body || '';
         activeEditorElement = modalBody;
       }
 
       editModal.classList.remove('hidden');
       editModal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
 
-      if (focusBody && !isAssembly) {
+      if (!isAssemblyNote(note)) {
         setTimeout(() => {
           modalBody.focus();
           updateFormatButtonsState();
-        }, 60);
-      } else {
-        updateFormatButtonsState();
+        }, 50);
       }
     }
 
@@ -1422,7 +1265,7 @@
 
       if (note.subtitle) {
         const sub = document.createElement('p');
-        sub.className = 'text-xs font-medium opacity-75 pb-2 border-b border-black/10 dark:border-white/10';
+        sub.className = 'text-xs sm:text-sm font-medium opacity-75 pb-2 border-b border-black/10 dark:border-white/10';
         sub.textContent = note.subtitle;
         container.appendChild(sub);
       }
@@ -1430,18 +1273,18 @@
       note.assemblyData.sessions.forEach((session, sIdx) => {
         const sec = document.createElement('div');
         sec.className = 'space-y-2';
-        sec.innerHTML = `<h4 class="font-display font-bold text-xs tracking-wider uppercase px-2 py-1 rounded bg-black/10 dark:bg-white/10 inline-block">${session.name}</h4>`;
+        sec.innerHTML = `<h4 class="font-display font-bold text-xs tracking-wider uppercase px-2.5 py-1 rounded bg-black/10 dark:bg-white/10 inline-block">${session.name}</h4>`;
 
         const list = document.createElement('div');
-        list.className = 'space-y-1.5';
+        list.className = 'space-y-2';
 
         session.items.forEach((item, iIdx) => {
           const itemBox = document.createElement('div');
-          itemBox.className = 'rounded-lg border border-black/10 dark:border-white/10 overflow-hidden bg-white/40 dark:bg-black/20';
+          itemBox.className = 'rounded-xl border border-black/10 dark:border-white/10 overflow-hidden bg-white/40 dark:bg-black/20';
 
           if (!item.isNoteable) {
             itemBox.innerHTML = `
-              <div class="px-3 py-2 flex items-center gap-3 text-xs sm:text-sm opacity-75">
+              <div class="px-3.5 py-2.5 flex items-center gap-3 text-xs sm:text-sm opacity-75">
                 <span class="font-mono font-medium min-w-[42px]">${item.time}</span>
                 <span>${item.title}</span>
               </div>
@@ -1449,15 +1292,15 @@
           } else {
             const hasNotes = item.notes && item.notes.trim() !== '';
             itemBox.innerHTML = `
-              <button type="button" class="w-full px-3 py-2.5 flex items-start justify-between gap-2 text-left hover:bg-black/5 dark:hover:bg-white/5 transition">
-                <div class="flex items-start gap-3 text-sm font-medium">
-                  <span class="font-mono text-xs opacity-75 mt-0.5 min-w-[42px]">${item.time}</span>
+              <button type="button" class="w-full px-3.5 py-3 flex items-start justify-between gap-2 text-left hover:bg-black/5 dark:hover:bg-white/5 transition">
+                <div class="flex items-start gap-3 text-sm sm:text-base font-medium">
+                  <span class="font-mono text-xs opacity-75 mt-1 min-w-[42px]">${item.time}</span>
                   <span>${item.title}</span>
                 </div>
                 <span class="material-symbols-outlined text-base opacity-60 expand-icon">${hasNotes ? 'expand_less' : 'expand_more'}</span>
               </button>
-              <div class="assembly-editor-wrap ${hasNotes ? '' : 'hidden'} px-3 pb-3 pt-1 border-t border-black/5 dark:border-white/5">
-                <div contenteditable="true" data-sidx="${sIdx}" data-iidx="${iIdx}" data-placeholder="Escribe tus apuntes de este tema aquí..." class="rich-editor assembly-topic-editor min-h-[70px] text-sm leading-relaxed focus:outline-none p-2 rounded bg-white/60 dark:bg-black/30">${upgradeInlineIconsInHTML(item.notes || '')}</div>
+              <div class="assembly-editor-wrap ${hasNotes ? '' : 'hidden'} px-3.5 pb-3.5 pt-1 border-t border-black/5 dark:border-white/5">
+                <div contenteditable="true" data-sidx="${sIdx}" data-iidx="${iIdx}" data-placeholder="Escribe tus apuntes de este tema aquí..." class="rich-editor assembly-topic-editor min-h-[90px] text-sm sm:text-base leading-relaxed focus:outline-none p-2.5 rounded-lg bg-white/60 dark:bg-black/30">${upgradeColoredIconsInHtml(item.notes || '')}</div>
               </div>
             `;
 
@@ -1472,17 +1315,17 @@
               if (!hidden) {
                 activeEditorElement = editorDiv;
                 editorDiv.focus();
+                updateFormatButtonsState();
               }
             });
 
             editorDiv.addEventListener('focus', () => {
               activeEditorElement = editorDiv;
+              updateFormatButtonsState();
             });
 
             editorDiv.addEventListener('input', () => {
               note.assemblyData.sessions[sIdx].items[iIdx].notes = editorDiv.innerHTML;
-              note.updatedAt = Date.now();
-              saveToLocalStorage();
             });
           }
 
@@ -1496,19 +1339,17 @@
 
     function saveAndCloseModal() {
       if (activeModalNoteId) {
-        const idx = notes.findIndex(n => n.id === activeModalNoteId);
-        if (idx >= 0) {
-          const note = notes[idx];
+        const noteIdx = notes.findIndex(n => n.id === activeModalNoteId);
+        if (noteIdx >= 0) {
+          const note = notes[noteIdx];
           note.title = document.getElementById('modalTitle').value.trim();
           if (!isAssemblyNote(note)) {
             note.body = document.getElementById('modalBody').innerHTML.trim();
-          } else {
-            note.labels = [];
           }
 
-          const isEmptyText = (!note.body || note.body === '<br>') && !note.title && !note.image;
-          if (isCreatingNewNote && !isAssemblyNote(note) && isEmptyText) {
-            notes.splice(idx, 1);
+          const isEmptyBody = !note.body || note.body === '<br>';
+          if (isCreatingNewNote && !isAssemblyNote(note) && !note.title && isEmptyBody && !note.image) {
+            notes.splice(noteIdx, 1);
             saveToLocalStorage();
             renderApp();
           } else {
@@ -1522,19 +1363,20 @@
       activeEditorElement = null;
       editModal.classList.add('hidden');
       editModal.classList.remove('flex');
+      document.body.style.overflow = '';
       document.getElementById('modalColorMenu').classList.add('hidden');
       document.getElementById('modalLabelMenu').classList.add('hidden');
       syncThemeUI();
     }
 
-    document.getElementById('modalBackBtn').addEventListener('click', saveAndCloseModal);
     document.getElementById('modalSaveCloseBtn').addEventListener('click', saveAndCloseModal);
+    document.getElementById('modalBackBtn').addEventListener('click', saveAndCloseModal);
 
     document.getElementById('modalPinBtn').addEventListener('click', () => {
       const note = notes.find(n => n.id === activeModalNoteId);
       if (!note) return;
       note.pinned = !note.pinned;
-      document.getElementById('modalPinIcon').classList.toggle('filled', note.pinned);
+      updateModalAppearance(note);
     });
 
     document.getElementById('modalColorBtn').addEventListener('click', (e) => {
@@ -1544,43 +1386,37 @@
         const note = notes.find(n => n.id === activeModalNoteId);
         if (!note) return;
         note.color = colorKey;
-        const styles = getColorStyles(colorKey);
-        editModalCard.style.backgroundColor = styles.bg;
-        const metaTheme = document.getElementById('themeColorMeta');
-        if (metaTheme) metaTheme.setAttribute('content', styles.bg);
+        updateModalAppearance(note);
       });
       document.getElementById('modalColorMenu').classList.toggle('hidden');
     });
 
-    function renderModalLabelCheckboxes() {
+    document.getElementById('modalLabelBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('modalColorMenu').classList.add('hidden');
       const note = notes.find(n => n.id === activeModalNoteId);
       if (!note || isAssemblyNote(note)) return;
-      if (!Array.isArray(note.labels)) note.labels = [];
+
       sortLabelsAlphabetically();
       const menu = document.getElementById('modalLabelMenu');
-      menu.innerHTML = '<div class="text-xs font-medium opacity-75 mb-1">Etiquetas</div>';
+      menu.innerHTML = '<div class="text-xs font-medium opacity-75 mb-1">Etiquetar apunte</div>';
       labels.forEach(lbl => {
         const row = document.createElement('label');
         row.className = 'flex items-center gap-2 text-sm cursor-pointer py-1';
-        const checked = note.labels.includes(lbl);
+        const checked = (note.labels || []).includes(lbl);
         row.innerHTML = `<input type="checkbox" ${checked ? 'checked' : ''} class="rounded"> <span>${lbl}</span>`;
-        row.querySelector('input').onchange = (e) => {
-          if (e.target.checked) {
+        row.querySelector('input').onchange = (ev) => {
+          if (!note.labels) note.labels = [];
+          if (ev.target.checked) {
             if (!note.labels.includes(lbl)) note.labels.push(lbl);
           } else {
             note.labels = note.labels.filter(x => x !== lbl);
           }
-          renderModalLabelsChips(note);
+          updateModalAppearance(note);
         };
         menu.appendChild(row);
       });
-    }
-
-    document.getElementById('modalLabelBtn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      document.getElementById('modalColorMenu').classList.add('hidden');
-      renderModalLabelCheckboxes();
-      document.getElementById('modalLabelMenu').classList.toggle('hidden');
+      menu.classList.toggle('hidden');
     });
 
     document.getElementById('modalImgBtn').addEventListener('click', () => {
@@ -1591,7 +1427,7 @@
       const note = notes.find(n => n.id === activeModalNoteId);
       if (!note) return;
       note.image = null;
-      renderModalImage(note);
+      updateModalAppearance(note);
     });
 
     document.getElementById('modalArchiveBtn').addEventListener('click', () => {
@@ -1628,22 +1464,15 @@
 
     document.getElementById('viewToggleBtn').addEventListener('click', () => {
       isListView = !isListView;
-      localStorage.setItem('mis_apuntes_view_mode', isListView ? 'list' : 'grid');
-      renderApp();
+      localStorage.setItem(STORAGE_VIEW_KEY, isListView ? 'list' : 'grid');
+      syncGridViewClasses();
+      renderNotesGrids();
     });
 
     document.getElementById('themeToggleBtn').addEventListener('click', () => {
-      const htmlEl = document.documentElement;
-      const willBeDark = !htmlEl.classList.contains('dark');
-      if (willBeDark) {
-        htmlEl.classList.add('dark');
-        htmlEl.classList.remove('light');
-        localStorage.setItem(THEME_STORAGE_KEY, 'dark');
-      } else {
-        htmlEl.classList.remove('dark');
-        htmlEl.classList.add('light');
-        localStorage.setItem(THEME_STORAGE_KEY, 'light');
-      }
+      document.documentElement.classList.toggle('dark');
+      const dark = isDarkMode();
+      localStorage.setItem('mis_apuntes_theme', dark ? 'dark' : 'light');
       renderApp();
     });
 
@@ -1657,7 +1486,7 @@
           const note = notes.find(n => n.id === activeModalNoteId);
           if (note) {
             note.image = ev.target.result;
-            renderModalImage(note);
+            updateModalAppearance(note);
           }
         }
       };
@@ -1678,13 +1507,7 @@
           <button type="button" class="p-1 text-gray-400 hover:text-red-500"><span class="material-symbols-outlined text-base">delete</span></button>
         `;
         row.querySelector('button').onclick = () => {
-          const removedLabel = labels[idx];
           labels.splice(idx, 1);
-          notes.forEach(n => {
-            if (Array.isArray(n.labels)) {
-              n.labels = n.labels.filter(l => l !== removedLabel);
-            }
-          });
           saveToLocalStorage();
           renderLabelsModalList();
           renderApp();
@@ -1714,10 +1537,11 @@
       }
     });
 
+    // Detector de Instalación PWA
     let deferredInstallPrompt = null;
-    const pwaInstallBanner = document.getElementById('pwaInstallBanner');
-    const pwaInstallActionBtn = document.getElementById('pwaInstallActionBtn');
-    const pwaDismissBtn = document.getElementById('pwaDismissBtn');
+    const installAppBanner = document.getElementById('installAppBanner');
+    const installAppBtn = document.getElementById('installAppBtn');
+    const dismissInstallBtn = document.getElementById('dismissInstallBtn');
 
     function isAppInstalled() {
       return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -1726,40 +1550,41 @@
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredInstallPrompt = e;
-      if (!isAppInstalled() && sessionStorage.getItem('pwa_banner_dismissed') !== '1') {
-        pwaInstallBanner.classList.remove('hidden');
+      if (!isAppInstalled()) {
+        installAppBanner.classList.remove('hidden');
+        installAppBanner.classList.add('flex');
       }
     });
 
-    pwaInstallActionBtn.addEventListener('click', async () => {
+    installAppBtn.addEventListener('click', async () => {
       if (!deferredInstallPrompt) return;
-      pwaInstallBanner.classList.add('hidden');
       deferredInstallPrompt.prompt();
       const { outcome } = await deferredInstallPrompt.userChoice;
       if (outcome === 'accepted') {
-        pwaInstallBanner.classList.add('hidden');
+        installAppBanner.classList.add('hidden');
+        installAppBanner.classList.remove('flex');
       }
       deferredInstallPrompt = null;
     });
 
-    pwaDismissBtn.addEventListener('click', () => {
-      sessionStorage.setItem('pwa_banner_dismissed', '1');
-      pwaInstallBanner.classList.add('hidden');
+    dismissInstallBtn.addEventListener('click', () => {
+      installAppBanner.classList.add('hidden');
+      installAppBanner.classList.remove('flex');
     });
 
     window.addEventListener('appinstalled', () => {
+      installAppBanner.classList.add('hidden');
+      installAppBanner.classList.remove('flex');
       deferredInstallPrompt = null;
-      pwaInstallBanner.classList.add('hidden');
     });
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').then((reg) => {
-          reg.update();
-        }).catch((err) => console.warn('SW error:', err));
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
       });
     }
 
+    // Asegurar inicio limpio sin ninguna nota abierta
     editModal.classList.add('hidden');
     editModal.classList.remove('flex');
     loadFromLocalStorage();
