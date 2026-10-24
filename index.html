@@ -49,7 +49,7 @@
       --note-font-scale: 1;
     }
     body { font-family: 'Roboto', sans-serif; -webkit-tap-highlight-color: transparent; }
-    h1, h2, h3, .font-display { font-family: 'Google Sans', 'Roboto', sans-serif; }
+    h1, h2, h3, .font-display { font-family: 'Google Sans', 'Roboto', 'sans-serif'; }
     .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; user-select: none; }
     .material-symbols-outlined.filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
 
@@ -195,6 +195,9 @@
         <span id="selectionCountText" class="font-display font-medium text-base">1 seleccionada</span>
       </div>
       <div class="flex items-center gap-2">
+        <button id="restoreSelectedNoteBtn" type="button" class="hidden p-2.5 rounded-full bg-green-500/15 text-green-600 dark:text-green-400 hover:bg-green-500/25 transition items-center justify-center" title="Restaurar apunte">
+          <span class="material-symbols-outlined">restore_from_trash</span>
+        </button>
         <button id="deleteSelectedNoteBtn" type="button" class="p-2.5 rounded-full bg-red-500/15 text-red-600 dark:text-red-400 hover:bg-red-500/25 transition flex items-center justify-center" title="Eliminar nota">
           <span class="material-symbols-outlined">delete</span>
         </button>
@@ -312,11 +315,12 @@
   <!-- Contenido Principal -->
   <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-5 pb-24">
 
-    <!-- Barra de Vaciar Papelera (Aparece solo cuando estás en Papelera) -->
+    <!-- Barra de Vaciar Papelera (Aparece cuando estás en Papelera) -->
     <div id="trashHeaderBar" class="hidden max-w-xl mx-auto mb-6 px-4 py-3 rounded-xl bg-[#f1f3f4] dark:bg-[#303134] border border-gray-200 dark:border-[#5f6368]/50 items-center justify-between gap-3">
-      <span class="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Apuntes en la papelera de reciclaje</span>
-      <button id="emptyTrashBtn" type="button" class="shrink-0 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-500/10 transition">
-        Vaciar papelera
+      <span class="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Apuntes en la papelera</span>
+      <button id="emptyTrashBtn" type="button" class="shrink-0 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-red-500/15 text-red-600 dark:text-red-400 hover:bg-red-500/25 transition flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-base">delete_forever</span>
+        <span>Vaciar papelera</span>
       </button>
     </div>
 
@@ -441,7 +445,10 @@
         <button id="modalArchiveBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Archivar">
           <span class="material-symbols-outlined text-[22px]">archive</span>
         </button>
-        <button id="modalDeleteBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" title="Mover a la papelera">
+        <button id="modalRestoreBtn" type="button" class="hidden p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-green-600 dark:text-green-400" title="Restaurar de la papelera">
+          <span class="material-symbols-outlined text-[22px]">restore_from_trash</span>
+        </button>
+        <button id="modalDeleteBtn" type="button" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-red-600 dark:text-red-400" title="Mover a la papelera">
           <span class="material-symbols-outlined text-[22px]">delete</span>
         </button>
       </div>
@@ -454,6 +461,29 @@
 
       <!-- Menú de Etiquetas en el Editor -->
       <div id="modalLabelMenu" class="hidden absolute bottom-14 left-24 z-30 p-3 bg-white dark:bg-[#303134] rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 w-56 space-y-1.5"></div>
+    </div>
+  </div>
+
+  <!-- Modal Confirmar Vaciar Papelera (Reemplaza confirm() nativo para no fallar en PWA móvil) -->
+  <div id="confirmEmptyTrashModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+    <div class="bg-white dark:bg-[#303134] w-full max-w-sm rounded-2xl shadow-2xl p-5 space-y-4 border border-gray-200 dark:border-gray-700">
+      <div class="flex items-center gap-3">
+        <div class="p-2.5 rounded-full bg-red-500/15 text-red-500">
+          <span class="material-symbols-outlined">delete_forever</span>
+        </div>
+        <h3 class="font-display font-medium text-lg">¿Vaciar papelera?</h3>
+      </div>
+      <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+        Todos los apuntes que están en la papelera se eliminarán de forma definitiva y no se podrán recuperar.
+      </p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button id="cancelEmptyTrashBtn" type="button" class="px-4 py-2 text-sm font-medium rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition">
+          Cancelar
+        </button>
+        <button id="confirmEmptyTrashBtn" type="button" class="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition">
+          Vaciar definitivamente
+        </button>
+      </div>
     </div>
   </div>
 
@@ -725,6 +755,7 @@
 
     const STORAGE_NOTES_KEY = 'mis_apuntes_notes_permanent';
     const STORAGE_LABELS_KEY = 'mis_apuntes_labels_permanent';
+    const STORAGE_DELETED_IDS_KEY = 'mis_apuntes_deleted_ids_permanent';
     const STORAGE_VIEW_KEY = 'mis_apuntes_view_mode';
     const STORAGE_FONT_SCALE_KEY = 'mis_apuntes_font_scale';
 
@@ -737,6 +768,7 @@
 
     let notes = [];
     let labels = ['Ideas', 'Reuniones', 'Revisitas'];
+    let deletedNoteIds = new Set();
     let currentView = 'notes';
     let isListView = localStorage.getItem(STORAGE_VIEW_KEY) === 'list';
     let searchQuery = '';
@@ -772,6 +804,11 @@
     }
 
     function loadFromLocalStorage() {
+      const savedDeleted = localStorage.getItem(STORAGE_DELETED_IDS_KEY);
+      if (savedDeleted) {
+        try { deletedNoteIds = new Set(JSON.parse(savedDeleted)); } catch (e) { deletedNoteIds = new Set(); }
+      }
+
       const savedLabels = localStorage.getItem(STORAGE_LABELS_KEY) || localStorage.getItem('mis_apuntes_labels_v2');
       if (savedLabels) {
         try { labels = JSON.parse(savedLabels); } catch (e) {}
@@ -803,8 +840,14 @@
         ];
       }
 
+      // Filtrar cualquier nota que haya sido borrada definitivamente de la papelera
+      notes = notes.filter(n => !deletedNoteIds.has(n.id));
+
       notes.forEach((n, idx) => {
         if (typeof n.order !== 'number') n.order = idx;
+        n.trashed = Boolean(n.trashed);
+        n.archived = Boolean(n.archived);
+        n.pinned = Boolean(n.pinned);
         if (isAssemblyNote(n)) {
           n.type = 'assembly';
           n.labels = [];
@@ -837,6 +880,7 @@
       sortLabelsAlphabetically();
       localStorage.setItem(STORAGE_NOTES_KEY, JSON.stringify(notes));
       localStorage.setItem(STORAGE_LABELS_KEY, JSON.stringify(labels));
+      localStorage.setItem(STORAGE_DELETED_IDS_KEY, JSON.stringify(Array.from(deletedNoteIds)));
     }
 
     // Inicialización de Firebase
@@ -879,7 +923,16 @@
         const cloudNotesMap = new Map();
         snapshot.docs.forEach(d => cloudNotesMap.set(d.id, d.data()));
 
+        // Si en la nube todavía existe una nota que ya fue eliminada definitivamente de la papelera, la borramos de la nube y no la restauramos
+        cloudNotesMap.forEach((cloudNote, id) => {
+          if (deletedNoteIds.has(id)) {
+            deleteDoc(doc(db, 'users', uid, 'notes', id)).catch(() => {});
+            cloudNotesMap.delete(id);
+          }
+        });
+
         notes.forEach(localNote => {
+          if (deletedNoteIds.has(localNote.id)) return;
           const cloudNote = cloudNotesMap.get(localNote.id);
           if (!cloudNote || (localNote.updatedAt || 0) > (cloudNote.updatedAt || 0)) {
             setDoc(doc(db, 'users', uid, 'notes', localNote.id), localNote).catch(() => {});
@@ -887,6 +940,10 @@
         });
 
         cloudNotesMap.forEach((cloudNote, id) => {
+          if (deletedNoteIds.has(id)) return;
+          cloudNote.trashed = Boolean(cloudNote.trashed);
+          cloudNote.archived = Boolean(cloudNote.archived);
+          cloudNote.pinned = Boolean(cloudNote.pinned);
           if (isAssemblyNote(cloudNote)) {
             cloudNote.type = 'assembly';
             cloudNote.labels = [];
@@ -924,7 +981,9 @@
 
         if (user && db) {
           for (const item of previousLocalNotes) {
-            await setDoc(doc(db, 'users', user.uid, 'notes', item.id), item).catch(() => {});
+            if (!deletedNoteIds.has(item.id)) {
+              await setDoc(doc(db, 'users', user.uid, 'notes', item.id), item).catch(() => {});
+            }
           }
         }
         updateAuthUI(user);
@@ -977,6 +1036,10 @@
     document.getElementById('sidebarGoogleBtn').addEventListener('click', connectGoogleAccount);
 
     async function persistNote(note) {
+      note.trashed = Boolean(note.trashed);
+      note.archived = Boolean(note.archived);
+      note.pinned = Boolean(note.pinned);
+
       if (isAssemblyNote(note)) {
         note.type = 'assembly';
         note.labels = [];
@@ -997,6 +1060,27 @@
       }
     }
 
+    // Mover cualquier apunte a la papelera de reciclaje
+    async function moveNoteToTrash(noteId) {
+      const note = notes.find(n => n.id === noteId);
+      if (!note) return;
+      note.trashed = true;
+      note.pinned = false;
+      note.archived = false;
+      note.updatedAt = Date.now();
+      await persistNote(note);
+    }
+
+    // Restaurar apunte desde la papelera
+    async function restoreNoteFromTrash(noteId) {
+      const note = notes.find(n => n.id === noteId);
+      if (!note) return;
+      note.trashed = false;
+      note.updatedAt = Date.now();
+      await persistNote(note);
+    }
+
+    // Eliminar de forma definitiva de la papelera y de Firebase
     async function permanentlyDeleteNoteById(noteId) {
       const idx = notes.findIndex(n => n.id === noteId);
       if (idx === -1) return;
@@ -1009,9 +1093,11 @@
         return;
       }
 
+      deletedNoteIds.add(noteId);
       notes.splice(idx, 1);
       saveToLocalStorage();
       renderApp();
+
       if (db && currentUser) {
         try {
           await deleteDoc(doc(db, 'users', currentUser.uid, 'notes', noteId));
@@ -1021,9 +1107,20 @@
 
     function selectNoteForAction(noteId) {
       selectedNoteId = noteId;
+      const note = notes.find(n => n.id === noteId);
       const bar = document.getElementById('selectionActionBar');
+      const restoreBtn = document.getElementById('restoreSelectedNoteBtn');
       bar.classList.remove('hidden');
       bar.classList.add('flex');
+
+      if (note && note.trashed) {
+        restoreBtn.classList.remove('hidden');
+        restoreBtn.classList.add('flex');
+      } else {
+        restoreBtn.classList.add('hidden');
+        restoreBtn.classList.remove('flex');
+      }
+
       document.querySelectorAll('.note-card').forEach(el => {
         el.classList.toggle('note-selected', el.dataset.id === noteId);
       });
@@ -1044,6 +1141,14 @@
       clearSelectedNote();
     });
 
+    document.getElementById('restoreSelectedNoteBtn').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!selectedNoteId) return;
+      const idToRestore = selectedNoteId;
+      clearSelectedNote();
+      await restoreNoteFromTrash(idToRestore);
+    });
+
     document.getElementById('deleteSelectedNoteBtn').addEventListener('click', async (e) => {
       e.stopPropagation();
       if (!selectedNoteId) return;
@@ -1053,31 +1158,46 @@
       const note = notes.find(n => n.id === idToDelete);
       if (!note) return;
 
+      // Si ya está en la papelera, la borra definitivamente; si no, la manda a la papelera
       if (currentView === 'trash' || note.trashed) {
         await permanentlyDeleteNoteById(idToDelete);
       } else {
-        note.trashed = true;
-        note.pinned = false;
-        note.updatedAt = Date.now();
-        await persistNote(note);
+        await moveNoteToTrash(idToDelete);
       }
     });
 
-    document.getElementById('emptyTrashBtn').addEventListener('click', async () => {
-      const trashedNotes = notes.filter(n => n.trashed);
-      if (trashedNotes.length === 0) return;
-      if (!confirm('¿Vaciar la papelera? Todos los apuntes en la papelera se eliminarán definitivamente.')) return;
+    // Modal personalizado de Vaciar Papelera
+    const confirmEmptyTrashModal = document.getElementById('confirmEmptyTrashModal');
 
+    document.getElementById('emptyTrashBtn').addEventListener('click', () => {
+      const trashedNotes = notes.filter(n => Boolean(n.trashed));
+      if (trashedNotes.length === 0) return;
+      confirmEmptyTrashModal.classList.remove('hidden');
+      confirmEmptyTrashModal.classList.add('flex');
+    });
+
+    document.getElementById('cancelEmptyTrashBtn').addEventListener('click', () => {
+      confirmEmptyTrashModal.classList.add('hidden');
+      confirmEmptyTrashModal.classList.remove('flex');
+    });
+
+    document.getElementById('confirmEmptyTrashBtn').addEventListener('click', async () => {
+      confirmEmptyTrashModal.classList.add('hidden');
+      confirmEmptyTrashModal.classList.remove('flex');
       clearSelectedNote();
+
       const idsToDeleteFromCloud = [];
+      const assembliesToRestore = [];
 
       notes = notes.filter(n => {
         if (!n.trashed) return true;
         if (isAssemblyNote(n)) {
           n.trashed = false;
           n.updatedAt = Date.now();
+          assembliesToRestore.push(n);
           return true;
         }
+        deletedNoteIds.add(n.id);
         idsToDeleteFromCloud.push(n.id);
         return false;
       });
@@ -1087,7 +1207,14 @@
 
       if (db && currentUser) {
         for (const id of idsToDeleteFromCloud) {
-          deleteDoc(doc(db, 'users', currentUser.uid, 'notes', id)).catch(() => {});
+          try {
+            await deleteDoc(doc(db, 'users', currentUser.uid, 'notes', id));
+          } catch (e) { console.error(e); }
+        }
+        for (const asm of assembliesToRestore) {
+          try {
+            await setDoc(doc(db, 'users', currentUser.uid, 'notes', asm.id), asm);
+          } catch (e) { console.error(e); }
         }
       }
     });
@@ -1314,17 +1441,20 @@
 
       const isAssembly = isAssemblyNote(note);
 
-      const pinBtn = document.createElement('button');
-      pinBtn.type = 'button';
-      pinBtn.className = 'absolute top-2.5 right-2.5 p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 z-10 transition';
-      pinBtn.title = note.pinned ? 'Desfijar' : 'Fijar';
-      pinBtn.innerHTML = `<span class="material-symbols-outlined text-[20px] ${note.pinned ? 'filled' : 'opacity-60'}">push_pin</span>`;
-      pinBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        note.pinned = !note.pinned;
-        note.updatedAt = Date.now();
-        persistNote(note);
-      });
+      if (!note.trashed) {
+        const pinBtn = document.createElement('button');
+        pinBtn.type = 'button';
+        pinBtn.className = 'absolute top-2.5 right-2.5 p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 z-10 transition';
+        pinBtn.title = note.pinned ? 'Desfijar' : 'Fijar';
+        pinBtn.innerHTML = `<span class="material-symbols-outlined text-[20px] ${note.pinned ? 'filled' : 'opacity-60'}">push_pin</span>`;
+        pinBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          note.pinned = !note.pinned;
+          note.updatedAt = Date.now();
+          persistNote(note);
+        });
+        card.appendChild(pinBtn);
+      }
 
       const topContent = document.createElement('div');
       topContent.className = 'overflow-hidden pr-6';
@@ -1355,7 +1485,34 @@
       topContent.innerHTML = html;
 
       const bottomContent = document.createElement('div');
-      if (isAssembly) {
+      if (note.trashed) {
+        const actionsWrap = document.createElement('div');
+        actionsWrap.className = 'flex items-center justify-end gap-1 mt-2 pt-1.5 border-t border-black/10 dark:border-white/10';
+
+        const restoreBtn = document.createElement('button');
+        restoreBtn.type = 'button';
+        restoreBtn.className = 'p-1.5 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 text-xs font-medium flex items-center gap-1';
+        restoreBtn.title = 'Restaurar apunte';
+        restoreBtn.innerHTML = `<span class="material-symbols-outlined text-base">restore_from_trash</span><span>Restaurar</span>`;
+        restoreBtn.onclick = (e) => {
+          e.stopPropagation();
+          restoreNoteFromTrash(note.id);
+        };
+
+        const permDelBtn = document.createElement('button');
+        permDelBtn.type = 'button';
+        permDelBtn.className = 'p-1.5 rounded-lg hover:bg-red-500/20 text-red-600 dark:text-red-400 text-xs font-medium flex items-center gap-1';
+        permDelBtn.title = 'Borrar definitivamente';
+        permDelBtn.innerHTML = `<span class="material-symbols-outlined text-base">delete_forever</span>`;
+        permDelBtn.onclick = (e) => {
+          e.stopPropagation();
+          permanentlyDeleteNoteById(note.id);
+        };
+
+        actionsWrap.appendChild(restoreBtn);
+        actionsWrap.appendChild(permDelBtn);
+        bottomContent.appendChild(actionsWrap);
+      } else if (isAssembly) {
         let totalNotes = 0;
         note.assemblyData?.sessions?.forEach(s => s.items.forEach(it => {
           if (it.notes && it.notes.trim() !== '') totalNotes++;
@@ -1370,7 +1527,6 @@
         </div>`;
       }
 
-      card.appendChild(pinBtn);
       card.appendChild(topContent);
       card.appendChild(bottomContent);
 
@@ -1434,7 +1590,7 @@
       if (pinnedSortable) { pinnedSortable.destroy(); pinnedSortable = null; }
       if (othersSortable) { othersSortable.destroy(); othersSortable = null; }
 
-      if (isListView || searchQuery || typeof Sortable === 'undefined') return;
+      if (isListView || searchQuery || currentView === 'trash' || typeof Sortable === 'undefined') return;
 
       const sortableOptions = {
         animation: 200,
@@ -1494,6 +1650,8 @@
       const pinnedSection = document.getElementById('pinnedSection');
       const othersHeading = document.getElementById('othersHeading');
       const emptyState = document.getElementById('emptyState');
+      const emptyStateIcon = document.getElementById('emptyStateIcon');
+      const emptyStateText = document.getElementById('emptyStateText');
       const trashHeaderBar = document.getElementById('trashHeaderBar');
 
       pinnedGrid.innerHTML = '';
@@ -1533,14 +1691,24 @@
         othersHeading.classList.add('hidden');
         emptyState.classList.remove('hidden');
         emptyState.classList.add('flex');
+        if (currentView === 'trash') {
+          emptyStateIcon.textContent = 'delete';
+          emptyStateText.textContent = 'No hay ningún apunte en la papelera';
+        } else if (currentView === 'archive') {
+          emptyStateIcon.textContent = 'archive';
+          emptyStateText.textContent = 'Tus apuntes archivados aparecerán aquí';
+        } else {
+          emptyStateIcon.textContent = 'edit_note';
+          emptyStateText.textContent = 'Los apuntes que agregues aparecerán aquí';
+        }
         return;
       }
 
       emptyState.classList.add('hidden');
       emptyState.classList.remove('flex');
 
-      const pinned = filtered.filter(n => n.pinned);
-      const others = filtered.filter(n => !n.pinned);
+      const pinned = filtered.filter(n => n.pinned && !n.trashed);
+      const others = filtered.filter(n => !n.pinned || n.trashed);
 
       if (pinned.length > 0) {
         pinnedSection.classList.remove('hidden');
@@ -1616,6 +1784,16 @@
       editModal.style.backgroundColor = styles.bg;
       document.getElementById('themeColorMeta')?.setAttribute('content', styles.bg);
       document.getElementById('modalPinIcon').classList.toggle('filled', !!note.pinned);
+
+      const modalRestoreBtn = document.getElementById('modalRestoreBtn');
+      const modalArchiveBtn = document.getElementById('modalArchiveBtn');
+      if (note.trashed) {
+        modalRestoreBtn.classList.remove('hidden');
+        modalArchiveBtn.classList.add('hidden');
+      } else {
+        modalRestoreBtn.classList.add('hidden');
+        modalArchiveBtn.classList.remove('hidden');
+      }
 
       const imgWrap = document.getElementById('modalImageWrap');
       if (note.image) {
@@ -1754,6 +1932,18 @@
       });
     }
 
+    function closeModalUIOnly() {
+      isCreatingNewNote = false;
+      activeModalNoteId = null;
+      activeEditorElement = null;
+      editModal.classList.add('hidden');
+      editModal.classList.remove('flex');
+      document.body.style.overflow = '';
+      document.getElementById('modalColorMenu').classList.add('hidden');
+      document.getElementById('modalLabelMenu').classList.add('hidden');
+      syncThemeUI();
+    }
+
     function saveAndCloseModal() {
       if (activeModalNoteId) {
         const noteIdx = notes.findIndex(n => n.id === activeModalNoteId);
@@ -1775,15 +1965,7 @@
           }
         }
       }
-      isCreatingNewNote = false;
-      activeModalNoteId = null;
-      activeEditorElement = null;
-      editModal.classList.add('hidden');
-      editModal.classList.remove('flex');
-      document.body.style.overflow = '';
-      document.getElementById('modalColorMenu').classList.add('hidden');
-      document.getElementById('modalLabelMenu').classList.add('hidden');
-      syncThemeUI();
+      closeModalUIOnly();
     }
 
     document.getElementById('modalSaveCloseBtn').addEventListener('click', saveAndCloseModal);
@@ -1854,20 +2036,44 @@
       saveAndCloseModal();
     });
 
-    document.getElementById('modalDeleteBtn').addEventListener('click', async () => {
+    document.getElementById('modalRestoreBtn').addEventListener('click', async () => {
       const note = notes.find(n => n.id === activeModalNoteId);
       if (!note) return;
+      const idToRestore = note.id;
+      closeModalUIOnly();
+      await restoreNoteFromTrash(idToRestore);
+    });
+
+    document.getElementById('modalDeleteBtn').addEventListener('click', async () => {
+      const noteIdx = notes.findIndex(n => n.id === activeModalNoteId);
+      if (noteIdx === -1) return;
+      const note = notes[noteIdx];
+      const noteId = note.id;
+
+      // Guardamos el texto actual antes de enviarla a la papelera
+      note.title = document.getElementById('modalTitle').value.trim();
+      if (!isAssemblyNote(note)) {
+        note.body = document.getElementById('modalBody').innerHTML.trim();
+      }
+
+      const isEmptyBody = !note.body || note.body === '<br>';
+
+      // Si era una nota recién abierta totalmente en blanco, la descartamos sin ensuciar la papelera
+      if (isCreatingNewNote && !isAssemblyNote(note) && !note.title && isEmptyBody && !note.image) {
+        notes.splice(noteIdx, 1);
+        closeModalUIOnly();
+        saveToLocalStorage();
+        renderApp();
+        return;
+      }
+
+      closeModalUIOnly();
+
+      // Si ya estaba en la papelera, la elimina definitivamente; si no, la manda a la papelera
       if (note.trashed) {
-        const idToRemove = note.id;
-        activeModalNoteId = null;
-        editModal.classList.add('hidden');
-        editModal.classList.remove('flex');
-        document.body.style.overflow = '';
-        await permanentlyDeleteNoteById(idToRemove);
+        await permanentlyDeleteNoteById(noteId);
       } else {
-        note.trashed = true;
-        note.pinned = false;
-        saveAndCloseModal();
+        await moveNoteToTrash(noteId);
       }
     });
 
